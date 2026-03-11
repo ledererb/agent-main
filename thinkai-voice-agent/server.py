@@ -153,7 +153,7 @@ async def entrypoint(ctx: JobContext):
         stt=elevenlabs.STT(
             model_id="scribe_v2_realtime",
             language_code="hu",
-            api_key=os.getenv("ELEVEN_API_KEY"),
+            api_key=os.getenv("ELEVEN_API_KEY") or os.getenv("ELEVENLABS_API_KEY"),
         ),
         llm=google.LLM(
             model="gemini-2.5-flash",
