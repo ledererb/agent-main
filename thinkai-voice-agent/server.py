@@ -168,8 +168,8 @@ async def entrypoint(ctx: JobContext):
             emotion=["positivity:high", "curiosity"],
         ),
         vad=silero.VAD.load(
-            activation_threshold=0.75,
-            min_speech_duration=0.2,
+            activation_threshold=0.85,
+            min_speech_duration=0.4,
             min_silence_duration=0.65,
         ),
     )
