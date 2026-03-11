@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["python312", "pip"]
+
+[phases.install]
+cmds = ["pip install -r thinkai-voice-agent/requirements.txt"]
