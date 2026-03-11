@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -r thinkai-voice-agent/requirements.txt"
+
+[deploy]
+startCommand = "cd thinkai-voice-agent && bash start.sh start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
