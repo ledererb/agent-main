@@ -170,7 +170,7 @@ async def send_followup_email(
                     </div>
                     """,
                 },
-                timeout=10,
+                timeout=20,
             )
             resp.raise_for_status()
             sent_ok = True
@@ -446,74 +446,7 @@ async def create_task(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 4. WEATHER CHECK (Open-Meteo API — no API key needed!)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-CITY_COORDS = {
-    "budapest": (47.4979, 19.0402),
-    "debrecen": (47.5316, 21.6273),
-    "szeged": (46.253, 20.1414),
-    "miskolc": (48.1035, 20.7784),
-    "pécs": (46.0727, 18.2323),
-    "győr": (47.6875, 17.6504),
-    "nyíregyháza": (47.9553, 21.7174),
-    "kecskemét": (46.8964, 19.6897),
-    "székesfehérvár": (47.1860, 18.4221),
-    "vienna": (48.2082, 16.3738),
-    "bécs": (48.2082, 16.3738),
-    "london": (51.5074, -0.1278),
-    "new york": (40.7128, -74.0060),
-    "paris": (48.8566, 2.3522),
-    "párizs": (48.8566, 2.3522),
-    "berlin": (52.5200, 13.4050),
-}
-
-
-@function_tool(description="Aktuális időjárás lekérdezése egy városban. Használd, ha a felhasználó az időjárásról kérdez.")
-async def get_weather(
-    ctx: RunContext,
-    city: Annotated[str, "A város neve (pl. Budapest, Debrecen, Bécs)"],
-) -> str:
-    """Időjárás lekérdezése."""
-    city_lower = city.lower().strip()
-    coords = CITY_COORDS.get(city_lower, CITY_COORDS["budapest"])
-    if city_lower not in CITY_COORDS:
-        city = "Budapest"
-    lat, lon = coords
-
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                "https://api.open-meteo.com/v1/forecast",
-                params={"latitude": lat, "longitude": lon, "current_weather": "true", "timezone": "Europe/Budapest"},
-                timeout=5,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-
-        weather = data.get("current_weather", {})
-        temp = weather.get("temperature", "?")
-        wind = weather.get("windspeed", "?")
-        code = weather.get("weathercode", 0)
-
-        weather_desc = {
-            0: "tiszta égbolt", 1: "enyhén felhős", 2: "részben felhős",
-            3: "borult", 45: "ködös", 48: "zúzmarás köd",
-            51: "enyhe szitálás", 53: "mérsékelt szitálás", 55: "sűrű szitálás",
-            61: "enyhe eső", 63: "mérsékelt eső", 65: "erős eső",
-            71: "enyhe havazás", 73: "mérsékelt havazás", 75: "erős havazás",
-            80: "enyhe zápor", 81: "mérsékelt zápor", 82: "erős zápor",
-            95: "zivatar", 96: "jégesős zivatar", 99: "erős jégesős zivatar",
-        }.get(code, "ismeretlen")
-
-        return f"{city.title()}: {temp}°C, {weather_desc}, szél {wind} km/h."
-    except Exception as e:
-        logger.error(f"Weather error: {e}")
-        return f"Hiba az időjárás lekérdezésekor: {str(e)}"
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 5. KNOWLEDGE LOOKUP (structured ThinkAI info)
+# 6. KNOWLEDGE LOOKUP (structured ThinkAI info)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ── Knowledge base path ──────────────────────────────────────────────────────
