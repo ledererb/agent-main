@@ -611,6 +611,39 @@
         let agentSpeaking = false;
         let pollInterval = null;
 
+        // ── Inactivity auto-disconnect ───────────────────────
+        const INACTIVITY_TIMEOUT = 20000; // 20 seconds
+        const COUNTDOWN_SECONDS = 5;
+        let inactivityTimer = null;
+        let countdownTimer = null;
+        let countdownValue = 0;
+
+        function resetInactivity() {
+            clearTimeout(inactivityTimer);
+            clearInterval(countdownTimer);
+            inactivityTimer = null;
+            countdownTimer = null;
+            if (!connected) return;
+            inactivityTimer = setTimeout(startCountdown, INACTIVITY_TIMEOUT - (COUNTDOWN_SECONDS * 1000));
+        }
+
+        function startCountdown() {
+            countdownValue = COUNTDOWN_SECONDS;
+            statusEl.textContent = `Lekapcsolódás ${countdownValue} másodperc múlva...`;
+            statusEl.className = 'status reconnecting';
+            countdownTimer = setInterval(() => {
+                countdownValue--;
+                if (countdownValue <= 0) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                    disconnect();
+                    statusEl.textContent = 'Viszlát! Kattints ide, ha újra szükséged van rám!';
+                } else {
+                    statusEl.textContent = `Lekapcsolódás ${countdownValue} másodperc múlva...`;
+                }
+            }, 1000);
+        }
+
         const micBtn = document.getElementById('micBtn');
         const statusEl = document.getElementById('status');
         const visualizer = document.getElementById('visualizer');
@@ -679,6 +712,7 @@
                     });
 
                     room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
+                        resetInactivity();
                         for (const seg of segments) {
                             if (seg.final) {
                                 const isAgent = participant?.identity !== room.localParticipant?.identity;
@@ -687,6 +721,7 @@
                         }
                     });
                     room.on(RoomEvent.DataReceived, (payload) => {
+                        resetInactivity();
                         try {
                             const data = JSON.parse(new TextDecoder().decode(payload));
                             if (data.type === 'transcription' && data.text) addTranscript(data.role || 'agent', data.text);
@@ -695,6 +730,7 @@
 
                     room.on(RoomEvent.ParticipantConnected, (participant) => {
                         participant.on(ParticipantEvent.IsSpeakingChanged, (speaking) => {
+                            resetInactivity();
                             agentSpeaking = speaking;
                             if (speaking) {
                                 setState('speaking', 'Beszélek...');
@@ -738,6 +774,7 @@
                     visualizer.classList.add('active');
                     transcript.classList.add('visible');
                     startPolling();
+                    resetInactivity();
                     return; // success!
 
                 } catch (err) {
@@ -771,6 +808,10 @@
         }
 
         function disconnect() {
+            clearTimeout(inactivityTimer);
+            clearInterval(countdownTimer);
+            inactivityTimer = null;
+            countdownTimer = null;
             if (room) { room.disconnect(); room = null; }
             connected = false; reconnecting = false; agentSpeaking = false;
             micBtn.classList.remove('listening', 'thinking', 'speaking', 'connecting', 'reconnecting');

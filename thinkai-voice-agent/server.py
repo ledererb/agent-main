@@ -158,6 +158,17 @@ class ThinkAIAgent(Agent):
             logger.error(f"LLM error: {e}")
             return "Hoppá, most egy pillanatra elakadtam. Kérlek, próbáld újra!"
 
+    async def toolcall_node(self, tool_call, chat_ctx, model_settings):
+        """Override toolcall node: catch unhandled exceptions so the agent never goes silent."""
+        try:
+            result = Agent.default.toolcall_node(self, tool_call, chat_ctx, model_settings)
+            if asyncio.iscoroutine(result):
+                result = await result
+            return result
+        except Exception as e:
+            logger.error(f"Tool call error ({tool_call.function.name}): {e}")
+            return f"Sajnos hiba történt a művelet során: {str(e)}. Kérlek, próbáld újra!"
+
     async def tts_node(self, text, model_settings):
         """Override TTS node: apply brand pronunciation replacements."""
         async def _cleaned_text():
@@ -221,7 +232,7 @@ async def entrypoint(ctx: JobContext):
         min_interruption_duration=0.7,
         min_interruption_words=1,
         max_tool_steps=5,
-        user_away_timeout=30.0,
+        user_away_timeout=20.0,
         preemptive_generation=True,
         conn_options=conn_options,
     )
