@@ -650,88 +650,124 @@
         }
 
         async function connect() {
-            setState('connecting', 'Felébresztem a szervert...');
-            try {
-                // 1. Warm-up ping — wakes Railway container from sleep
-                try { await fetch('/api/health'); } catch (e) { /* ignore */ }
+            const MAX_CONNECT_ATTEMPTS = 3;
+            for (let attempt = 1; attempt <= MAX_CONNECT_ATTEMPTS; attempt++) {
+                setState('connecting', attempt === 1 ? 'Felébresztem a szervert...' : `Újrapróbálom... (${attempt}/${MAX_CONNECT_ATTEMPTS})`);
+                try {
+                    // 1. Warm-up ping — wakes Railway container from sleep
+                    try { await fetch('/api/health'); } catch (e) { /* ignore */ }
 
-                // 2. Get token with retry (container may need a few seconds to fully start)
-                setState('connecting', 'Csatlakozás...');
-                const resp = await fetchWithRetry('/api/token', 3, 2000);
-                const { token, url } = await resp.json();
+                    // 2. Get token with retry (container may need a few seconds to fully start)
+                    setState('connecting', 'Csatlakozás...');
+                    const resp = await fetchWithRetry('/api/token', 3, 2000);
+                    const { token, url } = await resp.json();
 
-                room = new Room({
-                    audioCaptureDefaults: { autoGainControl: true, echoCancellation: true, noiseSuppression: true },
-                    reconnectPolicy: { maxRetries: 5, maxRetryDelay: 5000 },
-                });
+                    room = new Room({
+                        audioCaptureDefaults: { autoGainControl: true, echoCancellation: true, noiseSuppression: true },
+                        reconnectPolicy: { maxRetries: 5, maxRetryDelay: 5000 },
+                    });
 
-                room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
-                    if (track.kind === Track.Kind.Audio) {
-                        const el = track.attach();
-                        el.id = `audio-${participant.identity}`;
-                        document.body.appendChild(el);
-                    }
-                });
-                room.on(RoomEvent.TrackUnsubscribed, (track) => {
-                    track.detach().forEach(el => el.remove());
-                });
-
-                room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
-                    for (const seg of segments) {
-                        if (seg.final) {
-                            const isAgent = participant?.identity !== room.localParticipant?.identity;
-                            addTranscript(isAgent ? 'agent' : 'user', seg.text);
-                        }
-                    }
-                });
-                room.on(RoomEvent.DataReceived, (payload) => {
-                    try {
-                        const data = JSON.parse(new TextDecoder().decode(payload));
-                        if (data.type === 'transcription' && data.text) addTranscript(data.role || 'agent', data.text);
-                    } catch (e) { }
-                });
-
-                room.on(RoomEvent.ParticipantConnected, (participant) => {
-                    participant.on(ParticipantEvent.IsSpeakingChanged, (speaking) => {
-                        agentSpeaking = speaking;
-                        if (speaking) {
-                            setState('speaking', 'Beszélek...');
-                            visualizer.classList.add('active');
-                        } else {
-                            setState('listening', 'Hallgatlak...');
-                            visualizer.classList.add('active');
+                    room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
+                        if (track.kind === Track.Kind.Audio) {
+                            const el = track.attach();
+                            el.id = `audio-${participant.identity}`;
+                            document.body.appendChild(el);
                         }
                     });
-                });
+                    room.on(RoomEvent.TrackUnsubscribed, (track) => {
+                        track.detach().forEach(el => el.remove());
+                    });
 
-                room.on(RoomEvent.ConnectionStateChanged, (state) => {
-                    if (state === ConnectionState.Reconnecting) {
-                        reconnecting = true; setState('reconnecting', 'Újracsatlakozás...');
-                    } else if (state === ConnectionState.Connected && reconnecting) {
-                        reconnecting = false; setState('listening', 'Újra csatlakozva!');
+                    room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
+                        for (const seg of segments) {
+                            if (seg.final) {
+                                const isAgent = participant?.identity !== room.localParticipant?.identity;
+                                addTranscript(isAgent ? 'agent' : 'user', seg.text);
+                            }
+                        }
+                    });
+                    room.on(RoomEvent.DataReceived, (payload) => {
+                        try {
+                            const data = JSON.parse(new TextDecoder().decode(payload));
+                            if (data.type === 'transcription' && data.text) addTranscript(data.role || 'agent', data.text);
+                        } catch (e) { }
+                    });
+
+                    room.on(RoomEvent.ParticipantConnected, (participant) => {
+                        participant.on(ParticipantEvent.IsSpeakingChanged, (speaking) => {
+                            agentSpeaking = speaking;
+                            if (speaking) {
+                                setState('speaking', 'Beszélek...');
+                                visualizer.classList.add('active');
+                            } else {
+                                setState('listening', 'Hallgatlak...');
+                                visualizer.classList.add('active');
+                            }
+                        });
+                    });
+
+                    room.on(RoomEvent.ConnectionStateChanged, (state) => {
+                        if (state === ConnectionState.Reconnecting) {
+                            reconnecting = true; setState('reconnecting', 'Újracsatlakozás...');
+                        } else if (state === ConnectionState.Connected && reconnecting) {
+                            reconnecting = false; setState('listening', 'Újra csatlakozva!');
+                        }
+                    });
+                    room.on(RoomEvent.Disconnected, () => { if (!reconnecting) disconnect(); });
+
+                    await room.connect(url, token);
+                    await room.localParticipant.setMicrophoneEnabled(true);
+
+                    // 3. Wait for agent to join the room (cold start: agent worker may not be ready)
+                    setState('connecting', 'Várok az asszisztensre...');
+                    const agentJoined = await waitForAgent(room, 15000);
+
+                    if (!agentJoined) {
+                        console.warn(`Attempt ${attempt}: agent didn't join within timeout`);
+                        room.disconnect();
+                        room = null;
+                        if (attempt < MAX_CONNECT_ATTEMPTS) {
+                            await new Promise(r => setTimeout(r, 1000));
+                            continue; // retry
+                        }
+                        throw new Error('Az asszisztens nem érhető el. Próbáld újra!');
                     }
-                });
-                room.on(RoomEvent.Disconnected, () => { if (!reconnecting) disconnect(); });
 
-                await room.connect(url, token);
-                await room.localParticipant.setMicrophoneEnabled(true);
+                    connected = true;
+                    setState('listening', 'Hallgatlak...');
+                    visualizer.classList.add('active');
+                    transcript.classList.add('visible');
+                    startPolling();
+                    return; // success!
 
-                connected = true;
-                setState('listening', 'Hallgatlak...');
-                visualizer.classList.add('active');
-                transcript.classList.add('visible');
-
-                // Start polling calendar & emails
-                startPolling();
-
-            } catch (err) {
-                console.error('Connection error:', err);
-                setState('error', 'Hiba: ' + err.message);
-                micBtn.classList.remove('connecting');
-                setTimeout(() => {
-                    if (!connected) { statusEl.textContent = 'Kattints ide, és beszélj velem!'; statusEl.className = 'status'; }
-                }, 4000);
+                } catch (err) {
+                    console.error('Connection error:', err);
+                    if (room) { room.disconnect(); room = null; }
+                    if (attempt >= MAX_CONNECT_ATTEMPTS) {
+                        setState('error', 'Hiba: ' + err.message);
+                        micBtn.classList.remove('connecting');
+                        setTimeout(() => {
+                            if (!connected) { statusEl.textContent = 'Kattints ide, és beszélj velem!'; statusEl.className = 'status'; }
+                        }, 4000);
+                    }
+                }
             }
+        }
+
+        // Wait for a non-local participant (the agent) to join the room
+        function waitForAgent(room, timeoutMs) {
+            return new Promise((resolve) => {
+                // Check if agent is already in the room
+                for (const [, p] of room.remoteParticipants) {
+                    resolve(true);
+                    return;
+                }
+                const timer = setTimeout(() => resolve(false), timeoutMs);
+                room.on(RoomEvent.ParticipantConnected, () => {
+                    clearTimeout(timer);
+                    resolve(true);
+                });
+            });
         }
 
         function disconnect() {
