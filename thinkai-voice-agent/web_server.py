@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
-from livekit.api import AccessToken, VideoGrants
+from livekit.api import AccessToken, VideoGrants, RoomConfiguration, RoomAgentDispatch
 
 THIS_DIR = Path(__file__).resolve().parent
 load_dotenv(THIS_DIR / ".env")
@@ -69,6 +69,13 @@ async def get_token():
             room_join=True,
             room=room_name,
         ))
+        .with_room_config(
+            RoomConfiguration(
+                agents=[
+                    RoomAgentDispatch(agent_name="thinkai-ugyfelszolg")
+                ],
+            )
+        )
     )
 
     return JSONResponse({
