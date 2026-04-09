@@ -546,6 +546,125 @@
       .sidebar-logo-text, .nav-item span, .user-name, .user-role { display: none; }
       .main { margin-left: 60px; padding: 20px 16px; }
     }
+    /* ── Settings page ──────────────────────────────────────────── */
+    .settings-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+    .settings-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .settings-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 90px;
+    }
+    .settings-select, .settings-input {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      flex: 1;
+    }
+    .settings-select:focus, .settings-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .settings-textarea {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 12px;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      width: 100%;
+      resize: vertical;
+      min-height: 300px;
+      box-sizing: border-box;
+      line-height: 1.6;
+    }
+    .settings-textarea:focus { outline: none; border-color: var(--accent); }
+    /* Business hours table */
+    .bh-table { width: auto; border-collapse: collapse; }
+    .bh-table th {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-muted);
+      padding: 4px 8px; text-align: left;
+    }
+    .bh-table td { padding: 3px 8px; }
+    .bh-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .bh-day-label { font-size: 12px; color: var(--text); width: 90px; }
+    .bh-time { width: 72px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 6px; font-size: 12px; font-family: 'Inter',sans-serif; }
+    .bh-time:disabled { opacity: 0.35; }
+    .bh-time:focus { outline: none; border-color: var(--accent); }
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .toggle { position: relative; display: inline-block; width: 38px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: var(--bg3);
+      border-radius: 22px; cursor: pointer; transition: 0.2s;
+      border: 1px solid var(--border);
+    }
+    .toggle-slider:before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; left: 2px; bottom: 2px;
+      background: var(--text-muted); border-radius: 50%; transition: 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: rgba(0,212,200,0.2); border-color: var(--accent); }
+    .toggle input:checked + .toggle-slider:before { background: var(--accent); transform: translateX(16px); }
+    /* Format toggle buttons */
+    .fmt-toggle { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .fmt-btn {
+      flex: 1; padding: 7px 16px; border: none; background: var(--bg3);
+      color: var(--text-muted); font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .fmt-btn.active { background: rgba(0,212,200,0.15); color: var(--accent); }
+    /* Restart banner */
+    .restart-banner {
+      display: none;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: var(--yellow);
+      font-size: 13px;
+      margin-bottom: 18px;
+      align-items: center;
+      gap: 10px;
+    }
+    .restart-banner.visible { display: flex; }
+    /* Save button */
+    .btn-settings-save {
+      background: linear-gradient(135deg, #00d4c8, #0099ff);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 14px; font-weight: 600;
+      padding: 12px 32px; cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: opacity 0.2s;
+    }
+    .btn-settings-save:hover { opacity: 0.88; }
+    .btn-settings-save:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -605,6 +724,10 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       <span>Sessionök</span>
     </button>
+    <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Beállítások</span>
+    </button>
 
     <div class="sidebar-bottom">
       <div class="user-info">
@@ -663,7 +786,79 @@
       </div>
     </div>
 
-    <!-- INTERACTIONS PAGE -->
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="page-header" style="margin-bottom:18px;">
+        <div>
+          <div class="page-title">Agent Beállítások</div>
+          <div class="page-subtitle">Hang, nyitvatartás, tudásbázis és kommunikációs stílus</div>
+        </div>
+        <button class="btn-settings-save" id="save-settings-btn" onclick="saveSettings()">&#128190; Mentés</button>
+      </div>
+
+      <!-- Restart banner -->
+      <div class="restart-banner" id="restart-banner">
+        <span>&#9888;&#65039;</span>
+        <span>A változtatások elmentve! Az agent szerver újraindítása szükséges az érvényesítéshez: <code style="background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;">python server.py</code></span>
+      </div>
+
+      <!-- 1. Voice + Tone in one row -->
+      <div class="settings-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+          <!-- Voice -->
+          <div>
+            <div class="settings-section-title" style="margin-bottom:10px;">&#127897;&#65039; Hang</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <select id="setting-voice" class="settings-select">
+                <option value="">Betöltés...</option>
+              </select>
+              <span id="voice-load-status" style="font-size:11px;color:var(--text-muted);white-space:nowrap;"></span>
+            </div>
+          </div>
+          <!-- Tone -->
+          <div>
+            <div class="settings-section-title" style="margin-bottom:10px;">&#127917; Kommunikációs stílus</div>
+            <select id="setting-tone" class="settings-select" onchange="onToneChange()">
+              <option value="professional_friendly">Professzionális, barátságos</option>
+              <option value="formal">Formális, tárgyszerű</option>
+              <option value="informal">Informális, közvetlen</option>
+              <option value="empathetic">Empatikus, támogató</option>
+              <option value="custom">Egyedi leírás...</option>
+            </select>
+            <div id="tone-custom-row" style="display:none;margin-top:8px;">
+              <textarea id="setting-tone-custom" class="settings-textarea" style="min-height:70px;" placeholder="Leírd a kívánt kommunikációs stílust..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">&#128336; Nyitvatartás</div>
+        <table class="bh-table">
+          <thead><tr>
+            <th>Nap</th><th>Nyit</th><th>Zár</th><th>Nyitva?</th>
+          </tr></thead>
+          <tbody id="bh-tbody">
+            <!-- JS renders rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3. Knowledge base -->
+      <div class="settings-section">
+        <div class="settings-section-title" style="justify-content:space-between;">
+          <span>&#128222; Tudásbázis</span>
+          <div class="fmt-toggle">
+            <button class="fmt-btn active" id="fmt-json-btn" onclick="switchKnowledgeFormat('json')">JSON</button>
+            <button class="fmt-btn" id="fmt-md-btn" onclick="switchKnowledgeFormat('md')">Markdown</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;" id="fmt-hint">Struktúrált JSON formátum &mdash; kulcs: érték párok</div>
+        <textarea id="setting-knowledge" class="settings-textarea" placeholder="Tudásbázis tartalma..."></textarea>
+      </div>
+    </div>
+
+
     <div class="page" id="page-interactions">
       <div class="page-header">
         <div>
@@ -852,6 +1047,7 @@ function showPage(page) {
   if (page === 'calendar')     loadCalendar();
   if (page === 'emails')       loadEmails();
   if (page === 'sessions')     loadSessions();
+  if (page === 'settings')     loadSettings();
 }
 
 // ── ANALYTICS ─────────────────────────────────────────────────────────────────
@@ -1177,6 +1373,157 @@ if (authToken) {
       authToken = '';
       localStorage.removeItem('thinkai_admin_token');
     });
+}
+
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+const BH_DAYS = [
+  { key: 'monday',    label: 'Hétfő' },
+  { key: 'tuesday',   label: 'Kedd' },
+  { key: 'wednesday', label: 'Szerda' },
+  { key: 'thursday',  label: 'Csütörtök' },
+  { key: 'friday',    label: 'Péntek' },
+  { key: 'saturday',  label: 'Szombat' },
+  { key: 'sunday',    label: 'Vasárnap' },
+];
+
+let currentKnowledgeFormat = 'json';
+
+async function loadSettings() {
+  try {
+    const res  = await authFetch('/admin/api/settings');
+    const data = await res.json();
+    await loadCartesiaVoices(data.voice_id);
+    renderBhTable(data.business_hours || {});
+    currentKnowledgeFormat = data.knowledge_format || 'json';
+    document.getElementById('setting-knowledge').value = data.knowledge_content || '';
+    updateFmtButtons();
+    const toneEl = document.getElementById('setting-tone');
+    toneEl.value = data.tone || 'professional_friendly';
+    document.getElementById('setting-tone-custom').value = data.tone_custom || '';
+    onToneChange();
+  } catch(e) { console.error('Settings load error:', e); }
+}
+
+async function loadCartesiaVoices(selectedId) {
+  const sel    = document.getElementById('setting-voice');
+  const status = document.getElementById('voice-load-status');
+  sel.innerHTML = '<option value="">Betöltés...</option>';
+  status.textContent = '';
+  try {
+    const res    = await authFetch('/admin/api/cartesia/voices');
+    const voices = await res.json();
+    voices.sort((a, b) => {
+      const aHu = (a.language || '').startsWith('hu');
+      const bHu = (b.language || '').startsWith('hu');
+      if (aHu && !bHu) return -1;
+      if (!aHu && bHu) return 1;
+      return (a.name || '').localeCompare(b.name || '', 'hu');
+    });
+    sel.innerHTML = voices.map(v => {
+      const lang = v.language ? ` [${v.language}]` : '';
+      const s    = v.id === selectedId ? ' selected' : '';
+      return `<option value="${v.id}"${s}>${v.name}${lang}</option>`;
+    }).join('');
+    status.textContent = `${voices.length} hang betöltve`;
+  } catch(e) {
+    sel.innerHTML = '<option value="">Nem sikerült betölteni</option>';
+    status.textContent = 'Hiba: ' + e.message;
+  }
+}
+
+function renderBhTable(bh) {
+  const tbody = document.getElementById('bh-tbody');
+  tbody.innerHTML = BH_DAYS.map(d => {
+    const day = bh[d.key] || { open: '09:00', close: '18:00', enabled: false };
+    const dis = day.enabled ? '' : ' disabled';
+    return `
+      <tr>
+        <td class="bh-day-label">${d.label}</td>
+        <td><input type="time" class="bh-time" id="bh-${d.key}-open"  value="${day.open || ''}"${dis}></td>
+        <td><input type="time" class="bh-time" id="bh-${d.key}-close" value="${day.close || ''}"${dis}></td>
+        <td>
+          <label class="toggle">
+            <input type="checkbox" id="bh-${d.key}-enabled"
+              ${day.enabled ? 'checked' : ''}
+              onchange="onBhToggle('${d.key}')">
+            <span class="toggle-slider"></span>
+          </label>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function onBhToggle(dayKey) {
+  const enabled = document.getElementById(`bh-${dayKey}-enabled`).checked;
+  document.getElementById(`bh-${dayKey}-open`).disabled  = !enabled;
+  document.getElementById(`bh-${dayKey}-close`).disabled = !enabled;
+}
+
+function collectBhData() {
+  const result = {};
+  BH_DAYS.forEach(d => {
+    const enabled = document.getElementById(`bh-${d.key}-enabled`).checked;
+    result[d.key] = {
+      open:    document.getElementById(`bh-${d.key}-open`).value  || null,
+      close:   document.getElementById(`bh-${d.key}-close`).value || null,
+      enabled,
+    };
+  });
+  return result;
+}
+
+function switchKnowledgeFormat(fmt) {
+  if (fmt === currentKnowledgeFormat) return;
+  if (!confirm(`Formátum váltás → ${fmt.toUpperCase()}?\nA jelenlegi tartalom törlődik — ments el előszőr!`)) return;
+  currentKnowledgeFormat = fmt;
+  document.getElementById('setting-knowledge').value = fmt === 'json' ? '{}' : '';
+  updateFmtButtons();
+}
+
+function updateFmtButtons() {
+  document.getElementById('fmt-json-btn').classList.toggle('active', currentKnowledgeFormat === 'json');
+  document.getElementById('fmt-md-btn').classList.toggle('active',   currentKnowledgeFormat === 'md');
+  document.getElementById('fmt-hint').textContent = currentKnowledgeFormat === 'json'
+    ? 'Struktúrált JSON formátum — kulcs: érték párok'
+    : 'Markdown formátum — ## fejlécekkel, sima szöveg';
+  document.getElementById('setting-knowledge').style.fontFamily =
+    currentKnowledgeFormat === 'json' ? "'Courier New', monospace" : "'Inter', sans-serif";
+}
+
+function onToneChange() {
+  const val = document.getElementById('setting-tone').value;
+  document.getElementById('tone-custom-row').style.display = val === 'custom' ? 'block' : 'none';
+}
+
+async function saveSettings() {
+  const btn = document.getElementById('save-settings-btn');
+  btn.disabled = true;
+  btn.textContent = 'Mentés...';
+  try {
+    const payload = {
+      voice_id:          document.getElementById('setting-voice').value,
+      tone:              document.getElementById('setting-tone').value,
+      tone_custom:       document.getElementById('setting-tone-custom').value,
+      knowledge_format:  currentKnowledgeFormat,
+      knowledge_content: document.getElementById('setting-knowledge').value,
+      business_hours:    collectBhData(),
+    };
+    const res  = await authFetch('/admin/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Hiba');
+    document.getElementById('restart-banner').classList.add('visible');
+    btn.textContent = '✓ Elmentve';
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = '&#128190; Mentés'; }, 2500);
+  } catch(e) {
+    alert('Hiba a mentés során: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '&#128190; Mentés';
+  }
 }
 </script>
 </body>

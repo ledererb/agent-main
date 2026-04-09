@@ -4,11 +4,13 @@ Serves the voice widget, generates LiveKit tokens,
 and provides a JWT-protected admin API with analytics.
 """
 
+import json
 import os
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -224,6 +226,108 @@ async def get_calendar():
 @app.get("/api/emails")
 async def get_emails():
     return JSONResponse({"emails": db.get_email_logs()})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+SETTINGS_FILE  = THIS_DIR / "agent_settings.json"
+KNOWLEDGE_JSON = THIS_DIR / "knowledge.json"
+KNOWLEDGE_MD   = THIS_DIR / "knowledge.md"
+
+DEFAULT_SETTINGS = {
+    "voice_id": os.getenv("CARTESIA_VOICE_ID", "93896c4f-aa00-4c17-a360-fec55579d7fa"),
+    "tone": "professional_friendly",
+    "tone_custom": "",
+    "knowledge_format": "json",
+    "business_hours": {
+        "monday":    {"open": "09:00", "close": "18:00", "enabled": True},
+        "tuesday":   {"open": "09:00", "close": "18:00", "enabled": True},
+        "wednesday": {"open": "09:00", "close": "18:00", "enabled": True},
+        "thursday":  {"open": "09:00", "close": "18:00", "enabled": True},
+        "friday":    {"open": "09:00", "close": "16:00", "enabled": True},
+        "saturday":  {"open": None,    "close": None,    "enabled": False},
+        "sunday":    {"open": None,    "close": None,    "enabled": False},
+    },
+}
+
+
+def _read_settings() -> dict:
+    if SETTINGS_FILE.exists():
+        try:
+            return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return dict(DEFAULT_SETTINGS)
+
+
+def _read_knowledge() -> dict:
+    """Read knowledge content and format from disk."""
+    settings = _read_settings()
+    fmt = settings.get("knowledge_format", "json")
+    if fmt == "md":
+        content = KNOWLEDGE_MD.read_text(encoding="utf-8") if KNOWLEDGE_MD.exists() else ""
+    else:
+        content = KNOWLEDGE_JSON.read_text(encoding="utf-8") if KNOWLEDGE_JSON.exists() else "{}"
+    return {"format": fmt, "content": content}
+
+
+@app.get("/admin/api/settings")
+async def get_settings(username: str = Depends(verify_jwt)):
+    """Return current agent settings + knowledge base content."""
+    s = _read_settings()
+    k = _read_knowledge()
+    return {**s, "knowledge_content": k["content"]}
+
+
+class SettingsSaveRequest(BaseModel):
+    voice_id: str = ""
+    tone: str = "professional_friendly"
+    tone_custom: str = ""
+    knowledge_format: str = "json"
+    knowledge_content: str = ""
+    business_hours: dict = {}
+
+
+@app.post("/admin/api/settings")
+async def save_settings(payload: SettingsSaveRequest, username: str = Depends(verify_jwt)):
+    """Save agent settings and knowledge base to disk."""
+    # Save settings (without knowledge content)
+    settings = {
+        "voice_id":        payload.voice_id,
+        "tone":            payload.tone,
+        "tone_custom":     payload.tone_custom,
+        "knowledge_format": payload.knowledge_format,
+        "business_hours":  payload.business_hours,
+    }
+    SETTINGS_FILE.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Save knowledge to appropriate file
+    if payload.knowledge_format == "md":
+        KNOWLEDGE_MD.write_text(payload.knowledge_content, encoding="utf-8")
+    else:
+        try:
+            parsed = json.loads(payload.knowledge_content)
+            KNOWLEDGE_JSON.write_text(json.dumps(parsed, ensure_ascii=False, indent=2), encoding="utf-8")
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail=f"Hibás JSON formátum: {e}")
+
+    return {"ok": True, "message": "Beállítások elmentve. Az agent újraindítása szükséges a változtatások érvényesítéséhez."}
+
+
+@app.get("/admin/api/cartesia/voices")
+async def cartesia_voices(username: str = Depends(verify_jwt)):
+    """Proxy: list available Cartesia voices."""
+    api_key = os.getenv("CARTESIA_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="CARTESIA_API_KEY nincs beállítva")
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                "https://api.cartesia.ai/voices",
+                headers={"X-API-Key": api_key, "Cartesia-Version": "2024-06-10"}
+            )
+        return resp.json()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Cartesia API hiba: {e}")
 
 
 if __name__ == "__main__":

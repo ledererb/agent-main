@@ -5,6 +5,7 @@ Hungarian-only with ThinkAI brand pronunciation handling
 """
 
 import asyncio
+import json
 import os
 import re
 import sys
@@ -17,6 +18,17 @@ from loguru import logger
 # ── Load env ──────────────────────────────────────────────────────────────────
 THIS_DIR = Path(__file__).resolve().parent
 load_dotenv(THIS_DIR / ".env")
+
+def _load_agent_settings() -> dict:
+    """Load agent_settings.json — override .env values at runtime."""
+    settings_file = THIS_DIR / "agent_settings.json"
+    if settings_file.exists():
+        try:
+            return json.loads(settings_file.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning(f"Could not read agent_settings.json: {e}")
+    return {}
+
 
 # ── LiveKit Agents ────────────────────────────────────────────────────────────
 from livekit.agents import (
@@ -223,7 +235,7 @@ async def entrypoint(ctx: JobContext):
         ),
         tts=cartesia.TTS(
             api_key=os.getenv("CARTESIA_API_KEY"),
-            voice=os.getenv("CARTESIA_VOICE_ID", "93896c4f-aa00-4c17-a360-fec55579d7fa"),
+            voice=_load_agent_settings().get("voice_id") or os.getenv("CARTESIA_VOICE_ID", "93896c4f-aa00-4c17-a360-fec55579d7fa"),
             model="sonic-3",
             speed=1.0,
             language="hu",
