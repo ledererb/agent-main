@@ -377,6 +377,65 @@ def get_interactions(limit: int = 100, type_filter: str = "") -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def _build_session_summary(interactions: list[dict]) -> str:
+    """Generate a short natural-language summary from a session's interactions."""
+    if not interactions:
+        return "Nincs rögzített interakció ebben a sessionben."
+
+    type_counts: dict[str, int] = {}
+    topics: list[str] = []
+    for i in interactions:
+        t = i.get("type", "")
+        if t:
+            type_counts[t] = type_counts.get(t, 0) + 1
+        topic = i.get("topic", "")
+        if topic and topic not in topics:
+            topics.append(topic)
+
+    parts = []
+    label_map = {
+        "email":    "email küldés",
+        "foglalás": "időpontfoglalás",
+        "feladat":  "feladat rögzítés",
+        "kérdés":   "kérdés / tudásbázis",
+        "időjárás": "időjárás lekérdezés",
+    }
+    for typ, cnt in type_counts.items():
+        label = label_map.get(typ, typ)
+        parts.append(f"{cnt}× {label}")
+
+    summary = "A session során: " + ", ".join(parts) + "." if parts else "Általános beszélgetés."
+
+    # Add up to 3 specific topics
+    specific = [t for t in topics if t not in ("Email küldés", "Időpontfoglalás", "Feladat rögzítés")][:3]
+    if specific:
+        summary += " Témák: " + "; ".join(specific) + "."
+
+    return summary
+
+
+def get_sessions_with_summary(limit: int = 50) -> list[dict]:
+    """Return sessions enriched with interaction count and auto-generated summary."""
+    with get_db() as conn:
+        sessions = conn.execute(
+            "SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        sessions = [dict(s) for s in sessions]
+
+        for sess in sessions:
+            sid = sess["session_id"]
+            rows = conn.execute(
+                "SELECT * FROM interactions WHERE session_id = ? ORDER BY created_at ASC",
+                (sid,)
+            ).fetchall()
+            interactions = [dict(r) for r in rows]
+            sess["interaction_count"] = len(interactions)
+            sess["interactions"] = interactions
+            sess["summary"] = _build_session_summary(interactions)
+
+    return sessions
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # JSON MIGRATION HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════

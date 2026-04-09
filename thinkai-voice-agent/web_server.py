@@ -209,6 +209,12 @@ async def admin_sessions(limit: int = 50, username: str = Depends(verify_jwt)):
     return {"sessions": [dict(r) for r in rows]}
 
 
+@app.get("/admin/api/sessions/summary")
+async def admin_sessions_summary(limit: int = 50, username: str = Depends(verify_jwt)):
+    """Sessions enriched with interaction summaries."""
+    return {"sessions": db.get_sessions_with_summary(limit=limit)}
+
+
 # ── Legacy public API (for backward compat with voice-widget.html) ────────────
 @app.get("/api/calendar")
 async def get_calendar():

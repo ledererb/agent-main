@@ -660,33 +660,13 @@
     <div class="page" id="page-interactions">
       <div class="page-header">
         <div>
-          <div class="page-title">Interakciós lista</div>
-          <div class="page-subtitle">Minden agent interakció típusonként szűrve</div>
+          <div class="page-title">Interakciók</div>
+          <div class="page-subtitle">Sessionök és beszélgetés összefoglalók</div>
         </div>
         <button onclick="loadInteractions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
       </div>
-      <div class="table-card">
-        <div class="filter-row" id="interaction-filters">
-          <button class="filter-btn active" onclick="filterInteractions('')" data-type="">Összes</button>
-          <button class="filter-btn" onclick="filterInteractions('foglalás')" data-type="foglalás">📅 Foglalás</button>
-          <button class="filter-btn" onclick="filterInteractions('email')" data-type="email">✉️ Email</button>
-          <button class="filter-btn" onclick="filterInteractions('feladat')" data-type="feladat">✓ Feladat</button>
-          <button class="filter-btn" onclick="filterInteractions('kérdés')" data-type="kérdés">❔ Kérdés</button>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Dátum / Idő</th>
-              <th>Típus</th>
-              <th>Téma</th>
-              <th>Összefoglaló</th>
-              <th>Eredmény</th>
-            </tr>
-          </thead>
-          <tbody id="interactions-body">
-            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
-          </tbody>
-        </table>
+      <div id="session-cards-container">
+        <div style="text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner"></div>&nbsp; Adatok betöltése...</div>
       </div>
     </div>
 
@@ -953,27 +933,17 @@ function renderStats(data) {
   });
 }
 
-// ── INTERACTIONS ──────────────────────────────────────────────────────────────
+// ── SESSION CARDS (Interactions tab) ─────────────────────────────────────────
 async function loadInteractions() {
+  const container = document.getElementById('session-cards-container');
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner"></div></div>';
   try {
-    const res  = await authFetch('/admin/api/interactions?limit=200');
+    const res  = await authFetch('/admin/api/sessions/summary?limit=50');
     const data = await res.json();
-    interactionsCache = data.interactions || [];
-    renderInteractions(interactionsCache);
+    renderSessionCards(data.sessions || []);
   } catch(e) {
-    document.getElementById('interactions-body').innerHTML =
-      '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
+    container.innerHTML = '<div style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</div>';
   }
-}
-
-let activeFilter = '';
-function filterInteractions(type) {
-  activeFilter = type;
-  document.querySelectorAll('.filter-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.type === type);
-  });
-  const filtered = type ? interactionsCache.filter(i => i.type === type) : interactionsCache;
-  renderInteractions(filtered);
 }
 
 const TYPE_BADGES = {
@@ -990,22 +960,81 @@ function typeBadge(type) {
   return `<span class="badge ${cls}">${type}</span>`;
 }
 
-function renderInteractions(rows) {
-  const tbody = document.getElementById('interactions-body');
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Nincs megjeleníthető interakció</div></div></td></tr>`;
+function fmtDuration(secs) {
+  if (!secs) return '—';
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m > 0 ? `${m}p ${s}s` : `${s}s`;
+}
+
+function renderSessionCards(sessions) {
+  const container = document.getElementById('session-cards-container');
+  if (!sessions.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎙️</div><div class="empty-state-text">Nincs rögzített session</div></div>`;
     return;
   }
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td class="td-time">${fmtDt(r.created_at)}</td>
-      <td>${typeBadge(r.type)}</td>
-      <td style="font-weight:500">${esc(r.topic || '—')}</td>
-      <td class="td-summary">${esc(r.summary || '—')}</td>
-      <td>${r.result ? `<span class="badge badge-gray">${esc(r.result)}</span>` : '—'}</td>
-    </tr>
-  `).join('');
+
+  container.innerHTML = sessions.map((s, idx) => {
+    const dur = fmtDuration(s.duration_seconds);
+    const dateStr = fmtDt(s.started_at);
+    const cnt = s.interaction_count || 0;
+    const isActive = !s.ended_at;
+    const statusBadge = isActive
+      ? '<span class="badge badge-green">🔴 Aktív</span>'
+      : '<span class="badge badge-gray">Befejezett</span>';
+
+    // Interaction rows inside the card
+    const interactionRows = (s.interactions || []).map(r => `
+      <tr>
+        <td class="td-time">${fmtDt(r.created_at)}</td>
+        <td>${typeBadge(r.type)}</td>
+        <td style="font-weight:500">${esc(r.topic || '—')}</td>
+        <td class="td-summary">${esc(r.summary || '—')}</td>
+        <td>${r.result ? `<span class="badge badge-gray">${esc(r.result)}</span>` : '—'}</td>
+      </tr>
+    `).join('');
+
+    const detailId = `session-detail-${idx}`;
+
+    return `
+      <div class="table-card" style="margin-bottom:16px;">
+        <div style="padding:18px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;cursor:pointer;" onclick="toggleSessionDetail('${detailId}')">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+              ${statusBadge}
+              <span style="font-size:13px;font-weight:600;">${dateStr}</span>
+              <span style="font-size:12px;color:var(--text-muted);">⏱ ${dur}</span>
+              <span style="font-size:12px;color:var(--text-muted);">· ${cnt} interakció</span>
+            </div>
+            <div style="font-size:12px;font-family:monospace;color:var(--text-muted);margin-bottom:8px;">${esc(s.session_id)}</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.5;">${esc(s.summary)}</div>
+          </div>
+          <div style="font-size:18px;color:var(--text-muted);transition:transform 0.2s;" id="arrow-${detailId}">›</div>
+        </div>
+        ${cnt > 0 ? `
+        <div id="${detailId}" style="display:none;border-top:1px solid var(--border);">
+          <table class="data-table">
+            <thead><tr><th>Idő</th><th>Típus</th><th>Téma</th><th>Összefoglaló</th><th>Eredmény</th></tr></thead>
+            <tbody>${interactionRows || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">Nincs interakció</td></tr>'}</tbody>
+          </table>
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
 }
+
+function toggleSessionDetail(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById('arrow-' + id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+let activeFilter = '';
+function filterInteractions(type) { /* kept for compat */ }
+
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
 async function loadCalendar() {
