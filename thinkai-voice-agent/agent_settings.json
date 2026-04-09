@@ -1,43 +1,16 @@
 {
-  "voice_id": "e97c3b37-1aa5-46af-afb7-9545086aaa92",
-  "tone": "informal",
+  "voice_id": "93896c4f-aa00-4c17-a360-fec55579d7fa",
+  "tone": "professional_friendly",
   "tone_custom": "",
+  "greeting": "Szia! A Tink-éj-áj virtuális asszisztense vagyok. Kérdezz a szolgáltatásainkról, foglalj időpontot, vagy akár emailt is küldhetek helyetted. Miben segíthetek?",
   "knowledge_format": "json",
   "business_hours": {
-    "monday": {
-      "open": "09:00",
-      "close": "18:00",
-      "enabled": true
-    },
-    "tuesday": {
-      "open": "09:00",
-      "close": "18:00",
-      "enabled": true
-    },
-    "wednesday": {
-      "open": "09:00",
-      "close": "18:00",
-      "enabled": true
-    },
-    "thursday": {
-      "open": "09:00",
-      "close": "18:00",
-      "enabled": true
-    },
-    "friday": {
-      "open": "09:00",
-      "close": "16:00",
-      "enabled": true
-    },
-    "saturday": {
-      "open": null,
-      "close": null,
-      "enabled": false
-    },
-    "sunday": {
-      "open": null,
-      "close": null,
-      "enabled": false
-    }
+    "monday":    { "open": "09:00", "close": "18:00", "enabled": true },
+    "tuesday":   { "open": "09:00", "close": "18:00", "enabled": true },
+    "wednesday": { "open": "09:00", "close": "18:00", "enabled": true },
+    "thursday":  { "open": "09:00", "close": "18:00", "enabled": true },
+    "friday":    { "open": "09:00", "close": "16:00", "enabled": true },
+    "saturday":  { "open": null,    "close": null,    "enabled": false },
+    "sunday":    { "open": null,    "close": null,    "enabled": false }
   }
 }

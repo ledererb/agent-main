@@ -832,6 +832,14 @@
         </div>
       </div>
 
+      <!-- Greeting -->
+      <div class="settings-section">
+        <div class="settings-section-title">&#128075; Bemutatkozás</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent ezt mondja el minden hívás elején.</div>
+        <textarea id="setting-greeting" class="settings-textarea" style="min-height:80px;font-family:'Inter',sans-serif;font-size:13px;"
+          placeholder="Szia! A ThinkAI virtuális asszisztense vagyok..."></textarea>
+      </div>
+
       <div class="settings-section">
         <div class="settings-section-title">&#128336; Nyitvatartás</div>
         <table class="bh-table">
@@ -1398,6 +1406,7 @@ async function loadSettings() {
     currentKnowledgeFormat = data.knowledge_format || 'json';
     document.getElementById('setting-knowledge').value = data.knowledge_content || '';
     updateFmtButtons();
+    document.getElementById('setting-greeting').value = data.greeting || '';
     const toneEl = document.getElementById('setting-tone');
     toneEl.value = data.tone || 'professional_friendly';
     document.getElementById('setting-tone-custom').value = data.tone_custom || '';
@@ -1505,6 +1514,7 @@ async function saveSettings() {
       voice_id:          document.getElementById('setting-voice').value,
       tone:              document.getElementById('setting-tone').value,
       tone_custom:       document.getElementById('setting-tone-custom').value,
+      greeting:          document.getElementById('setting-greeting').value,
       knowledge_format:  currentKnowledgeFormat,
       knowledge_content: document.getElementById('setting-knowledge').value,
       business_hours:    collectBhData(),

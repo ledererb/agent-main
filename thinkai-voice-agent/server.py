@@ -141,11 +141,13 @@ class ThinkAIAgent(Agent):
 
     async def on_enter(self):
         """Greet the user when they connect."""
-        self.session.say(
+        settings = _load_agent_settings()
+        greeting = settings.get("greeting") or (
             "Szia! A Tink-éj-áj virtuális asszisztense vagyok. "
             "Kérdezz a szolgáltatásainkról, foglalj időpontot, "
             "vagy akár emailt is küldhetek helyetted. Miben segíthetek?"
         )
+        self.session.say(greeting)
 
     async def stt_node(self, audio, model_settings):
         """Override STT node: filter phantom transcripts from noise."""

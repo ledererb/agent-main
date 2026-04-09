@@ -284,6 +284,7 @@ class SettingsSaveRequest(BaseModel):
     tone_custom: str = ""
     knowledge_format: str = "json"
     knowledge_content: str = ""
+    greeting: str = ""
     business_hours: dict = {}
 
 
@@ -296,6 +297,7 @@ async def save_settings(payload: SettingsSaveRequest, username: str = Depends(ve
         "tone":            payload.tone,
         "tone_custom":     payload.tone_custom,
         "knowledge_format": payload.knowledge_format,
+        "greeting":        payload.greeting,
         "business_hours":  payload.business_hours,
     }
     SETTINGS_FILE.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
