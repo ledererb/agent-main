@@ -1053,7 +1053,7 @@ async function loadEmails() {
           <div style="font-size:12px;color:var(--text-muted)">${esc(em.to_email)}</div>
         </td>
         <td class="td-summary">${esc(em.subject || '—')}</td>
-        <td><span class="badge ${em.status === 'sent' ? 'badge-green' : 'badge-red'}">${em.status === 'sent' ? 'Elküldve' : 'Hiba'}</span></td>
+        <td><span class="badge ${em.status === 'sent' ? 'badge-green' : em.status === 'sent (simulated)' ? 'badge-yellow' : 'badge-red'}">${em.status === 'sent' ? '✓ Elküldve' : em.status === 'sent (simulated)' ? '⚙ Szimulált' : '✗ Hiba'}</span></td>
       </tr>
     `).join('');
   } catch(e) {

@@ -610,6 +610,7 @@
         let reconnecting = false;
         let agentSpeaking = false;
         let pollInterval = null;
+        let currentRoomName = null;  // tracked for session duration
 
         // ── Inactivity auto-disconnect ───────────────────────
         const INACTIVITY_TIMEOUT = 20000; // 20 seconds
@@ -693,7 +694,9 @@
                     // 2. Get token with retry (container may need a few seconds to fully start)
                     setState('connecting', 'Csatlakozás...');
                     const resp = await fetchWithRetry('/api/token', 3, 2000);
-                    const { token, url } = await resp.json();
+                    const tokenData = await resp.json();
+                    const { token, url } = tokenData;
+                    currentRoomName = tokenData.room || null;
 
                     room = new Room({
                         audioCaptureDefaults: { autoGainControl: true, echoCancellation: true, noiseSuppression: true },
@@ -812,6 +815,15 @@
             clearInterval(countdownTimer);
             inactivityTimer = null;
             countdownTimer = null;
+            // ── Record session end time ──────────────────────────
+            if (currentRoomName) {
+                fetch('/api/session/end', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: currentRoomName }),
+                }).catch(() => {});
+                currentRoomName = null;
+            }
             if (room) { room.disconnect(); room = null; }
             connected = false; reconnecting = false; agentSpeaking = false;
             micBtn.classList.remove('listening', 'thinking', 'speaking', 'connecting', 'reconnecting');

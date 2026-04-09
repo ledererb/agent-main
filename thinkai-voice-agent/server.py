@@ -252,15 +252,32 @@ async def entrypoint(ctx: JobContext):
         f"VAD threshold=0.85, preemptive={True}"
     )
 
-    await session.start(
-        agent=ThinkAIAgent(),
-        room=ctx.room,
-        # Server-side noise cancellation — filters breathing, background noise,
-        # keyboard sounds before they reach VAD (requires LiveKit Cloud)
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
-        ),
-    )
+    # ── Wait for actual room disconnect before closing session ───────────────
+    # session.start() is non-blocking — it returns immediately while the session
+    # continues to run. We use an Event to stay in the entrypoint until the room
+    # truly disconnects, so close_session() records the correct duration.
+    room_disconnected = asyncio.Event()
+
+    @ctx.room.on("disconnected")
+    def _on_room_disconnected(*args, **kwargs):
+        room_disconnected.set()
+
+    try:
+        await session.start(
+            agent=ThinkAIAgent(),
+            room=ctx.room,
+            # Server-side noise cancellation — filters breathing, background noise,
+            # keyboard sounds before they reach VAD (requires LiveKit Cloud)
+            room_input_options=RoomInputOptions(
+                noise_cancellation=noise_cancellation.BVC(),
+            ),
+        )
+        # Block here until the room disconnects
+        await room_disconnected.wait()
+    finally:
+        # Record session end + duration
+        db.close_session(session_id)
+        logger.info(f"Session closed and duration saved: {session_id}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

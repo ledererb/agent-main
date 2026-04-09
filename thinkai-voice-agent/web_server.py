@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -123,6 +123,19 @@ async def get_token():
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "agent": "thinkai-voice-agent"}
+
+
+@app.post("/api/session/end")
+async def session_end(request: Request):
+    """Called by the widget on disconnect to record session duration."""
+    try:
+        body = await request.json()
+        session_id = body.get("session_id", "")
+        if session_id:
+            db.close_session(session_id)
+    except Exception:
+        pass
+    return {"ok": True}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
