@@ -3,8 +3,8 @@ ThinkAI Voice Agent — Tool Implementations (LiveKit Agents v1.4)
 Function tools using @function_tool decorator for the voice assistant.
 """
 
-import json
 import os
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Annotated
@@ -14,11 +14,18 @@ import httpx
 from livekit.agents import function_tool, RunContext
 from loguru import logger
 
+import database as db
+
+
 # ── Paths ────────────────────────────────────────────────────────────────────
 THIS_DIR = Path(__file__).resolve().parent
-TASKS_FILE = THIS_DIR / "tasks.json"
-CALENDAR_FILE = THIS_DIR / "calendar.json"
-EMAILS_FILE = THIS_DIR / "emails.json"
+
+# Context var for current session_id (set by server.py entrypoint)
+_current_session_id: str = ""
+
+def set_session_id(sid: str):
+    global _current_session_id
+    _current_session_id = sid
 
 
 # ── Hungarian date/time parsing ─────────────────────────────────────────────
@@ -103,18 +110,6 @@ def _parse_hungarian_time(raw: str) -> str:
     raise ValueError(f"Nem értelmezhető időpont: '{raw}'")
 
 
-# ── JSON helpers ─────────────────────────────────────────────────────────────
-def _read_json(path: Path) -> list:
-    if path.exists():
-        try:
-            return json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            return []
-    return []
-
-
-def _write_json(path: Path, data: list):
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -178,19 +173,24 @@ async def send_followup_email(
         logger.error(f"Email error: {e}")
         error_msg = str(e)
 
-    # Log the email regardless of send success
-    emails = _read_json(EMAILS_FILE)
-    emails.append({
-        "id": len(emails) + 1,
-        "to_name": recipient_name,
-        "to_email": recipient_email,
-        "subject": subject,
-        "message": message,
-        "sent_at": datetime.utcnow().isoformat(),
-        "status": "sent" if sent_ok else "failed",
-        "error": error_msg if not sent_ok else None,
-    })
-    _write_json(EMAILS_FILE, emails)
+    # Log to DB
+    db.add_email_log(
+        to_name=recipient_name,
+        to_email=recipient_email,
+        subject=subject,
+        message=message,
+        status="sent" if sent_ok else "failed",
+        error=error_msg if not sent_ok else "",
+        session_id=_current_session_id,
+    )
+    db.log_interaction(
+        type="email",
+        topic="Email küldés",
+        summary=f"{recipient_name} ({recipient_email}) — {subject}",
+        result="Sikeresen elküldve" if sent_ok else f"Hiba: {error_msg}",
+        tool_name="send_followup_email",
+        session_id=_current_session_id,
+    )
 
     if sent_ok:
         return f"Email sikeresen elküldve {recipient_name} ({recipient_email}) részére."
@@ -210,7 +210,7 @@ async def check_calendar(
     """Naptár ellenőrzése a következő napokra."""
     logger.info(f"Checking calendar for next {days_ahead} days")
 
-    events = _read_json(CALENDAR_FILE)
+    events = db.get_calendar_events()
     if not events:
         return f"A következő {days_ahead} napban nincsenek rögzített események — teljesen szabad a naptár!"
 
@@ -220,13 +220,13 @@ async def check_calendar(
     upcoming = []
     for ev in events:
         try:
-            ev_dt = datetime.fromisoformat(ev["start"])
+            ev_dt = datetime.fromisoformat(ev["start_dt"])
             if now <= ev_dt <= cutoff:
                 upcoming.append(ev)
         except Exception:
             continue
 
-    upcoming.sort(key=lambda e: e["start"])
+    upcoming.sort(key=lambda e: e["start_dt"])
 
     if not upcoming:
         return f"A következő {days_ahead} napban nincsenek rögzített események — teljesen szabad a naptár!"
@@ -234,15 +234,24 @@ async def check_calendar(
     event_list = []
     for ev in upcoming[:10]:
         try:
-            dt = datetime.fromisoformat(ev["start"])
+            dt = datetime.fromisoformat(ev["start_dt"])
             formatted = dt.strftime("%m/%d %H:%M")
         except Exception:
-            formatted = ev["start"]
+            formatted = ev["start_dt"]
         title = ev.get("title", "Névtelen esemény")
         duration = ev.get("duration_minutes", 30)
         event_list.append(f"- {formatted}: {title} ({duration} perc)")
 
-    return f"A következő {days_ahead} napban {len(upcoming)} esemény van:\n" + "\n".join(event_list)
+    result_text = f"A következő {days_ahead} napban {len(upcoming)} esemény van:\n" + "\n".join(event_list)
+    db.log_interaction(
+        type="kérdés",
+        topic="Naptár ellenőrzés",
+        summary=f"Következő {days_ahead} nap, {len(upcoming)} esemény",
+        result=f"{len(upcoming)} esemény",
+        tool_name="check_calendar",
+        session_id=_current_session_id,
+    )
+    return result_text
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -267,18 +276,16 @@ async def book_meeting(
         start_dt = datetime.fromisoformat(f"{parsed_date}T{parsed_time}:00")
         end_dt = start_dt + timedelta(minutes=duration_minutes)
 
-        events = _read_json(CALENDAR_FILE)
+        events = db.get_calendar_events()
 
         # ── Conflict detection ────────────────────────────────────────
         for ev in events:
             try:
-                ev_start = datetime.fromisoformat(ev["start"])
+                ev_start = datetime.fromisoformat(ev["start_dt"])
                 ev_end = ev_start + timedelta(minutes=ev.get("duration_minutes", 30))
-                # Overlap: new starts before existing ends AND new ends after existing starts
                 if start_dt < ev_end and end_dt > ev_start:
                     ev_title = ev.get("title", "Névtelen esemény")
                     ev_time = ev_start.strftime("%H:%M")
-                    # Find next available slot on the same day
                     suggestion = _find_next_slot(events, date, duration_minutes, start_dt)
                     msg = (
                         f"Ütközés! {ev_time}-kor már van egy foglalás: \"{ev_title}\" "
@@ -293,17 +300,22 @@ async def book_meeting(
                 continue
 
         # ── No conflict — book it ─────────────────────────────────────
-        new_id = max((e.get("id", 0) for e in events), default=0) + 1
-        events.append({
-            "id": new_id,
-            "title": title,
-            "start": start_dt.isoformat(),
-            "end": end_dt.isoformat(),
-            "duration_minutes": duration_minutes,
-            "attendee": attendee_email or None,
-            "created_at": datetime.utcnow().isoformat(),
-        })
-        _write_json(CALENDAR_FILE, events)
+        db.add_calendar_event(
+            title=title,
+            start_dt=start_dt.isoformat(),
+            end_dt=end_dt.isoformat(),
+            duration_minutes=duration_minutes,
+            attendee="",
+            attendee_email=attendee_email,
+        )
+        db.log_interaction(
+            type="foglalás",
+            topic="Időpontfoglalás",
+            summary=f"{title} — {date} {time}",
+            result="Lefoglalva",
+            tool_name="book_meeting",
+            session_id=_current_session_id,
+        )
 
         result = f"Találkozó sikeresen lefoglalva: {title}, {date} {time}-kor, {duration_minutes} perces."
         if attendee_email:
@@ -319,7 +331,7 @@ def _find_next_slot(events: list, date: str, duration: int, after: datetime) -> 
     day_events = []
     for ev in events:
         try:
-            ev_start = datetime.fromisoformat(ev["start"])
+            ev_start = datetime.fromisoformat(ev["start_dt"])
             if ev_start.strftime("%Y-%m-%d") == date:
                 ev_end = ev_start + timedelta(minutes=ev.get("duration_minutes", 30))
                 day_events.append((ev_start, ev_end))
@@ -403,7 +415,16 @@ async def get_weather(
             95: "zivatar", 96: "jégesős zivatar", 99: "erős jégesős zivatar",
         }.get(code, "ismeretlen")
 
-        return f"{city.title()}: {temp}°C, {weather_desc}, szél {wind} km/h."
+        result_str = f"{city.title()}: {temp}°C, {weather_desc}, szél {wind} km/h."
+        db.log_interaction(
+            type="kérdés",
+            topic="Időjárás",
+            summary=f"{city} időjárás lekérdezve",
+            result=f"{temp}°C, {weather_desc}",
+            tool_name="get_weather",
+            session_id=_current_session_id,
+        )
+        return result_str
     except Exception as e:
         logger.error(f"Weather error: {e}")
         return f"Hiba az időjárás lekérdezésekor: {str(e)}"
@@ -424,17 +445,15 @@ async def create_task(
     logger.info(f"Creating task: {task}")
 
     try:
-        tasks = _read_json(TASKS_FILE)
-        new_task = {
-            "id": len(tasks) + 1,
-            "text": task,
-            "priority": priority,
-            "due_date": due_date,
-            "created_at": datetime.utcnow().isoformat(),
-            "completed": False,
-        }
-        tasks.append(new_task)
-        _write_json(TASKS_FILE, tasks)
+        db.add_task(text=task, priority=priority, due_date=due_date, session_id=_current_session_id)
+        db.log_interaction(
+            type="feladat",
+            topic="Feladat rögzítés",
+            summary=task,
+            result="Rögzítve",
+            tool_name="create_task",
+            session_id=_current_session_id,
+        )
 
         result = f'Feladat rögzítve: "{task}"'
         if due_date:
@@ -499,43 +518,70 @@ async def lookup_info(
     topic_lower = topic.lower().strip()
     logger.info(f"Knowledge lookup: {topic_lower}")
 
-    # 1. Exact match in knowledge base
+    result = None
+
+    # 1. Exact match
     if topic_lower in kb:
-        return kb[topic_lower]
+        result = kb[topic_lower]
 
-    # 2. Match via Hungarian aliases
-    for alias, key in _TOPIC_ALIASES.items():
-        if alias in topic_lower or topic_lower in alias:
-            if key in kb:
-                return kb[key]
-
-    # 3. Fuzzy match on knowledge base keys
-    for key, value in kb.items():
-        if key in topic_lower or topic_lower in key:
-            return value
-
-    # 4. Full-text search in values
-    for key, value in kb.items():
-        if topic_lower in value.lower():
-            return value
-
-    # 5. Multi-word: try each word separately
-    words = topic_lower.split()
-    for word in words:
-        if len(word) < 3:
-            continue
+    # 2. Hungarian aliases
+    if not result:
         for alias, key in _TOPIC_ALIASES.items():
-            if word in alias or alias in word:
+            if alias in topic_lower or topic_lower in alias:
                 if key in kb:
-                    return kb[key]
-        for key, value in kb.items():
-            if word in key or word in value.lower():
-                return value
+                    result = kb[key]
+                    break
 
-    return (
-        "Erről a témáról nincs részletes információm a tudásbázisban. "
-        "Részletesebb információért keresd a csapatot a hello@thinkai.hu címen!"
+    # 3. Fuzzy key match
+    if not result:
+        for key, value in kb.items():
+            if key in topic_lower or topic_lower in key:
+                result = value
+                break
+
+    # 4. Full-text value search
+    if not result:
+        for key, value in kb.items():
+            if topic_lower in value.lower():
+                result = value
+                break
+
+    # 5. Multi-word
+    if not result:
+        words = topic_lower.split()
+        for word in words:
+            if len(word) < 3:
+                continue
+            for alias, key in _TOPIC_ALIASES.items():
+                if word in alias or alias in word:
+                    if key in kb:
+                        result = kb[key]
+                        break
+            if result:
+                break
+            for key, value in kb.items():
+                if word in key or word in value.lower():
+                    result = value
+                    break
+            if result:
+                break
+
+    if not result:
+        result = (
+            "Erről a témáról nincs részletes információm a tudásbázisban. "
+            "Részletesebb információért keresd a csapatot a hello@thinkai.hu címen!"
+        )
+
+    db.log_interaction(
+        type="kérdés",
+        topic=f"Tudásbázis: {topic}",
+        summary=topic,
+        result=result[:100] + "..." if len(result) > 100 else result,
+        tool_name="lookup_info",
+        session_id=_current_session_id,
     )
+    return result
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -554,52 +600,34 @@ async def modify_meeting(
     """Naptári esemény módosítása."""
     logger.info(f"Modifying meeting: {event_title}")
 
-    events = _read_json(CALENDAR_FILE)
-    if not events:
-        return "Nincs egyetlen esemény sem a naptárban."
-
-    # Find the event by title (fuzzy match)
-    found = None
-    for ev in events:
-        if event_title.lower() in ev.get("title", "").lower():
-            found = ev
-            break
-
+    found = db.find_calendar_event_by_title(event_title)
     if not found:
+        events = db.get_calendar_events()
         titles = ", ".join(e.get("title", "?") for e in events)
         return f"Nem találtam ilyen eseményt. A naptárban ezek vannak: {titles}"
 
     try:
         if not any([new_title, new_date, new_time, new_duration_minutes]):
-            logger.warning(f"modify_meeting called with no changes for: {event_title}")
-            return (
-                f"Nem kaptam módosítási adatot. Mit szeretnél változtatni? "
-                f"(új dátum, új időpont, új cím, vagy új időtartam)"
-            )
+            return "Nem kaptam módosítási adatot. Mit szeretnél változtatni? (új dátum, új időpont, új cím, vagy új időtartam)"
 
-        logger.info(
-            f"Modify args: title='{new_title}', date='{new_date}', "
-            f"time='{new_time}', duration={new_duration_minutes}"
-        )
-
+        updates = {}
         if new_title:
-            found["title"] = new_title
+            updates["title"] = new_title
         if new_date or new_time:
-            old_dt = datetime.fromisoformat(found["start"])
+            old_dt = datetime.fromisoformat(found["start_dt"])
             d = _parse_hungarian_date(new_date) if new_date else old_dt.strftime("%Y-%m-%d")
             t = _parse_hungarian_time(new_time) if new_time else old_dt.strftime("%H:%M")
             new_start = datetime.fromisoformat(f"{d}T{t}:00")
             dur = new_duration_minutes or found.get("duration_minutes", 30)
-            found["start"] = new_start.isoformat()
-            found["end"] = (new_start + timedelta(minutes=dur)).isoformat()
-            found["duration_minutes"] = dur
+            updates["start_dt"] = new_start.isoformat()
+            updates["end_dt"] = (new_start + timedelta(minutes=dur)).isoformat()
+            updates["duration_minutes"] = dur
         elif new_duration_minutes:
-            start = datetime.fromisoformat(found["start"])
-            found["duration_minutes"] = new_duration_minutes
-            found["end"] = (start + timedelta(minutes=new_duration_minutes)).isoformat()
+            start = datetime.fromisoformat(found["start_dt"])
+            updates["duration_minutes"] = new_duration_minutes
+            updates["end_dt"] = (start + timedelta(minutes=new_duration_minutes)).isoformat()
 
-        _write_json(CALENDAR_FILE, events)
-        logger.info(f"Calendar written successfully: {CALENDAR_FILE}")
+        db.update_calendar_event(found["id"], **updates)
 
         changes = []
         if new_title: changes.append(f"cím: {new_title}")
@@ -624,19 +652,13 @@ async def delete_meeting(
     """Naptári esemény törlése."""
     logger.info(f"Deleting meeting: {event_title}")
 
-    events = _read_json(CALENDAR_FILE)
-    if not events:
-        return "Nincs egyetlen esemény sem a naptárban."
-
-    # Find and remove
-    original_count = len(events)
-    events = [e for e in events if event_title.lower() not in e.get("title", "").lower()]
-
-    if len(events) == original_count:
+    found = db.find_calendar_event_by_title(event_title)
+    if not found:
+        events = db.get_calendar_events()
         titles = ", ".join(e.get("title", "?") for e in events)
         return f"Nem találtam ilyen eseményt. A naptárban ezek vannak: {titles}"
 
-    _write_json(CALENDAR_FILE, events)
+    db.delete_calendar_event(found["id"])
     return f"Esemény törölve: {event_title}."
 
 
@@ -647,6 +669,7 @@ ALL_TOOLS = [
     book_meeting,
     modify_meeting,
     delete_meeting,
+    create_task,
     get_weather,
     lookup_info,
 ]

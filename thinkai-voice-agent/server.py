@@ -34,7 +34,8 @@ from livekit.plugins import cartesia, elevenlabs, google, noise_cancellation, si
 
 # ── Import tools ──────────────────────────────────────────────────────────────
 sys.path.insert(0, str(THIS_DIR))
-from tools import ALL_TOOLS
+from tools import ALL_TOOLS, set_session_id
+import database as db
 
 # ── Google credentials setup (still needed for Gemini LLM) ───────────────────
 def _setup_google_credentials():
@@ -187,9 +188,17 @@ class ThinkAIAgent(Agent):
 
 async def entrypoint(ctx: JobContext):
     """LiveKit agent entrypoint — called when a user joins a room."""
-    logger.info(f"Agent connecting to room: {ctx.room.name}")
+    room_name = ctx.room.name
+    session_id = room_name  # use room name as unique session ID
+    logger.info(f"Agent connecting to room: {room_name}")
 
     await ctx.connect()
+
+    # Initialize DB + log session start
+    db.init_db()
+    db.create_session(session_id=session_id, room_name=room_name)
+    set_session_id(session_id)
+    logger.info(f"Session started: {session_id}")
 
     # NOTE: ElevenLabs keyterms only work in batch mode (not realtime streaming).
     # The scribe_v2_realtime model ignores keyterms in the WebSocket streaming path.
@@ -262,6 +271,6 @@ if __name__ == "__main__":
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
-            agent_name="thinkai-ugyfelszolg",
+            agent_name="thinkai-dobozos-local",
         ),
     )

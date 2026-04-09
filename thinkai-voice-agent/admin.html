@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ThinkAI — Admin Dashboard</title>
+  <meta name="description" content="ThinkAI voice agent admin felület — analitika, interakciós lista, feladatok." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:         #0a0e1a;
+      --bg2:        #111827;
+      --bg3:        #1a2236;
+      --card:       #141c2e;
+      --border:     #1e2d45;
+      --accent:     #00d4c8;
+      --accent2:    #0099ff;
+      --accent-glow:rgba(0,212,200,0.18);
+      --text:       #e8edf5;
+      --text-muted: #6b7fa3;
+      --text-dim:   #3d5070;
+      --green:      #22c55e;
+      --red:        #ef4444;
+      --yellow:     #f59e0b;
+      --purple:     #a855f7;
+      --orange:     #f97316;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Login Screen ──────────────────────────────────────────────── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,153,255,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,212,200,0.08) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    .login-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 44px;
+      width: 420px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,200,0.06);
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .login-logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0a0e1a;
+      flex-shrink: 0;
+    }
+
+    .login-logo span {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, var(--text) 60%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-tagline {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .login-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 15px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .login-error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #fca5a5;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #0a0e1a;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s, transform 0.15s;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── App Shell ─────────────────────────────────────────────────── */
+    #app { display: none; min-height: 100vh; }
+
+    /* ── Sidebar ───────────────────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 240px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .sidebar-logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0a0e1a;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--text) 60%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      margin-bottom: 4px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active { background: rgba(0,212,200,0.12); color: var(--accent); }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      padding: 12px 12px 6px;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+    }
+
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0a0e1a;
+      flex-shrink: 0;
+    }
+
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-role { font-size: 11px; color: var(--text-muted); }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+      margin-top: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Main ──────────────────────────────────────────────────────── */
+    .main {
+      margin-left: 240px;
+      padding: 32px 36px;
+      min-height: 100vh;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Stats grid ────────────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover { border-color: rgba(0,212,200,0.3); }
+
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 18px;
+    }
+
+    .stat-icon.teal  { background: rgba(0,212,200,0.12); }
+    .stat-icon.blue  { background: rgba(0,153,255,0.12); }
+    .stat-icon.green { background: rgba(34,197,94,0.12); }
+    .stat-icon.purple{ background: rgba(168,85,247,0.12); }
+    .stat-icon.yellow{ background: rgba(245,158,11,0.12); }
+    .stat-icon.orange{ background: rgba(249,115,22,0.12); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-trend {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-trend.up   { color: var(--green); }
+    .stat-trend.down { color: var(--red); }
+
+    /* ── Charts row ────────────────────────────────────────────────── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .chart-canvas { width: 100% !important; }
+
+    /* ── Table ─────────────────────────────────────────────────────── */
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-title { font-size: 15px; font-weight: 600; }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: rgba(0,212,200,0.12); border-color: var(--accent); color: var(--accent); }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 12px 20px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 14px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(30,45,69,0.5);
+      vertical-align: middle;
+    }
+
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .td-time { color: var(--text-muted); font-size: 12px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-teal   { background: rgba(0,212,200,0.15); color: var(--accent); }
+    .badge-blue   { background: rgba(0,153,255,0.15); color: #60a5fa; }
+    .badge-green  { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .badge-red    { background: rgba(239,68,68,0.15);  color: var(--red); }
+    .badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+    .badge-gray   { background: rgba(107,127,163,0.15);color: var(--text-muted); }
+
+    .td-summary {
+      max-width: 280px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-muted);
+    }
+
+    /* ── Loading spinner ───────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-row td {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    /* ── Empty state ───────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 56px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-state-text { font-size: 14px; }
+
+    /* ── Type color mapping ────────────────────────────────────────── */
+    .type-badge-map { display: none; }
+
+    /* ── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 1100px) {
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; padding: 16px 8px; }
+      .sidebar-logo-text, .nav-item span, .user-name, .user-role { display: none; }
+      .main { margin-left: 60px; padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════  LOGIN  ═══════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">T</div>
+      <span>ThinkAI Admin</span>
+    </div>
+    <div class="login-tagline">Üdv újra!<br>Kérem, jelentkezz be.</div>
+    <div class="login-sub">Hangügynök vezérlőpult — analitika és interakciók</div>
+
+    <div id="login-error" class="login-error"></div>
+
+    <div class="form-group">
+      <label class="form-label" for="login-username">Felhasználónév</label>
+      <input id="login-username" class="form-input" type="text" placeholder="admin" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="login-password">Jelszó</label>
+      <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button id="login-btn" class="btn-primary" onclick="doLogin()">BELÉPÉS</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════  APP  ═══════════════════════════ -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">T</div>
+      <span class="sidebar-logo-text">ThinkAI</span>
+    </div>
+
+    <div class="nav-section-title">Főmenü</div>
+    <button class="nav-item active" onclick="showPage('analytics')" id="nav-analytics">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h2l3-9 4 18 3-9h6"/></svg>
+      <span>Analitika</span>
+    </button>
+    <button class="nav-item" onclick="showPage('interactions')" id="nav-interactions">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h8M8 8h4m-4 8h6M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+      <span>Interakciók</span>
+    </button>
+    <button class="nav-item" onclick="showPage('calendar')" id="nav-calendar">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span>Naptár</span>
+    </button>
+    <button class="nav-item" onclick="showPage('emails')" id="nav-emails">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 0l8 7 8-7"/></svg>
+      <span>Emailek</span>
+    </button>
+    <button class="nav-item" onclick="showPage('sessions')" id="nav-sessions">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span>Sessionök</span>
+    </button>
+
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar-char">A</div>
+        <div>
+          <div class="user-name" id="sidebar-username">admin</div>
+          <div class="user-role">Adminisztrátor</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Kijelentkezés
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page active" id="page-analytics">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Analitika</div>
+          <div class="page-subtitle">Összesített teljesítmény és hangügynök statisztikák</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="stats-days" onchange="loadStats()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">
+            <option value="7">Elmúlt 7 nap</option>
+            <option value="30" selected>Elmúlt 30 nap</option>
+            <option value="90">Elmúlt 90 nap</option>
+          </select>
+          <button onclick="loadStats()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="stats-grid">
+        <!-- Populated by JS -->
+        <div class="stat-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+          <div class="spinner"></div>&nbsp; Adatok betöltése...
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">Sessionök időbeli alakulása</div>
+          <canvas id="sessions-chart" class="chart-canvas" height="160"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Interakció típusonként</div>
+          <canvas id="types-chart" class="chart-canvas" height="160"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIONS PAGE -->
+    <div class="page" id="page-interactions">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Interakciós lista</div>
+          <div class="page-subtitle">Minden agent interakció típusonként szűrve</div>
+        </div>
+        <button onclick="loadInteractions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+      </div>
+      <div class="table-card">
+        <div class="filter-row" id="interaction-filters">
+          <button class="filter-btn active" onclick="filterInteractions('')" data-type="">Összes</button>
+          <button class="filter-btn" onclick="filterInteractions('foglalás')" data-type="foglalás">📅 Foglalás</button>
+          <button class="filter-btn" onclick="filterInteractions('email')" data-type="email">✉️ Email</button>
+          <button class="filter-btn" onclick="filterInteractions('feladat')" data-type="feladat">✓ Feladat</button>
+          <button class="filter-btn" onclick="filterInteractions('kérdés')" data-type="kérdés">❔ Kérdés</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dátum / Idő</th>
+              <th>Típus</th>
+              <th>Téma</th>
+              <th>Összefoglaló</th>
+              <th>Eredmény</th>
+            </tr>
+          </thead>
+          <tbody id="interactions-body">
+            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CALENDAR PAGE -->
+    <div class="page" id="page-calendar">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Naptár</div>
+          <div class="page-subtitle">Foglalt időpontok és megbeszélések</div>
+        </div>
+        <button onclick="loadCalendar()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dátum / Idő</th>
+              <th>Esemény</th>
+              <th>Résztvevő</th>
+              <th>Időtartam</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody id="calendar-body">
+            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EMAILS PAGE -->
+    <div class="page" id="page-emails">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Emailek</div>
+          <div class="page-subtitle">Az agent által küldött follow-up emailek</div>
+        </div>
+        <button onclick="loadEmails()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Küldve</th>
+              <th>Címzett</th>
+              <th>Tárgy</th>
+              <th>Állapot</th>
+            </tr>
+          </thead>
+          <tbody id="emails-body">
+            <tr class="loading-row"><td colspan="4"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SESSIONS PAGE -->
+    <div class="page" id="page-sessions">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Sessionök</div>
+          <div class="page-subtitle">Minden hangügynök kapcsolat</div>
+        </div>
+        <button onclick="loadSessions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+      </div>
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Időpont</th>
+              <th>Session ID</th>
+              <th>Szoba</th>
+              <th>Időtartam</th>
+              <th>Állapot</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-body">
+            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = '';  // same origin
+let authToken = localStorage.getItem('thinkai_admin_token') || '';
+let currentUser = localStorage.getItem('thinkai_admin_user') || '';
+let interactionsCache = [];
+let sessionsChart = null;
+let typesChart = null;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+  if (!username || !password) { showError('Kérlek, töltsd ki mindkét mezőt.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Belépés...';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/admin/login`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      showError(data.detail || 'Hibás adatok.');
+      return;
+    }
+    const data = await res.json();
+    authToken   = data.token;
+    currentUser = data.username;
+    localStorage.setItem('thinkai_admin_token', authToken);
+    localStorage.setItem('thinkai_admin_user',  currentUser);
+    enterApp();
+  } catch(e) {
+    showError('Nem sikerült csatlakozni a szerverhez.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'BELÉPÉS';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  authToken = '';
+  currentUser = '';
+  localStorage.removeItem('thinkai_admin_token');
+  localStorage.removeItem('thinkai_admin_user');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function authFetch(url, opts = {}) {
+  const res = await fetch(`${API}${url}`, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${authToken}`, ...opts.headers }
+  });
+  if (res.status === 401) { doLogout(); throw new Error('Unauthorized'); }
+  return res;
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sidebar-username').textContent = currentUser;
+  document.getElementById('user-avatar-char').textContent = currentUser[0].toUpperCase();
+  loadStats();
+  loadInteractions();
+}
+
+// ── Page navigation ───────────────────────────────────────────────────────────
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.getElementById(`nav-${page}`).classList.add('active');
+
+  if (page === 'calendar')     loadCalendar();
+  if (page === 'emails')       loadEmails();
+  if (page === 'sessions')     loadSessions();
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────────────
+async function loadStats() {
+  const days  = document.getElementById('stats-days').value;
+  const grid  = document.getElementById('stats-grid');
+  grid.innerHTML = `<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner"></div></div>`;
+
+  try {
+    const res  = await authFetch(`/admin/api/stats?days=${days}`);
+    const data = await res.json();
+    renderStats(data);
+  } catch(e) { grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:var(--red);padding:40px;">Hiba az adatok betöltésekor.</div>'; }
+}
+
+function renderStats(data) {
+  const grid = document.getElementById('stats-grid');
+  const stats = [
+    { label: 'Összes session',    value: data.total_sessions,     icon: '🎙️', cls: 'teal',   trend: '' },
+    { label: 'Interakciók',       value: data.total_interactions,  icon: '⚡',  cls: 'blue',   trend: '' },
+    { label: 'Foglalások',        value: data.total_bookings,      icon: '📅',  cls: 'green',  trend: '' },
+    { label: 'Emailek küldve',    value: data.total_emails,        icon: '✉️',  cls: 'purple', trend: '' },
+    { label: 'Nyitott feladatok', value: data.open_tasks,          icon: '✓',   cls: 'yellow', trend: '' },
+    { label: 'Átl. session (mp)', value: data.avg_session_duration,icon: '⏱️',  cls: 'orange', trend: '' },
+  ];
+
+  grid.innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-icon ${s.cls}">${s.icon}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.value ?? 0}</div>
+    </div>
+  `).join('');
+
+  // Sessions per day chart
+  const daily = data.sessions_per_day || [];
+  const ctx1  = document.getElementById('sessions-chart').getContext('2d');
+  if (sessionsChart) sessionsChart.destroy();
+  sessionsChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.day),
+      datasets: [{
+        label: 'Sessionök',
+        data: daily.map(d => d.count),
+        borderColor: '#00d4c8',
+        backgroundColor: 'rgba(0,212,200,0.08)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#00d4c8',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7fa3', font: { size: 11 } }, grid: { color: '#1e2d45' } },
+        y: { ticks: { color: '#6b7fa3', font: { size: 11 }, stepSize: 1 }, grid: { color: '#1e2d45' } }
+      }
+    }
+  });
+
+  // Types donut chart
+  const types = data.interactions_by_type || [];
+  const ctx2  = document.getElementById('types-chart').getContext('2d');
+  if (typesChart) typesChart.destroy();
+  typesChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: types.map(t => t.type),
+      datasets: [{
+        data: types.map(t => t.count),
+        backgroundColor: ['#00d4c8','#0099ff','#22c55e','#a855f7','#f59e0b','#f97316'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#6b7fa3', font: { size: 11 }, padding: 12 } }
+      }
+    }
+  });
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────────────────────
+async function loadInteractions() {
+  try {
+    const res  = await authFetch('/admin/api/interactions?limit=200');
+    const data = await res.json();
+    interactionsCache = data.interactions || [];
+    renderInteractions(interactionsCache);
+  } catch(e) {
+    document.getElementById('interactions-body').innerHTML =
+      '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
+  }
+}
+
+let activeFilter = '';
+function filterInteractions(type) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  const filtered = type ? interactionsCache.filter(i => i.type === type) : interactionsCache;
+  renderInteractions(filtered);
+}
+
+const TYPE_BADGES = {
+  'foglalás':   'badge-green',
+  'email':      'badge-blue',
+  'feladat':    'badge-purple',
+  'kérdés':     'badge-teal',
+  'időjárás':   'badge-yellow',
+  'tudásbázis': 'badge-gray',
+};
+
+function typeBadge(type) {
+  const cls = TYPE_BADGES[type] || 'badge-gray';
+  return `<span class="badge ${cls}">${type}</span>`;
+}
+
+function renderInteractions(rows) {
+  const tbody = document.getElementById('interactions-body');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Nincs megjeleníthető interakció</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="td-time">${fmtDt(r.created_at)}</td>
+      <td>${typeBadge(r.type)}</td>
+      <td style="font-weight:500">${esc(r.topic || '—')}</td>
+      <td class="td-summary">${esc(r.summary || '—')}</td>
+      <td>${r.result ? `<span class="badge badge-gray">${esc(r.result)}</span>` : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+async function loadCalendar() {
+  const tbody = document.getElementById('calendar-body');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>';
+  try {
+    const res  = await authFetch('/admin/api/calendar');
+    const data = await res.json();
+    const events = data.events || [];
+    if (!events.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Nincs naptári esemény</div></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = events.map(ev => `
+      <tr>
+        <td><div class="td-time">${fmtDt(ev.start_dt)}</div></td>
+        <td style="font-weight:500">${esc(ev.title)}</td>
+        <td>${esc(ev.attendee || '—')}</td>
+        <td><span class="badge badge-teal">${ev.duration_minutes} perc</span></td>
+        <td class="td-summary">${esc(ev.attendee_email || '—')}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
+  }
+}
+
+// ── EMAILS ────────────────────────────────────────────────────────────────────
+async function loadEmails() {
+  const tbody = document.getElementById('emails-body');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="4"><div class="spinner"></div></td></tr>';
+  try {
+    const res  = await authFetch('/admin/api/emails');
+    const data = await res.json();
+    const emails = data.emails || [];
+    if (!emails.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-state-icon">✉️</div><div class="empty-state-text">Nincs elküldött email</div></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = emails.map(em => `
+      <tr>
+        <td class="td-time">${fmtDt(em.sent_at)}</td>
+        <td>
+          <div style="font-weight:500">${esc(em.to_name)}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${esc(em.to_email)}</div>
+        </td>
+        <td class="td-summary">${esc(em.subject || '—')}</td>
+        <td><span class="badge ${em.status === 'sent' ? 'badge-green' : 'badge-red'}">${em.status === 'sent' ? 'Elküldve' : 'Hiba'}</span></td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
+  }
+}
+
+// ── SESSIONS ──────────────────────────────────────────────────────────────────
+async function loadSessions() {
+  const tbody = document.getElementById('sessions-body');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>';
+  try {
+    const res  = await authFetch('/admin/api/sessions');
+    const data = await res.json();
+    const sessions = data.sessions || [];
+    if (!sessions.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">🎙️</div><div class="empty-state-text">Nincs rögzített session</div></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = sessions.map(s => {
+      const dur = s.duration_seconds ? `${Math.floor(s.duration_seconds/60)}m ${s.duration_seconds%60}s` : '—';
+      const status = s.ended_at
+        ? `<span class="badge badge-gray">Befejezett</span>`
+        : `<span class="badge badge-green">Aktív</span>`;
+      return `
+        <tr>
+          <td class="td-time">${fmtDt(s.started_at)}</td>
+          <td style="font-family:monospace;font-size:12px;color:var(--text-muted)">${esc(s.session_id)}</td>
+          <td>${esc(s.room_name || '—')}</td>
+          <td>${dur}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtDt(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('hu-HU', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  } catch { return iso; }
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Auto login if token exists ────────────────────────────────────────────────
+if (authToken) {
+  // verify token is still valid by trying a quick fetch
+  authFetch('/admin/api/stats?days=1')
+    .then(() => enterApp())
+    .catch(() => {
+      authToken = '';
+      localStorage.removeItem('thinkai_admin_token');
+    });
+}
+</script>
+</body>
+</html>
