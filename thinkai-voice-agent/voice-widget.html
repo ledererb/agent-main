@@ -930,10 +930,10 @@
             container.innerHTML = events.map(ev => {
                 let dateStr = '';
                 try {
-                    const d = new Date(ev.start);
+                    const d = new Date(ev.start_dt || ev.start);
                     const months = ['jan', 'feb', 'már', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szep', 'okt', 'nov', 'dec'];
                     dateStr = `${months[d.getMonth()]} ${d.getDate()}. ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                } catch (e) { dateStr = ev.start; }
+                } catch (e) { dateStr = ev.start_dt || ev.start; }
 
                 return `<div class="cal-item">
                     <div class="cal-title">${escHtml(ev.title || 'Esemény')}</div>
@@ -942,6 +942,7 @@
                         <span class="cal-duration">· ${ev.duration_minutes || 30} perc</span>
                     </div>
                     ${ev.attendee ? `<div class="cal-attendee">👤 ${escHtml(ev.attendee)}</div>` : ''}
+                    ${ev.attendee_email ? `<div class="cal-attendee" style="font-size:0.7rem;color:#667eea;">✉️ ${escHtml(ev.attendee_email)}</div>` : ''}
                 </div>`;
             }).join('');
         }

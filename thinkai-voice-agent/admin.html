@@ -1126,7 +1126,9 @@ async function loadSessions() {
 function fmtDt(iso) {
   if (!iso) return '—';
   try {
-    const d = new Date(iso);
+    // DB stores UTC without 'Z' suffix — append it so JS converts to local time
+    const utcIso = iso.includes('Z') || iso.includes('+') ? iso : iso + 'Z';
+    const d = new Date(utcIso);
     return d.toLocaleString('hu-HU', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
   } catch { return iso; }
 }

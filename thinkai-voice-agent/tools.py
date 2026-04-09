@@ -267,10 +267,11 @@ async def book_meeting(
     date: Annotated[str, "A meeting dátuma (pl. 2026-03-11, március 11, márc 11)"],
     time: Annotated[str, "A meeting kezdési időpontja (pl. 10:00, 10 óra, 14:30)"],
     duration_minutes: Annotated[int, "A meeting hossza percben"] = 30,
+    attendee: Annotated[str, "A meghívott neve (opcionális, pl. Kovács János)"] = "",
     attendee_email: Annotated[str, "A meghívott email címe (opcionális)"] = "",
 ) -> str:
     """Találkozó foglalása a naptárba."""
-    logger.info(f"Booking meeting: {title} on {date} at {time}")
+    logger.info(f"Booking meeting: {title} on {date} at {time}, attendee={attendee}, email={attendee_email}")
 
     try:
         parsed_date = _parse_hungarian_date(date)
@@ -307,21 +308,23 @@ async def book_meeting(
             start_dt=start_dt.isoformat(),
             end_dt=end_dt.isoformat(),
             duration_minutes=duration_minutes,
-            attendee="",
+            attendee=attendee,
             attendee_email=attendee_email,
         )
         db.log_interaction(
             type="foglalás",
             topic="Időpontfoglalás",
-            summary=f"{title} — {date} {time}",
+            summary=f"{title} — {date} {time}" + (f" | {attendee}" if attendee else "") + (f" <{attendee_email}>" if attendee_email else ""),
             result="Lefoglalva",
             tool_name="book_meeting",
             session_id=_current_session_id,
         )
 
         result = f"Találkozó sikeresen lefoglalva: {title}, {date} {time}-kor, {duration_minutes} perces."
+        if attendee:
+            result += f" Résztvevő: {attendee}."
         if attendee_email:
-            result += f" Meghívott: {attendee_email}."
+            result += f" Email: {attendee_email}."
         return result
     except Exception as e:
         logger.error(f"Booking error: {e}")
