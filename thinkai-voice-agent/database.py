@@ -320,71 +320,80 @@ def get_tasks(completed: bool | None = None, limit: int = 100) -> list[dict]:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def get_stats(period: str = "month") -> dict:
-    """Return aggregated stats for the admin dashboard.
+    """Return aggregated stats filtered by period.
 
     period: 'week'  = current calendar week (Mon-Sun)
             'month' = current calendar month
-            'year'  = last 12 months, grouped by month
+            'year'  = last 12 months
     """
-    with get_db() as conn:
-        total_sessions = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
-        total_interactions = conn.execute("SELECT COUNT(*) FROM interactions").fetchone()[0]
-        total_emails = conn.execute("SELECT COUNT(*) FROM email_logs").fetchone()[0]
-        total_bookings = conn.execute("SELECT COUNT(*) FROM calendar_events").fetchone()[0]
-        open_tasks = conn.execute("SELECT COUNT(*) FROM tasks WHERE completed = 0").fetchone()[0]
+    if period == "week":
+        sess_where  = "DATE(started_at) >= DATE('now', 'weekday 1', '-7 days')"
+        inter_where = "DATE(created_at)  >= DATE('now', 'weekday 1', '-7 days')"
+        email_where = "DATE(sent_at)     >= DATE('now', 'weekday 1', '-7 days')"
+        cal_where   = "DATE(start_dt)    >= DATE('now', 'weekday 1', '-7 days')"
+    elif period == "month":
+        sess_where  = "strftime('%Y-%m', started_at) = strftime('%Y-%m', 'now')"
+        inter_where = "strftime('%Y-%m', created_at)  = strftime('%Y-%m', 'now')"
+        email_where = "strftime('%Y-%m', sent_at)     = strftime('%Y-%m', 'now')"
+        cal_where   = "strftime('%Y-%m', start_dt)    = strftime('%Y-%m', 'now')"
+    else:  # year
+        sess_where  = "started_at >= datetime('now', '-12 months')"
+        inter_where = "created_at  >= datetime('now', '-12 months')"
+        email_where = "sent_at     >= datetime('now', '-12 months')"
+        cal_where   = "start_dt    >= datetime('now', '-12 months')"
 
-        # Interactions by type
+    with get_db() as conn:
+        total_sessions = conn.execute(
+            f"SELECT COUNT(*) FROM sessions WHERE {sess_where}"
+        ).fetchone()[0]
+
+        total_interactions = conn.execute(
+            f"SELECT COUNT(*) FROM interactions WHERE {inter_where}"
+        ).fetchone()[0]
+
+        total_emails = conn.execute(
+            f"SELECT COUNT(*) FROM email_logs WHERE {email_where}"
+        ).fetchone()[0]
+
+        total_bookings = conn.execute(
+            f"SELECT COUNT(*) FROM calendar_events WHERE {cal_where}"
+        ).fetchone()[0]
+
+        open_tasks = conn.execute(
+            "SELECT COUNT(*) FROM tasks WHERE completed = 0"
+        ).fetchone()[0]
+
         type_rows = conn.execute(
-            "SELECT type, COUNT(*) as cnt FROM interactions GROUP BY type ORDER BY cnt DESC"
+            f"SELECT type, COUNT(*) as cnt FROM interactions WHERE {inter_where} GROUP BY type ORDER BY cnt DESC"
         ).fetchall()
 
-        # Sessions per period
-        if period == "week":
-            # Current week: Monday–today (Hungarian week starts on Monday)
-            daily_rows = conn.execute(
-                """SELECT DATE(started_at) as day, COUNT(*) as cnt
-                   FROM sessions
-                   WHERE DATE(started_at) >= DATE('now', 'weekday 1', '-7 days')
-                   GROUP BY day ORDER BY day ASC"""
+        if period == "year":
+            chart_rows = conn.execute(
+                f"""SELECT strftime('%Y-%m', started_at) as day, COUNT(*) as cnt
+                    FROM sessions WHERE {sess_where}
+                    GROUP BY day ORDER BY day ASC"""
             ).fetchall()
-            chart_data = [{"day": r["day"], "count": r["cnt"]} for r in daily_rows]
-
-        elif period == "month":
-            # Current calendar month
-            daily_rows = conn.execute(
-                """SELECT DATE(started_at) as day, COUNT(*) as cnt
-                   FROM sessions
-                   WHERE strftime('%Y-%m', started_at) = strftime('%Y-%m', 'now')
-                   GROUP BY day ORDER BY day ASC"""
+        else:
+            chart_rows = conn.execute(
+                f"""SELECT DATE(started_at) as day, COUNT(*) as cnt
+                    FROM sessions WHERE {sess_where}
+                    GROUP BY day ORDER BY day ASC"""
             ).fetchall()
-            chart_data = [{"day": r["day"], "count": r["cnt"]} for r in daily_rows]
 
-        else:  # year
-            # Last 12 months, grouped by month
-            monthly_rows = conn.execute(
-                """SELECT strftime('%Y-%m', started_at) as month, COUNT(*) as cnt
-                   FROM sessions
-                   WHERE started_at >= datetime('now', '-12 months')
-                   GROUP BY month ORDER BY month ASC"""
-            ).fetchall()
-            chart_data = [{"day": r["month"], "count": r["cnt"]} for r in monthly_rows]
-
-        # Avg session duration
         avg_dur = conn.execute(
-            "SELECT AVG(duration_seconds) FROM sessions WHERE duration_seconds IS NOT NULL"
+            f"SELECT AVG(duration_seconds) FROM sessions WHERE duration_seconds IS NOT NULL AND {sess_where}"
         ).fetchone()[0]
 
     return {
-        "total_sessions": total_sessions,
-        "total_interactions": total_interactions,
-        "total_emails": total_emails,
-        "total_bookings": total_bookings,
-        "open_tasks": open_tasks,
+        "total_sessions":       total_sessions,
+        "total_interactions":   total_interactions,
+        "total_emails":         total_emails,
+        "total_bookings":       total_bookings,
+        "open_tasks":           open_tasks,
         "avg_session_duration": round(avg_dur or 0),
         "interactions_by_type": [{"type": r["type"], "count": r["cnt"]} for r in type_rows],
-        "sessions_per_day": chart_data,
+        "sessions_per_day":     [{"day": r["day"],  "count": r["cnt"]} for r in chart_rows],
     }
-
 
 def get_interactions(limit: int = 100, type_filter: str = "") -> list[dict]:
     with get_db() as conn:

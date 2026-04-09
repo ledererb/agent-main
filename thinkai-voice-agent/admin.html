@@ -869,17 +869,20 @@ async function loadStats() {
 
 function renderStats(data) {
   const grid = document.getElementById('stats-grid');
+  const period = document.getElementById('stats-days').value;
+  const prefix = { week: 'Heti', month: 'Havi', year: 'Évi' }[period] || '';
+
   const stats = [
-    { label: 'Összes session',    value: data.total_sessions,      icon: '🎙️', cls: 'teal',   page: 'sessions' },
-    { label: 'Interakciók',       value: data.total_interactions,   icon: '⚡',  cls: 'blue',   page: 'interactions' },
-    { label: 'Foglalások',        value: data.total_bookings,       icon: '📅',  cls: 'green',  page: 'calendar' },
-    { label: 'Emailek küldve',    value: data.total_emails,         icon: '✉️',  cls: 'purple', page: 'emails' },
-    { label: 'Nyitott feladatok', value: data.open_tasks,           icon: '✓',   cls: 'yellow', page: 'sessions' },
-    { label: 'Átl. session (mp)', value: data.avg_session_duration, icon: '⏱️',  cls: 'orange', page: 'sessions' },
+    { label: `${prefix} session`,       value: data.total_sessions,      icon: '🎙️', cls: 'teal',   page: 'sessions' },
+    { label: `${prefix} interakció`,    value: data.total_interactions,   icon: '⚡',  cls: 'blue',   page: 'interactions' },
+    { label: `${prefix} foglalás`,      value: data.total_bookings,       icon: '📅',  cls: 'green',  page: 'calendar' },
+    { label: `${prefix} email`,         value: data.total_emails,         icon: '✉️',  cls: 'purple', page: 'emails' },
+    { label: 'Nyitott feladatok',             value: data.open_tasks,           icon: '✓',   cls: 'yellow', page: 'sessions' },
+    { label: `${prefix} átl. session (mp)`,   value: data.avg_session_duration, icon: '⏱️',  cls: 'orange', page: 'sessions' },
   ];
 
   grid.innerHTML = stats.map(s => `
-    <div class="stat-card" onclick="showPage('${s.page}')" style="cursor:pointer;" title="${s.label} → ${s.page} nézet">
+    <div class="stat-card" onclick="showPage('${s.page}')" style="cursor:pointer;" title="${s.label}">
       <div class="stat-icon ${s.cls}">${s.icon}</div>
       <div class="stat-label">${s.label}</div>
       <div class="stat-value">${s.value ?? 0}</div>
