@@ -326,7 +326,7 @@ def get_stats(days: int = 30) -> dict:
         total_interactions = conn.execute("SELECT COUNT(*) FROM interactions").fetchone()[0]
         total_emails = conn.execute("SELECT COUNT(*) FROM email_logs").fetchone()[0]
         total_bookings = conn.execute(
-            "SELECT COUNT(*) FROM interactions WHERE type = 'foglalás'"
+            "SELECT COUNT(*) FROM calendar_events"
         ).fetchone()[0]
         open_tasks = conn.execute(
             "SELECT COUNT(*) FROM tasks WHERE completed = 0"
