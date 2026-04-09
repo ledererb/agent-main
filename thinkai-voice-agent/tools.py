@@ -140,38 +140,43 @@ async def send_followup_email(
     logger.info(f"Brevo key starts with: {api_key[:12]}...")
     logger.info(f"Sending follow-up email to {recipient_name} <{recipient_email}>")
 
-    sent_ok = False
+    # ── DEV MODE: email küldés kikapcsolva, csak logolás ──────────────────────
+    # Az alábbi Brevo API hívás ki van kommentelve helyi fejlesztés idejére.
+    # Komment nélkül visszakapcsoláshoz töröld a # jeleket a try blokk elején.
+    sent_ok = True   # Szimulált siker — az admin panelen "sent (simulated)" jelenik meg
     error_msg = ""
 
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                "https://api.brevo.com/v3/smtp/email",
-                headers={"api-key": api_key, "Content-Type": "application/json"},
-                json={
-                    "sender": {"name": "ThinkAI", "email": "hello@thinkai.hu"},
-                    "to": [{"email": recipient_email, "name": recipient_name}],
-                    "subject": subject,
-                    "htmlContent": f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #1a1a2e;">Kedves {recipient_name}!</h2>
-                        <p>{message}</p>
-                        <hr style="border: 1px solid #eee; margin: 20px 0;">
-                        <p style="color: #666; font-size: 14px;">
-                            Üdvözlettel,<br>
-                            <strong>ThinkAI csapat</strong><br>
-                            <a href="https://thinkai.hu">thinkai.hu</a> | hello@thinkai.hu
-                        </p>
-                    </div>
-                    """,
-                },
-                timeout=20,
-            )
-            resp.raise_for_status()
-            sent_ok = True
-    except Exception as e:
-        logger.error(f"Email error: {e}")
-        error_msg = str(e)
+    # try:
+    #     async with httpx.AsyncClient() as client:
+    #         resp = await client.post(
+    #             "https://api.brevo.com/v3/smtp/email",
+    #             headers={"api-key": api_key, "Content-Type": "application/json"},
+    #             json={
+    #                 "sender": {"name": "ThinkAI", "email": "hello@thinkai.hu"},
+    #                 "to": [{"email": recipient_email, "name": recipient_name}],
+    #                 "subject": subject,
+    #                 "htmlContent": f"""
+    #                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    #                     <h2 style="color: #1a1a2e;">Kedves {recipient_name}!</h2>
+    #                     <p>{message}</p>
+    #                     <hr style="border: 1px solid #eee; margin: 20px 0;">
+    #                     <p style="color: #666; font-size: 14px;">
+    #                         Üdvözlettel,<br>
+    #                         <strong>ThinkAI csapat</strong><br>
+    #                         <a href="https://thinkai.hu">thinkai.hu</a> | hello@thinkai.hu
+    #                     </p>
+    #                 </div>
+    #                 """,
+    #             },
+    #             timeout=20,
+    #         )
+    #         resp.raise_for_status()
+    #         sent_ok = True
+    # except Exception as e:
+    #     logger.error(f"Email error: {e}")
+    #     error_msg = str(e)
+
+    logger.info(f"[DEV MODE] Email NEM lett elküldve — szimulált logolás: {recipient_email}")
 
     # Log to DB
     db.add_email_log(
@@ -179,23 +184,20 @@ async def send_followup_email(
         to_email=recipient_email,
         subject=subject,
         message=message,
-        status="sent" if sent_ok else "failed",
-        error=error_msg if not sent_ok else "",
+        status="sent (simulated)",
+        error="",
         session_id=_current_session_id,
     )
     db.log_interaction(
         type="email",
         topic="Email küldés",
         summary=f"{recipient_name} ({recipient_email}) — {subject}",
-        result="Sikeresen elküldve" if sent_ok else f"Hiba: {error_msg}",
+        result="Szimulált küldés (DEV MODE)",
         tool_name="send_followup_email",
         session_id=_current_session_id,
     )
 
-    if sent_ok:
-        return f"Email sikeresen elküldve {recipient_name} ({recipient_email}) részére."
-    else:
-        return f"Hiba az email küldésekor: {error_msg}"
+    return f"Email sikeresen (szimulálva) elküldve {recipient_name} ({recipient_email}) részére. [DEV MODE — valódi küldés kikapcsolva]"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
