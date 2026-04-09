@@ -319,32 +319,55 @@ def get_tasks(completed: bool | None = None, limit: int = 100) -> list[dict]:
 # ANALYTICS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def get_stats(days: int = 30) -> dict:
-    """Return aggregated stats for the admin dashboard."""
+def get_stats(period: str = "month") -> dict:
+    """Return aggregated stats for the admin dashboard.
+
+    period: 'week'  = current calendar week (Mon-Sun)
+            'month' = current calendar month
+            'year'  = last 12 months, grouped by month
+    """
     with get_db() as conn:
         total_sessions = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
         total_interactions = conn.execute("SELECT COUNT(*) FROM interactions").fetchone()[0]
         total_emails = conn.execute("SELECT COUNT(*) FROM email_logs").fetchone()[0]
-        total_bookings = conn.execute(
-            "SELECT COUNT(*) FROM calendar_events"
-        ).fetchone()[0]
-        open_tasks = conn.execute(
-            "SELECT COUNT(*) FROM tasks WHERE completed = 0"
-        ).fetchone()[0]
+        total_bookings = conn.execute("SELECT COUNT(*) FROM calendar_events").fetchone()[0]
+        open_tasks = conn.execute("SELECT COUNT(*) FROM tasks WHERE completed = 0").fetchone()[0]
 
         # Interactions by type
         type_rows = conn.execute(
             "SELECT type, COUNT(*) as cnt FROM interactions GROUP BY type ORDER BY cnt DESC"
         ).fetchall()
 
-        # Sessions per day (last N days)
-        daily_rows = conn.execute(
-            """SELECT DATE(started_at) as day, COUNT(*) as cnt
-               FROM sessions
-               WHERE started_at >= datetime('now', ?)
-               GROUP BY day ORDER BY day ASC""",
-            (f"-{days} days",)
-        ).fetchall()
+        # Sessions per period
+        if period == "week":
+            # Current week: Monday–today (Hungarian week starts on Monday)
+            daily_rows = conn.execute(
+                """SELECT DATE(started_at) as day, COUNT(*) as cnt
+                   FROM sessions
+                   WHERE DATE(started_at) >= DATE('now', 'weekday 1', '-7 days')
+                   GROUP BY day ORDER BY day ASC"""
+            ).fetchall()
+            chart_data = [{"day": r["day"], "count": r["cnt"]} for r in daily_rows]
+
+        elif period == "month":
+            # Current calendar month
+            daily_rows = conn.execute(
+                """SELECT DATE(started_at) as day, COUNT(*) as cnt
+                   FROM sessions
+                   WHERE strftime('%Y-%m', started_at) = strftime('%Y-%m', 'now')
+                   GROUP BY day ORDER BY day ASC"""
+            ).fetchall()
+            chart_data = [{"day": r["day"], "count": r["cnt"]} for r in daily_rows]
+
+        else:  # year
+            # Last 12 months, grouped by month
+            monthly_rows = conn.execute(
+                """SELECT strftime('%Y-%m', started_at) as month, COUNT(*) as cnt
+                   FROM sessions
+                   WHERE started_at >= datetime('now', '-12 months')
+                   GROUP BY month ORDER BY month ASC"""
+            ).fetchall()
+            chart_data = [{"day": r["month"], "count": r["cnt"]} for r in monthly_rows]
 
         # Avg session duration
         avg_dur = conn.execute(
@@ -359,7 +382,7 @@ def get_stats(days: int = 30) -> dict:
         "open_tasks": open_tasks,
         "avg_session_duration": round(avg_dur or 0),
         "interactions_by_type": [{"type": r["type"], "count": r["cnt"]} for r in type_rows],
-        "sessions_per_day": [{"day": r["day"], "count": r["cnt"]} for r in daily_rows],
+        "sessions_per_day": chart_data,
     }
 
 

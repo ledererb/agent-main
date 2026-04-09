@@ -165,9 +165,9 @@ async def admin_login(req: LoginRequest):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/admin/api/stats")
-async def admin_stats(days: int = 30, username: str = Depends(verify_jwt)):
+async def admin_stats(period: str = "month", username: str = Depends(verify_jwt)):
     """Analytics summary stats."""
-    return db.get_stats(days=days)
+    return db.get_stats(period=period)
 
 
 @app.get("/admin/api/interactions")

@@ -320,29 +320,29 @@
     /* ── Stats grid ────────────────────────────────────────────────── */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 28px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
     }
 
     .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px 24px;
+      border-radius: 12px;
+      padding: 14px 16px;
       transition: border-color 0.2s;
     }
 
     .stat-card:hover { border-color: rgba(0,212,200,0.3); }
 
     .stat-icon {
-      width: 40px; height: 40px;
-      border-radius: 10px;
+      width: 30px; height: 30px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 14px;
-      font-size: 18px;
+      margin-bottom: 8px;
+      font-size: 14px;
     }
 
     .stat-icon.teal  { background: rgba(0,212,200,0.12); }
@@ -353,28 +353,28 @@
     .stat-icon.orange{ background: rgba(249,115,22,0.12); }
 
     .stat-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .stat-value {
-      font-size: 30px;
+      font-size: 22px;
       font-weight: 700;
       letter-spacing: -0.5px;
       line-height: 1;
-      margin-bottom: 8px;
     }
 
     .stat-trend {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       display: flex;
       align-items: center;
       gap: 4px;
+      margin-top: 4px;
     }
 
     .stat-trend.up   { color: var(--green); }
@@ -384,21 +384,22 @@
     .charts-row {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: 16px;
-      margin-bottom: 28px;
+      gap: 12px;
+      margin-bottom: 0;
     }
 
     .chart-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px 24px;
+      border-radius: 12px;
+      padding: 16px 18px;
     }
 
     .chart-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
+      color: var(--text-muted);
     }
 
     .chart-canvas { width: 100% !important; }
@@ -532,6 +533,9 @@
     .type-badge-map { display: none; }
 
     /* ── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 1400px) {
+      .stats-grid { grid-template-columns: repeat(3,1fr); }
+    }
     @media (max-width: 1100px) {
       .stats-grid { grid-template-columns: repeat(2,1fr); }
       .charts-row { grid-template-columns: 1fr; }
@@ -622,36 +626,39 @@
 
     <!-- ANALYTICS PAGE -->
     <div class="page active" id="page-analytics">
-      <div class="page-header">
+      <div class="page-header" style="margin-bottom:14px;">
         <div>
           <div class="page-title">Analitika</div>
           <div class="page-subtitle">Összesített teljesítmény és hangügynök statisztikák</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <select id="stats-days" onchange="loadStats()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">
-            <option value="7">Elmúlt 7 nap</option>
-            <option value="30" selected>Elmúlt 30 nap</option>
-            <option value="90">Elmúlt 90 nap</option>
+          <select id="stats-days" onchange="loadStats()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 12px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;">
+            <option value="week">Jelenlegi hét</option>
+            <option value="month" selected>Jelen hónap</option>
+            <option value="year">Éves nézet</option>
           </select>
-          <button onclick="loadStats()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+          <button onclick="loadStats()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:7px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;">↻</button>
         </div>
       </div>
 
       <div class="stats-grid" id="stats-grid">
-        <!-- Populated by JS -->
-        <div class="stat-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+        <div class="stat-card" style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-muted);">
           <div class="spinner"></div>&nbsp; Adatok betöltése...
         </div>
       </div>
 
       <div class="charts-row">
-        <div class="chart-card">
+        <div class="chart-card" style="height:300px;">
           <div class="chart-title">Sessionök időbeli alakulása</div>
-          <canvas id="sessions-chart" class="chart-canvas" height="160"></canvas>
+          <div style="position:relative;height:calc(100% - 30px);">
+            <canvas id="sessions-chart" class="chart-canvas"></canvas>
+          </div>
         </div>
-        <div class="chart-card">
+        <div class="chart-card" style="height:300px;">
           <div class="chart-title">Interakció típusonként</div>
-          <canvas id="types-chart" class="chart-canvas" height="160"></canvas>
+          <div style="position:relative;height:calc(100% - 30px);">
+            <canvas id="types-chart" class="chart-canvas"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -849,30 +856,30 @@ function showPage(page) {
 
 // ── ANALYTICS ─────────────────────────────────────────────────────────────────
 async function loadStats() {
-  const days  = document.getElementById('stats-days').value;
-  const grid  = document.getElementById('stats-grid');
-  grid.innerHTML = `<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><div class="spinner"></div></div>`;
+  const period = document.getElementById('stats-days').value;
+  const grid   = document.getElementById('stats-grid');
+  grid.innerHTML = `<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-muted);"><div class="spinner"></div></div>`;
 
   try {
-    const res  = await authFetch(`/admin/api/stats?days=${days}`);
+    const res  = await authFetch(`/admin/api/stats?period=${period}`);
     const data = await res.json();
     renderStats(data);
-  } catch(e) { grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:var(--red);padding:40px;">Hiba az adatok betöltésekor.</div>'; }
+  } catch(e) { grid.innerHTML = '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:var(--red);padding:30px;">Hiba az adatok betöltésekor.</div>'; }
 }
 
 function renderStats(data) {
   const grid = document.getElementById('stats-grid');
   const stats = [
-    { label: 'Összes session',    value: data.total_sessions,     icon: '🎙️', cls: 'teal',   trend: '' },
-    { label: 'Interakciók',       value: data.total_interactions,  icon: '⚡',  cls: 'blue',   trend: '' },
-    { label: 'Foglalások',        value: data.total_bookings,      icon: '📅',  cls: 'green',  trend: '' },
-    { label: 'Emailek küldve',    value: data.total_emails,        icon: '✉️',  cls: 'purple', trend: '' },
-    { label: 'Nyitott feladatok', value: data.open_tasks,          icon: '✓',   cls: 'yellow', trend: '' },
-    { label: 'Átl. session (mp)', value: data.avg_session_duration,icon: '⏱️',  cls: 'orange', trend: '' },
+    { label: 'Összes session',    value: data.total_sessions,      icon: '🎙️', cls: 'teal',   page: 'sessions' },
+    { label: 'Interakciók',       value: data.total_interactions,   icon: '⚡',  cls: 'blue',   page: 'interactions' },
+    { label: 'Foglalások',        value: data.total_bookings,       icon: '📅',  cls: 'green',  page: 'calendar' },
+    { label: 'Emailek küldve',    value: data.total_emails,         icon: '✉️',  cls: 'purple', page: 'emails' },
+    { label: 'Nyitott feladatok', value: data.open_tasks,           icon: '✓',   cls: 'yellow', page: 'sessions' },
+    { label: 'Átl. session (mp)', value: data.avg_session_duration, icon: '⏱️',  cls: 'orange', page: 'sessions' },
   ];
 
   grid.innerHTML = stats.map(s => `
-    <div class="stat-card">
+    <div class="stat-card" onclick="showPage('${s.page}')" style="cursor:pointer;" title="${s.label} → ${s.page} nézet">
       <div class="stat-icon ${s.cls}">${s.icon}</div>
       <div class="stat-label">${s.label}</div>
       <div class="stat-value">${s.value ?? 0}</div>
@@ -883,6 +890,14 @@ function renderStats(data) {
   const daily = data.sessions_per_day || [];
   const ctx1  = document.getElementById('sessions-chart').getContext('2d');
   if (sessionsChart) sessionsChart.destroy();
+  // Dynamic Y-axis: avg sits at midpoint, max = avg*2 + 10% buffer
+  const counts = daily.map(d => d.count).filter(v => v > 0);
+  const avg    = counts.length ? counts.reduce((a, b) => a + b, 0) / counts.length : 5;
+  const maxVal = counts.length ? Math.max(...counts) : 10;
+  // Scale so avg is at midpoint; never cut off actual max
+  const yMax   = Math.ceil(Math.max(avg * 2.2, maxVal * 1.25));
+  const yStep  = Math.max(1, Math.ceil(yMax / 8));
+
   sessionsChart = new Chart(ctx1, {
     type: 'line',
     data: {
@@ -901,10 +916,16 @@ function renderStats(data) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { color: '#6b7fa3', font: { size: 11 } }, grid: { color: '#1e2d45' } },
-        y: { ticks: { color: '#6b7fa3', font: { size: 11 }, stepSize: 1 }, grid: { color: '#1e2d45' } }
+        y: {
+          min: 0,
+          max: yMax,
+          ticks: { color: '#6b7fa3', font: { size: 11 }, stepSize: yStep },
+          grid: { color: '#1e2d45' }
+        }
       }
     }
   });
@@ -925,12 +946,19 @@ function renderStats(data) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#6b7fa3', font: { size: 11 }, padding: 12 } }
+        legend: { position: 'bottom', labels: { color: '#6b7fa3', font: { size: 11 }, padding: 10 } }
       }
     }
   });
+
+  // Force correct size after first render
+  setTimeout(() => {
+    if (sessionsChart) sessionsChart.resize();
+    if (typesChart) typesChart.resize();
+  }, 50);
 }
 
 // ── SESSION CARDS (Interactions tab) ─────────────────────────────────────────
@@ -1140,8 +1168,7 @@ function esc(str) {
 
 // ── Auto login if token exists ────────────────────────────────────────────────
 if (authToken) {
-  // verify token is still valid by trying a quick fetch
-  authFetch('/admin/api/stats?days=1')
+  authFetch('/admin/api/stats?period=month')
     .then(() => enterApp())
     .catch(() => {
       authToken = '';
