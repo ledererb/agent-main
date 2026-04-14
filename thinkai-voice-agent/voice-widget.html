@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThinkAI Asszisztens</title>
+    <title>ThinkAI — AI Ügyfélszolgálat Demo</title>
+    <meta name="description" content="ThinkAI AI ügyfélszolgálat demó — működő AI megoldások vállalkozásoknak">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,179 +15,245 @@
             box-sizing: border-box;
         }
 
-        html,
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0c0c0c;
+            --bg-card: rgba(18, 18, 18, 0.85);
+            --bg-card-hover: rgba(28, 28, 28, 0.9);
+            --accent: #00E5CC;
+            --accent-glow: rgba(0, 229, 204, 0.25);
+            --accent-dim: rgba(0, 229, 204, 0.1);
+            --accent-hover: #33ffe6;
+            --secondary: #1a1a2e;
+            --electric: #6366f1;
+            --electric-glow: rgba(99, 102, 241, 0.25);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.25);
+            --text-primary: #f5f5f5;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(0, 229, 204, 0.2);
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0a0a1a;
-            color: #ffffff;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        /* ── Layout ─────────────────────────────────────────── */
+        /* ── Subtle grid background ─────────────────── */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(rgba(0, 229, 204, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 204, 0.015) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(0, 229, 204, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── 3-column Layout ──────────────────────── */
         .app {
             display: grid;
-            grid-template-columns: 1fr 380px 1fr;
-            gap: 0;
-            min-height: 100vh;
-            max-width: 1400px;
-            margin: 0 auto;
+            grid-template-columns: 280px 1fr 280px;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 900px) {
             .app {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto;
+            }
+            .side-panel {
+                display: none;
             }
         }
 
-        /* ── Side Panels ────────────────────────────────────── */
+        /* ── Side Panels ──────────────────────────────── */
         .side-panel {
-            padding: 1.5rem 1.2rem;
+            background: var(--bg-card);
+            backdrop-filter: blur(24px);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
         }
 
         .side-panel:last-child {
             border-right: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 1px solid var(--border);
         }
 
         .panel-header {
+            padding: 1.2rem 1.2rem 0.8rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.8rem;
         }
 
         .panel-header .icon {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
         }
 
         .panel-header h2 {
-            font-size: 0.95rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.82rem;
             font-weight: 600;
-            color: #ccd6f6;
-            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            flex: 1;
         }
 
         .panel-badge {
-            margin-left: auto;
-            background: rgba(102, 126, 234, 0.15);
-            color: #667eea;
+            background: var(--accent-dim);
+            color: var(--accent);
             font-size: 0.7rem;
-            font-weight: 600;
+            font-weight: 700;
             padding: 2px 8px;
-            border-radius: 10px;
+            border-radius: 4px;
+            min-width: 22px;
+            text-align: center;
+            font-family: 'Space Grotesk', monospace;
         }
 
         .panel-content {
             flex: 1;
             overflow-y: auto;
+            padding: 0.8rem;
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+            scrollbar-color: rgba(0, 229, 204, 0.1) transparent;
         }
 
         .empty-state {
             text-align: center;
-            padding: 3rem 1rem;
-            color: #4a5568;
-            font-size: 0.85rem;
+            padding: 2rem 1rem;
+            color: var(--text-muted);
         }
 
         .empty-state .empty-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
+            font-size: 2rem;
+            margin-bottom: 0.6rem;
             opacity: 0.4;
         }
 
-        /* ── Calendar items ─────────────────────────────────── */
+        .empty-state p {
+            font-size: 0.78rem;
+            line-height: 1.5;
+        }
+
+        /* Calendar items */
         .cal-item {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 0.75rem 0.85rem;
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 6px;
+            padding: 0.7rem 0.8rem;
             margin-bottom: 0.5rem;
-            transition: all 0.2s;
             animation: slideIn 0.3s ease;
+            transition: border-color 0.2s;
         }
 
         .cal-item:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(102, 126, 234, 0.3);
+            border-color: var(--border-hover);
+            border-left-color: var(--accent);
         }
 
-        .cal-item .cal-title {
-            font-size: 0.85rem;
+        .cal-title {
             font-weight: 600;
-            color: #e2e8f0;
+            font-size: 0.8rem;
+            color: var(--text-primary);
             margin-bottom: 0.25rem;
         }
 
-        .cal-item .cal-meta {
-            font-size: 0.75rem;
-            color: #667eea;
+        .cal-meta {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
             display: flex;
-            align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
         }
 
-        .cal-item .cal-duration {
-            color: #8892b0;
-            font-size: 0.7rem;
+        .cal-duration {
+            color: var(--accent);
+            font-family: 'Space Grotesk', monospace;
         }
 
-        .cal-item .cal-attendee {
-            font-size: 0.7rem;
-            color: #64748b;
-            margin-top: 0.2rem;
+        .cal-attendee {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
         }
 
-        /* ── Email items ────────────────────────────────────── */
+        /* Email items */
         .email-item {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 0.75rem 0.85rem;
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--electric);
+            border-radius: 6px;
+            padding: 0.7rem 0.8rem;
             margin-bottom: 0.5rem;
-            transition: all 0.2s;
             animation: slideIn 0.3s ease;
+            transition: border-color 0.2s;
         }
 
         .email-item:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(248, 87, 166, 0.3);
+            border-color: var(--border-hover);
+            border-left-color: var(--electric);
         }
 
-        .email-item .email-to {
-            font-size: 0.85rem;
+        .email-to {
             font-weight: 600;
-            color: #e2e8f0;
-            margin-bottom: 0.15rem;
+            font-size: 0.8rem;
+            color: var(--text-primary);
         }
 
-        .email-item .email-subject {
-            font-size: 0.78rem;
-            color: #f857a6;
-            margin-bottom: 0.3rem;
-        }
-
-        .email-item .email-body {
+        .email-subject {
             font-size: 0.75rem;
-            color: #a8b2d1;
+            color: var(--accent);
+            margin: 0.2rem 0;
+        }
+
+        .email-body {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
-        .email-item .email-meta {
+        .email-meta {
             font-size: 0.68rem;
-            color: #64748b;
+            color: var(--text-muted);
             margin-top: 0.35rem;
             display: flex;
             justify-content: space-between;
@@ -198,32 +265,27 @@
             font-size: 0.65rem;
             font-weight: 600;
             padding: 1px 6px;
-            border-radius: 6px;
+            border-radius: 3px;
+            font-family: 'Space Grotesk', monospace;
+            letter-spacing: 0.03em;
         }
 
         .email-status.sent {
-            background: rgba(72, 187, 120, 0.15);
-            color: #48bb78;
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--success);
         }
 
         .email-status.failed {
-            background: rgba(245, 101, 101, 0.15);
-            color: #f56565;
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--error);
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Center Voice Panel ─────────────────────────────── */
+        /* ── Center Voice Panel ─────────────────────────── */
         .voice-panel {
             display: flex;
             flex-direction: column;
@@ -233,20 +295,21 @@
             position: relative;
         }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.02em;
+        /* Logo */
+        .logo-img {
+            height: 80px;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 30px var(--accent-glow));
         }
 
         .subtitle {
-            color: #8892b0;
-            font-size: 0.85rem;
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
             margin-bottom: 2.5rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
         }
 
         /* Mic button */
@@ -255,7 +318,7 @@
             height: 110px;
             border-radius: 50%;
             border: none;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--bg-secondary);
             color: white;
             font-size: 2.2rem;
             cursor: pointer;
@@ -265,13 +328,19 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.2rem;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-            animation: pulse-idle 2.5s infinite;
+            box-shadow:
+                0 0 0 2px var(--accent),
+                0 0 40px var(--accent-glow),
+                inset 0 0 20px rgba(0, 229, 204, 0.03);
+            animation: pulse-idle 3s infinite;
         }
 
         .mic-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 12px 48px rgba(102, 126, 234, 0.5);
+            box-shadow:
+                0 0 0 2px var(--accent-hover),
+                0 0 60px var(--accent-glow),
+                inset 0 0 30px rgba(0, 229, 204, 0.06);
         }
 
         .mic-btn:active {
@@ -279,90 +348,59 @@
         }
 
         .mic-btn.listening {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            animation: pulse-blue 2s infinite;
+            box-shadow: 0 0 0 2px var(--accent), 0 0 30px var(--accent-glow);
+            animation: pulse-accent 2s infinite;
         }
 
         .mic-btn.thinking {
-            background: linear-gradient(135deg, #f6d365, #fda085);
-            animation: pulse-orange 1.5s infinite;
+            box-shadow: 0 0 0 2px var(--electric), 0 0 30px var(--electric-glow);
+            animation: pulse-electric 1.5s infinite;
         }
 
         .mic-btn.speaking {
-            background: linear-gradient(135deg, #f857a6, #ff5858);
-            animation: pulse-pink 2s infinite;
+            box-shadow: 0 0 0 2px var(--amber), 0 0 30px var(--amber-glow);
+            animation: pulse-amber 2s infinite;
         }
 
         .mic-btn.connecting {
-            background: linear-gradient(135deg, #a8a8a8, #666);
+            box-shadow: 0 0 0 2px var(--text-muted), 0 0 20px rgba(82, 82, 82, 0.2);
             animation: pulse-gray 1s infinite;
         }
 
         .mic-btn.reconnecting {
-            background: linear-gradient(135deg, #f6d365, #fda085);
-            animation: pulse-orange 0.8s infinite;
+            box-shadow: 0 0 0 2px var(--amber), 0 0 20px var(--amber-glow);
+            animation: pulse-amber 0.8s infinite;
         }
 
         @keyframes pulse-idle {
-
-            0%,
-            100% {
-                box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            0%, 100% {
+                box-shadow: 0 0 0 2px var(--accent), 0 0 40px var(--accent-glow), inset 0 0 20px rgba(0, 229, 204, 0.03);
                 transform: scale(1);
             }
-
             50% {
-                box-shadow: 0 8px 48px rgba(102, 126, 234, 0.5);
-                transform: scale(1.03);
+                box-shadow: 0 0 0 2px var(--accent), 0 0 60px var(--accent-glow), inset 0 0 30px rgba(0, 229, 204, 0.05);
+                transform: scale(1.02);
             }
         }
 
-        @keyframes pulse-blue {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0px rgba(102, 126, 234, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 18px rgba(102, 126, 234, 0);
-            }
+        @keyframes pulse-accent {
+            0%, 100% { box-shadow: 0 0 0 2px var(--accent), 0 0 0 0px var(--accent-glow); }
+            50% { box-shadow: 0 0 0 2px var(--accent), 0 0 0 18px rgba(0, 229, 204, 0); }
         }
 
-        @keyframes pulse-pink {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0px rgba(248, 87, 166, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 18px rgba(248, 87, 166, 0);
-            }
+        @keyframes pulse-electric {
+            0%, 100% { box-shadow: 0 0 0 2px var(--electric), 0 0 0 0px var(--electric-glow); }
+            50% { box-shadow: 0 0 0 2px var(--electric), 0 0 0 14px rgba(99, 102, 241, 0); }
         }
 
-        @keyframes pulse-orange {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0px rgba(246, 211, 101, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 14px rgba(246, 211, 101, 0);
-            }
+        @keyframes pulse-amber {
+            0%, 100% { box-shadow: 0 0 0 2px var(--amber), 0 0 0 0px var(--amber-glow); }
+            50% { box-shadow: 0 0 0 2px var(--amber), 0 0 0 18px rgba(245, 158, 11, 0); }
         }
 
         @keyframes pulse-gray {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0px rgba(168, 168, 168, 0.3);
-            }
-
-            50% {
-                box-shadow: 0 0 0 14px rgba(168, 168, 168, 0);
-            }
+            0%, 100% { box-shadow: 0 0 0 2px var(--text-muted), 0 0 0 0px rgba(82, 82, 82, 0.2); }
+            50% { box-shadow: 0 0 0 2px var(--text-muted), 0 0 0 14px rgba(82, 82, 82, 0); }
         }
 
         .mic-btn.speaking::after {
@@ -371,52 +409,31 @@
             width: 130px;
             height: 130px;
             border-radius: 50%;
-            border: 2px solid rgba(248, 87, 166, 0.3);
+            border: 1.5px solid rgba(245, 158, 11, 0.2);
             animation: ring 2s infinite;
         }
 
         @keyframes ring {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            100% {
-                transform: scale(1.4);
-                opacity: 0;
-            }
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
 
         .status {
-            font-size: 0.9rem;
-            color: #8892b0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
             min-height: 1.5em;
             transition: all 0.3s;
+            font-weight: 500;
+            letter-spacing: 0.02em;
         }
 
-        .status.listening {
-            color: #667eea;
-        }
-
-        .status.thinking {
-            color: #fda085;
-        }
-
-        .status.speaking {
-            color: #f857a6;
-        }
-
-        .status.connecting {
-            color: #888;
-        }
-
-        .status.reconnecting {
-            color: #fda085;
-        }
-
-        .status.error {
-            color: #ff5858;
-        }
+        .status.listening { color: var(--accent); }
+        .status.thinking { color: var(--electric); }
+        .status.speaking { color: var(--amber); }
+        .status.connecting { color: var(--text-muted); }
+        .status.reconnecting { color: var(--amber); }
+        .status.error { color: var(--error); }
 
         /* Visualizer */
         .visualizer {
@@ -430,119 +447,170 @@
             transition: opacity 0.3s;
         }
 
-        .visualizer.active {
-            opacity: 1;
-        }
+        .visualizer.active { opacity: 1; }
 
         .visualizer .bar {
-            width: 3.5px;
-            border-radius: 2px;
+            width: 3px;
+            border-radius: 1.5px;
             height: 6px;
             transition: height 0.1s, background 0.3s;
-            background: linear-gradient(180deg, #667eea, #764ba2);
+            background: var(--accent);
         }
 
         .visualizer.agent-speaking .bar {
-            background: linear-gradient(180deg, #f857a6, #ff5858);
+            background: var(--amber);
         }
 
         .visualizer.active .bar {
             animation: equalize 0.8s infinite ease-in-out;
         }
 
-        .visualizer.active .bar:nth-child(1) {
-            animation-delay: 0.0s;
-        }
-
-        .visualizer.active .bar:nth-child(2) {
-            animation-delay: 0.1s;
-        }
-
-        .visualizer.active .bar:nth-child(3) {
-            animation-delay: 0.2s;
-        }
-
-        .visualizer.active .bar:nth-child(4) {
-            animation-delay: 0.3s;
-        }
-
-        .visualizer.active .bar:nth-child(5) {
-            animation-delay: 0.4s;
-        }
-
-        .visualizer.active .bar:nth-child(6) {
-            animation-delay: 0.15s;
-        }
-
-        .visualizer.active .bar:nth-child(7) {
-            animation-delay: 0.25s;
-        }
+        .visualizer.active .bar:nth-child(1) { animation-delay: 0.0s; }
+        .visualizer.active .bar:nth-child(2) { animation-delay: 0.1s; }
+        .visualizer.active .bar:nth-child(3) { animation-delay: 0.2s; }
+        .visualizer.active .bar:nth-child(4) { animation-delay: 0.3s; }
+        .visualizer.active .bar:nth-child(5) { animation-delay: 0.4s; }
+        .visualizer.active .bar:nth-child(6) { animation-delay: 0.15s; }
+        .visualizer.active .bar:nth-child(7) { animation-delay: 0.25s; }
 
         @keyframes equalize {
-
-            0%,
-            100% {
-                height: 6px;
-            }
-
-            50% {
-                height: 28px;
-            }
+            0%, 100% { height: 6px; }
+            50% { height: 28px; }
         }
 
-        /* Transcript */
-        .transcript {
+        /* Activity Feed */
+        .activity-feed {
             margin-top: 1.5rem;
-            padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            min-height: 50px;
-            font-size: 0.8rem;
-            color: #a8b2d1;
+            padding: 0.6rem;
+            background: rgba(12, 12, 12, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            min-height: 40px;
+            max-height: 180px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
             text-align: left;
-            max-height: 200px;
             overflow-y: auto;
             width: 100%;
             display: none;
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+            scrollbar-color: rgba(0, 229, 204, 0.08) transparent;
         }
 
-        .transcript.visible {
-            display: block;
-        }
+        .activity-feed.visible { display: block; }
 
-        .transcript .user {
-            color: #667eea;
+        /* Transcript boxes */
+        .transcript-box {
+            margin-top: 0.75rem;
+            padding: 0.6rem 0.8rem;
+            background: rgba(12, 12, 12, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            max-height: 120px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: left;
+            overflow-y: auto;
+            width: 100%;
+            display: none;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 229, 204, 0.08) transparent;
+        }
+        .transcript-box.visible { display: block; }
+        .transcript-box .transcript-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(0, 229, 204, 0.5);
             margin-bottom: 0.3rem;
         }
+        .transcript-box .transcript-text {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.4;
+        }
+        .transcript-box.agent-transcript .transcript-label { color: rgba(168, 130, 255, 0.5); }
+        .transcript-box.agent-transcript .transcript-text { color: rgba(168, 130, 255, 0.85); }
 
-        .transcript .agent {
-            color: #f857a6;
-            margin-bottom: 0.3rem;
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.4rem;
+            border-radius: 6px;
+            margin-bottom: 0.25rem;
+            animation: activityIn 0.3s ease;
+            transition: background 0.2s;
         }
 
-        /* ── Live dot ───────────────────────────────────────── */
+        .activity-item:hover {
+            background: rgba(0, 229, 204, 0.04);
+        }
+
+        .activity-item .activity-icon {
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            width: 1.2rem;
+            text-align: center;
+        }
+
+        .activity-item .activity-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .activity-item .activity-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            font-family: 'Space Grotesk', monospace;
+        }
+
+        .activity-item.status-item { color: var(--text-muted); }
+        .activity-item.tool-item { color: var(--accent); }
+        .activity-item.result-item { color: var(--text-primary); }
+        .activity-item.error-item { color: var(--error); }
+
+        @keyframes activityIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Powered by footer ────────────────────────── */
+        .powered-by {
+            position: absolute;
+            bottom: 1.2rem;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .powered-by a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .powered-by a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Live dot ─────────────────────────────────── */
         .live-dot {
             width: 6px;
             height: 6px;
-            background: #48bb78;
+            background: var(--success);
             border-radius: 50%;
             display: inline-block;
             animation: blink 2s infinite;
         }
 
         @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
     </style>
 </head>
@@ -566,8 +634,8 @@
 
         <!-- CENTER: Voice -->
         <div class="voice-panel">
-            <div class="logo">ThinkAI</div>
-            <div class="subtitle">AI Voice Asszisztens</div>
+            <img class="logo-img" src="/thinkai-logo.png" alt="ThinkAI">
+            <div class="subtitle">AI Ügyfélszolgálat Demo</div>
 
             <div class="visualizer" id="visualizer">
                 <div class="bar"></div>
@@ -581,7 +649,17 @@
 
             <button class="mic-btn" id="micBtn" onclick="toggleConnection()">🎤</button>
             <div class="status" id="status">Kattints ide, és beszélj velem!</div>
-            <div class="transcript" id="transcript"></div>
+            <div class="activity-feed" id="activityFeed"></div>
+            <div class="transcript-box" id="userTranscript">
+                <div class="transcript-label">🎤 Te mondtad</div>
+                <div class="transcript-text" id="userTranscriptText">—</div>
+            </div>
+            <div class="transcript-box agent-transcript" id="agentTranscript">
+                <div class="transcript-label">🤖 Asszisztens</div>
+                <div class="transcript-text" id="agentTranscriptText">—</div>
+            </div>
+
+            <div class="powered-by">Powered by <a href="https://thinkai.hu" target="_blank">ThinkAI</a></div>
         </div>
 
         <!-- RIGHT: Emails -->
@@ -610,10 +688,8 @@
         let reconnecting = false;
         let agentSpeaking = false;
         let pollInterval = null;
-        let currentRoomName = null;  // tracked for session duration
 
-        // ── Inactivity auto-disconnect ───────────────────────
-        const INACTIVITY_TIMEOUT = 20000; // 20 seconds
+        const INACTIVITY_TIMEOUT = 20000;
         const COUNTDOWN_SECONDS = 5;
         let inactivityTimer = null;
         let countdownTimer = null;
@@ -648,9 +724,8 @@
         const micBtn = document.getElementById('micBtn');
         const statusEl = document.getElementById('status');
         const visualizer = document.getElementById('visualizer');
-        const transcript = document.getElementById('transcript');
+        const activityFeed = document.getElementById('activityFeed');
 
-        // ── State management ─────────────────────────────────
         function setState(state, message) {
             micBtn.classList.remove('listening', 'thinking', 'speaking', 'connecting', 'reconnecting');
             statusEl.classList.remove('listening', 'thinking', 'speaking', 'connecting', 'reconnecting', 'error');
@@ -661,21 +736,16 @@
             if (state === 'speaking') visualizer.classList.add('agent-speaking');
         }
 
-        // ── Toggle Connection ────────────────────────────────
         window.toggleConnection = async function () {
             if (connected) { disconnect(); } else { await connect(); }
         };
 
-        // Helper: fetch with retry (handles Railway cold starts)
         async function fetchWithRetry(url, retries = 3, delayMs = 2000) {
             for (let i = 0; i < retries; i++) {
                 try {
                     const resp = await fetch(url);
                     if (resp.ok) return resp;
-                    // Server returned error, retry
-                } catch (e) {
-                    // Network error (container still waking), retry
-                }
+                } catch (e) { }
                 if (i < retries - 1) {
                     await new Promise(r => setTimeout(r, delayMs));
                 }
@@ -686,17 +756,13 @@
         async function connect() {
             const MAX_CONNECT_ATTEMPTS = 3;
             for (let attempt = 1; attempt <= MAX_CONNECT_ATTEMPTS; attempt++) {
-                setState('connecting', attempt === 1 ? 'Felébresztem a szervert...' : `Újrapróbálom... (${attempt}/${MAX_CONNECT_ATTEMPTS})`);
+                setState('connecting', attempt === 1 ? 'Csatlakozás...' : `Újrapróbálom... (${attempt}/${MAX_CONNECT_ATTEMPTS})`);
                 try {
-                    // 1. Warm-up ping — wakes Railway container from sleep
-                    try { await fetch('/api/health'); } catch (e) { /* ignore */ }
+                    try { await fetch('/api/health'); } catch (e) { }
 
-                    // 2. Get token with retry (container may need a few seconds to fully start)
                     setState('connecting', 'Csatlakozás...');
                     const resp = await fetchWithRetry('/api/token', 3, 2000);
-                    const tokenData = await resp.json();
-                    const { token, url } = tokenData;
-                    currentRoomName = tokenData.room || null;
+                    const { token, url } = await resp.json();
 
                     room = new Room({
                         audioCaptureDefaults: { autoGainControl: true, echoCancellation: true, noiseSuppression: true },
@@ -719,7 +785,7 @@
                         for (const seg of segments) {
                             if (seg.final) {
                                 const isAgent = participant?.identity !== room.localParticipant?.identity;
-                                addTranscript(isAgent ? 'agent' : 'user', seg.text);
+                                handleTranscription(isAgent ? 'agent' : 'user', seg.text);
                             }
                         }
                     });
@@ -727,7 +793,7 @@
                         resetInactivity();
                         try {
                             const data = JSON.parse(new TextDecoder().decode(payload));
-                            if (data.type === 'transcription' && data.text) addTranscript(data.role || 'agent', data.text);
+                            if (data.type === 'transcription' && data.text) handleTranscription(data.role || 'agent', data.text);
                         } catch (e) { }
                     });
 
@@ -757,7 +823,6 @@
                     await room.connect(url, token);
                     await room.localParticipant.setMicrophoneEnabled(true);
 
-                    // 3. Wait for agent to join the room (cold start: agent worker may not be ready)
                     setState('connecting', 'Várok az asszisztensre...');
                     const agentJoined = await waitForAgent(room, 15000);
 
@@ -767,7 +832,7 @@
                         room = null;
                         if (attempt < MAX_CONNECT_ATTEMPTS) {
                             await new Promise(r => setTimeout(r, 1000));
-                            continue; // retry
+                            continue;
                         }
                         throw new Error('Az asszisztens nem érhető el. Próbáld újra!');
                     }
@@ -775,10 +840,11 @@
                     connected = true;
                     setState('listening', 'Hallgatlak...');
                     visualizer.classList.add('active');
-                    transcript.classList.add('visible');
+                    activityFeed.classList.add('visible');
+                    addActivity('🟢', 'Csatlakozva — beszélj hozzám!', 'status-item');
                     startPolling();
                     resetInactivity();
-                    return; // success!
+                    return;
 
                 } catch (err) {
                     console.error('Connection error:', err);
@@ -794,10 +860,8 @@
             }
         }
 
-        // Wait for a non-local participant (the agent) to join the room
         function waitForAgent(room, timeoutMs) {
             return new Promise((resolve) => {
-                // Check if agent is already in the room
                 for (const [, p] of room.remoteParticipants) {
                     resolve(true);
                     return;
@@ -815,71 +879,105 @@
             clearInterval(countdownTimer);
             inactivityTimer = null;
             countdownTimer = null;
-            // ── Record session end time ──────────────────────────
-            if (currentRoomName) {
-                fetch('/api/session/end', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: currentRoomName }),
-                }).catch(() => {});
-                currentRoomName = null;
-            }
             if (room) { room.disconnect(); room = null; }
             connected = false; reconnecting = false; agentSpeaking = false;
             micBtn.classList.remove('listening', 'thinking', 'speaking', 'connecting', 'reconnecting');
             statusEl.textContent = 'Kattints ide, és beszélj velem!';
             statusEl.className = 'status';
             visualizer.classList.remove('active', 'agent-speaking');
+            activityFeed.classList.remove('visible');
+            activityFeed.innerHTML = '';
             stopPolling();
         }
 
-        function normalizeUserText(text) {
-            // Remove repeated words/stutters: "a a a" → "a", "az az" → "az"
-            text = text.replace(/\b(\w+)(\s+\1)+\b/gi, '$1');
-            // Remove Hungarian filler words
-            text = text.replace(/\b(hát|szóval|ugye|na|nahát|izé|izé-izé|öö|ö|ööö|ááá|hmm|hm|tehát)\b\s*/gi, '');
-            // Fix common STT misspellings of ThinkAI
-            text = text.replace(/\b(finkáj|fink éj áj|finkai|finkéjáj|szinkáj|szinkéjáj|szink éj áj|think áj|thinkáj|think éj áj|tinkáj|tinkéjáj|tink éj áj|tinkai|tink ai)\b/gi, 'ThinkAI');
-            // Fix common STT misspellings of names
-            text = text.replace(/\bleaderrer\b/gi, 'Lederer');
-            text = text.replace(/\bleader\b(?=\s+[A-ZÁÉÍÓÖŐÚÜŰ])/gi, 'Lederer');
-            // Capitalize sentence start
-            text = text.replace(/^\s*\w/, c => c.toUpperCase());
-            // Collapse extra spaces
-            text = text.replace(/\s{2,}/g, ' ').trim();
-            // Remove trailing/leading noise
-            text = text.replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim();
-            return text;
+        // ── Activity Feed ─────────────────────────────────
+        const _toolPatterns = [
+            { re: /\b(ellenőrz|megnéz|ránéz)(öm|em)\b.*\bnaptár/i, icon: '📅', text: 'Naptár ellenőrzése...' },
+            { re: /\bnaptár(t|at)?\s+(ellenőrz|megnéz|nézem)/i, icon: '📅', text: 'Naptár ellenőrzése...' },
+            { re: /\b(most\s+)?(foglalom|lefoglalom|rögzítem)\b/i, icon: '📅', text: 'Időpont foglalása...' },
+            { re: /\b(most\s+)?(küldöm|elküldöm|megírom)\b.*\b(email|levél)/i, icon: '📧', text: 'Email küldése...' },
+            { re: /\b(email|levél)(t)?\s+(küldöm|írom)/i, icon: '📧', text: 'Email küldése...' },
+            { re: /\b(lekérdezem|megnézem)\b.*\bidőjárás/i, icon: '🌤️', text: 'Időjárás lekérdezése...' },
+            { re: /\b(most\s+)?(módosítom|megváltoztatom)\b/i, icon: '✏️', text: 'Esemény módosítása...' },
+            { re: /\b(most\s+)?(törlöm|lemondom)\b/i, icon: '🗑️', text: 'Esemény törlése...' },
+            { re: /\b(keresem|rákeresek|megnézem)\b.*\b(tudásbázis|információ)/i, icon: '🔍', text: 'Információ keresése...' },
+        ];
+
+        const _resultPatterns = [
+            { re: /sikeresen\s+(lefoglal|elküld|rögzít|módosít|töröl)/i, icon: '✅' },
+            { re: /\bfoglalva\b/i, icon: '✅' },
+            { re: /\belküldve\b/i, icon: '✅' },
+            { re: /\bhiba\b.*\btörtén/i, icon: '❌' },
+            { re: /\bütközés\b/i, icon: '⚠️' },
+        ];
+
+        let lastToolActivity = 0;
+
+        function addActivity(icon, text, className = '') {
+            const div = document.createElement('div');
+            div.className = 'activity-item ' + className;
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            div.innerHTML = `<span class="activity-icon">${icon}</span><span class="activity-text">${escHtml(text)}</span><span class="activity-time">${time}</span>`;
+            activityFeed.appendChild(div);
+            activityFeed.scrollTop = activityFeed.scrollHeight;
+            while (activityFeed.children.length > 12) activityFeed.removeChild(activityFeed.firstChild);
         }
 
-        function addTranscript(role, text) {
+        function handleTranscription(role, text) {
             if (!text || !text.trim()) return;
-            // Strip [LANG:XX] tags from display
+            if (role === 'user') {
+                const cleaned = text.trim().toLowerCase();
+                if (/^[bcdfghjklmnpqrstvwxyz]{2,}$/i.test(cleaned)) return;
+                if (['ksznm', 'kszn', 'hm', 'hmm', 'mhm', 'mm', 'sz', 'pszt'].includes(cleaned)) return;
+            }
+            if (role === 'agent') {
+                const t = text.trim();
+                if (/^silently[,.]?\s/i.test(t)) return;
+                if (/^I'm thinking\b/i.test(t)) return;
+                if (/^I need to\b/i.test(t)) return;
+                if (/^Therefore,? my response\b/i.test(t)) return;
+                if (/^My response will be\b/i.test(t)) return;
+                if (/^Let me think\b/i.test(t)) return;
+                if (/^I should\b/i.test(t)) return;
+                if (/^The user\b/i.test(t)) return;
+                if (/^I'll\b/i.test(t)) return;
+            }
             text = text.replace(/\[LANG:(HU|EN)\]/gi, '').trim();
             if (!text) return;
-            // Clean up phonetic spellings for display (agent text)
-            text = text.replace(/[Tt]ink-éj-áj/g, 'ThinkAI');
-            text = text.replace(/tink-éj-áj/g, 'ThinkAI');
-            text = text.replace(/éj-áj/g, 'AI');
-            text = text.replace(/Ízí|ízí/g, 'EAISY');
-            text = text.replace(/szé-er-em/g, 'CRM');
-            text = text.replace(/é-er-pé/g, 'ERP');
-            text = text.replace(/ThinkAI pont há ú/gi, 'thinkai.hu');
-            text = text.replace(/helló kukac ThinkAI pont há ú/gi, 'hello@thinkai.hu');
-            // Normalize user text (remove stutters, fillers, fix spelling)
-            if (role === 'user') {
-                text = normalizeUserText(text);
+
+            if (role === 'agent') {
+                const now = Date.now();
+                if (now - lastToolActivity > 3000) {
+                    for (const p of _toolPatterns) {
+                        if (p.re.test(text)) {
+                            addActivity(p.icon, p.text, 'tool-item');
+                            lastToolActivity = now;
+                            return;
+                        }
+                    }
+                }
+                for (const p of _resultPatterns) {
+                    if (p.re.test(text)) {
+                        const clean = text.replace(/[Tt]ink-éj-áj/g, 'ThinkAI').replace(/éj-áj/g, 'AI');
+                        const shortText = clean.length > 60 ? clean.substring(0, 60) + '...' : clean;
+                        addActivity(p.icon, shortText, p.icon === '❌' || p.icon === '⚠️' ? 'error-item' : 'result-item');
+                        return;
+                    }
+                }
             }
-            if (!text) return;
-            const div = document.createElement('div');
-            div.className = role;
-            div.textContent = (role === 'user' ? '🗣️ ' : '🤖 ') + text;
-            transcript.appendChild(div);
-            transcript.scrollTop = transcript.scrollHeight;
+
             if (role === 'user' && connected && !agentSpeaking) setState('thinking', 'Gondolkodom...');
+
+            // Update transcript boxes
+            const transcriptBox = role === 'user' ? document.getElementById('userTranscript') : document.getElementById('agentTranscript');
+            const transcriptText = role === 'user' ? document.getElementById('userTranscriptText') : document.getElementById('agentTranscriptText');
+            if (transcriptBox && transcriptText) {
+                transcriptBox.classList.add('visible');
+                transcriptText.textContent = text;
+            }
         }
 
-        // ── Polling ──────────────────────────────────────────
         let lastCalHash = '';
         let lastEmailHash = '';
 
@@ -916,25 +1014,20 @@
             const container = document.getElementById('calendarList');
             const badge = document.getElementById('calBadge');
             badge.textContent = events.length;
-
             if (events.length === 0) {
                 container.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><p>Nincs még foglalás.<br>Kérd az asszisztenst!</p></div>`;
                 return;
             }
-
-            // Only re-render if content changed (not just count)
             const calHash = JSON.stringify(events);
             if (calHash === lastCalHash) return;
             lastCalHash = calHash;
-
             container.innerHTML = events.map(ev => {
                 let dateStr = '';
                 try {
                     const d = new Date(ev.start_dt || ev.start);
                     const months = ['jan', 'feb', 'már', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szep', 'okt', 'nov', 'dec'];
                     dateStr = `${months[d.getMonth()]} ${d.getDate()}. ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                } catch (e) { dateStr = ev.start_dt || ev.start; }
-
+                } catch (e) { dateStr = ev.start_dt || ev.start || ''; }
                 return `<div class="cal-item">
                     <div class="cal-title">${escHtml(ev.title || 'Esemény')}</div>
                     <div class="cal-meta">
@@ -942,7 +1035,6 @@
                         <span class="cal-duration">· ${ev.duration_minutes || 30} perc</span>
                     </div>
                     ${ev.attendee ? `<div class="cal-attendee">👤 ${escHtml(ev.attendee)}</div>` : ''}
-                    ${ev.attendee_email ? `<div class="cal-attendee" style="font-size:0.7rem;color:#667eea;">✉️ ${escHtml(ev.attendee_email)}</div>` : ''}
                 </div>`;
             }).join('');
         }
@@ -951,29 +1043,24 @@
             const container = document.getElementById('emailList');
             const badge = document.getElementById('emailBadge');
             badge.textContent = emails.length;
-
             if (emails.length === 0) {
                 container.innerHTML = `<div class="empty-state"><div class="empty-icon">📧</div><p>Még nem küldtél emailt.<br>Kérd az asszisztenst!</p></div>`;
                 return;
             }
-
             const emailHash = JSON.stringify(emails);
             if (emailHash === lastEmailHash) return;
             lastEmailHash = emailHash;
-
             container.innerHTML = emails.map(em => {
                 let timeStr = '';
                 try {
                     const d = new Date(em.sent_at);
                     timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                 } catch (e) { timeStr = em.sent_at; }
-
                 const statusClass = em.status === 'sent' ? 'sent' : 'failed';
-                const statusText = em.status === 'sent' ? '✓ Elküldve' : '✗ Hiba';
-
+                const statusText = em.status === 'sent' ? '✓ SENT' : '✗ FAIL';
                 return `<div class="email-item">
                     <div class="email-to">📨 ${escHtml(em.to_name)}</div>
-                    <div class="email-addr" style="font-size:0.75rem;color:#667eea;margin-bottom:0.3rem;">${escHtml(em.to_email || '')}</div>
+                    <div class="email-addr" style="font-size:0.75rem;color:var(--accent);margin-bottom:0.3rem;">${escHtml(em.to_email || '')}</div>
                     <div class="email-subject">${escHtml(em.subject)}</div>
                     <div class="email-body">${escHtml(em.message)}</div>
                     <div class="email-meta">
@@ -990,7 +1077,6 @@
             return d.innerHTML;
         }
 
-        // Start polling immediately (so panels show data even without voice)
         startPolling();
     </script>
 </body>
