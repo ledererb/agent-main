@@ -201,6 +201,26 @@ async def admin_tasks(completed: str = "all", username: str = Depends(verify_jwt
     return {"tasks": db.get_tasks(completed=comp)}
 
 
+@app.patch("/admin/api/tasks/{task_id}/complete")
+async def admin_task_complete(task_id: int, username: str = Depends(verify_jwt)):
+    """Toggle task completed status."""
+    with db.get_db() as conn:
+        row = conn.execute("SELECT completed FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Task not found")
+        new_val = 0 if row["completed"] else 1
+        conn.execute("UPDATE tasks SET completed = ? WHERE id = ?", (new_val, task_id))
+    return {"ok": True, "completed": bool(new_val)}
+
+
+@app.delete("/admin/api/tasks/{task_id}")
+async def admin_task_delete(task_id: int, username: str = Depends(verify_jwt)):
+    """Delete a task."""
+    with db.get_db() as conn:
+        conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    return {"ok": True}
+
+
 @app.get("/admin/api/sessions")
 async def admin_sessions(limit: int = 50, username: str = Depends(verify_jwt)):
     """Recent sessions."""

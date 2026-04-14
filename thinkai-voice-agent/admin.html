@@ -1093,14 +1093,30 @@ function renderStats(data) {
   const grid = document.getElementById('stats-grid');
   const period = document.getElementById('stats-days').value;
   const prefix = { week: 'Heti', month: 'Havi', year: 'Évi' }[period] || '';
+  const prevLabel = { week: 'előző héthez', month: 'előző hónaphoz', year: 'előző évhez' }[period] || '';
+  const prev = data.previous_period || {};
+
+  function trendHtml(current, previous) {
+    if (previous === undefined || previous === null) return '';
+    const cur = Number(current) || 0;
+    const pre = Number(previous) || 0;
+    if (pre === 0 && cur === 0) return '';
+    if (pre === 0) return '<div class="stat-trend up">▲ Új adat</div>';
+    const diff = cur - pre;
+    const pct  = Math.round(Math.abs(diff / pre) * 100);
+    const sign = diff >= 0 ? '+' : '−';
+    const dir  = diff >= 0 ? 'up' : 'down';
+    const arrow = diff >= 0 ? '▲' : '▼';
+    return `<div class="stat-trend ${dir}">${arrow} ${sign}${pct}% <span style="font-weight:400;color:var(--text-muted);font-size:10px;">${prevLabel} képest</span></div>`;
+  }
 
   const stats = [
-    { label: `${prefix} session`,       value: data.total_sessions,      icon: '🎙️', cls: 'teal',   page: 'sessions' },
-    { label: `${prefix} interakció`,    value: data.total_interactions,   icon: '⚡',  cls: 'blue',   page: 'interactions' },
-    { label: `${prefix} foglalás`,      value: data.total_bookings,       icon: '📅',  cls: 'green',  page: 'calendar' },
-    { label: `${prefix} email`,         value: data.total_emails,         icon: '✉️',  cls: 'purple', page: 'emails' },
-    { label: 'Nyitott feladatok',             value: data.open_tasks,           icon: '✓',   cls: 'yellow', page: 'sessions' },
-    { label: `${prefix} átl. session (mp)`,   value: data.avg_session_duration, icon: '⏱️',  cls: 'orange', page: 'sessions' },
+    { label: `${prefix} session`,           value: data.total_sessions,       prev: prev.total_sessions,       icon: '🎙️', cls: 'teal',   page: 'sessions' },
+    { label: `${prefix} interakció`,        value: data.total_interactions,   prev: prev.total_interactions,   icon: '⚡',  cls: 'blue',   page: 'interactions' },
+    { label: `${prefix} foglalás`,          value: data.total_bookings,       prev: prev.total_bookings,       icon: '📅',  cls: 'green',  page: 'calendar' },
+    { label: `${prefix} email`,              value: data.total_emails,          prev: prev.total_emails,         icon: '✉️',  cls: 'purple', page: 'emails' },
+    { label: 'Nyitott feladatok',            value: data.open_tasks,            prev: null,                      icon: '✓',   cls: 'yellow', page: 'sessions' },
+    { label: `${prefix} átl. session (mp)`, value: data.avg_session_duration,  prev: prev.avg_session_duration, icon: '⏱️',  cls: 'orange', page: 'sessions' },
   ];
 
   grid.innerHTML = stats.map(s => `
@@ -1108,6 +1124,7 @@ function renderStats(data) {
       <div class="stat-icon ${s.cls}">${s.icon}</div>
       <div class="stat-label">${s.label}</div>
       <div class="stat-value">${s.value ?? 0}</div>
+      ${trendHtml(s.value, s.prev)}
     </div>
   `).join('');
 

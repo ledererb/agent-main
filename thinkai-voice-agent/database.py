@@ -331,16 +331,28 @@ def get_stats(period: str = "month") -> dict:
         inter_where = "DATE(created_at)  >= DATE('now', 'weekday 1', '-7 days')"
         email_where = "DATE(sent_at)     >= DATE('now', 'weekday 1', '-7 days')"
         cal_where   = "DATE(start_dt)    >= DATE('now', 'weekday 1', '-7 days')"
+        prev_sess   = "DATE(started_at) >= DATE('now','weekday 1','-14 days') AND DATE(started_at) < DATE('now','weekday 1','-7 days')"
+        prev_inter  = "DATE(created_at)  >= DATE('now','weekday 1','-14 days') AND DATE(created_at)  < DATE('now','weekday 1','-7 days')"
+        prev_email  = "DATE(sent_at)     >= DATE('now','weekday 1','-14 days') AND DATE(sent_at)     < DATE('now','weekday 1','-7 days')"
+        prev_cal    = "DATE(start_dt)    >= DATE('now','weekday 1','-14 days') AND DATE(start_dt)    < DATE('now','weekday 1','-7 days')"
     elif period == "month":
         sess_where  = "strftime('%Y-%m', started_at) = strftime('%Y-%m', 'now')"
         inter_where = "strftime('%Y-%m', created_at)  = strftime('%Y-%m', 'now')"
         email_where = "strftime('%Y-%m', sent_at)     = strftime('%Y-%m', 'now')"
         cal_where   = "strftime('%Y-%m', start_dt)    = strftime('%Y-%m', 'now')"
+        prev_sess   = "strftime('%Y-%m', started_at) = strftime('%Y-%m', 'now', '-1 month')"
+        prev_inter  = "strftime('%Y-%m', created_at)  = strftime('%Y-%m', 'now', '-1 month')"
+        prev_email  = "strftime('%Y-%m', sent_at)     = strftime('%Y-%m', 'now', '-1 month')"
+        prev_cal    = "strftime('%Y-%m', start_dt)    = strftime('%Y-%m', 'now', '-1 month')"
     else:  # year
         sess_where  = "started_at >= datetime('now', '-12 months')"
         inter_where = "created_at  >= datetime('now', '-12 months')"
         email_where = "sent_at     >= datetime('now', '-12 months')"
         cal_where   = "start_dt    >= datetime('now', '-12 months')"
+        prev_sess   = "started_at >= datetime('now','-24 months') AND started_at < datetime('now','-12 months')"
+        prev_inter  = "created_at  >= datetime('now','-24 months') AND created_at  < datetime('now','-12 months')"
+        prev_email  = "sent_at     >= datetime('now','-24 months') AND sent_at     < datetime('now','-12 months')"
+        prev_cal    = "start_dt    >= datetime('now','-24 months') AND start_dt    < datetime('now','-12 months')"
 
     with get_db() as conn:
         total_sessions = conn.execute(
@@ -384,6 +396,23 @@ def get_stats(period: str = "month") -> dict:
             f"SELECT AVG(duration_seconds) FROM sessions WHERE duration_seconds IS NOT NULL AND {sess_where}"
         ).fetchone()[0]
 
+        # ── Previous period totals (for trend indicators) ─────────────────
+        prev_total_sessions = conn.execute(
+            f"SELECT COUNT(*) FROM sessions WHERE {prev_sess}"
+        ).fetchone()[0]
+        prev_total_interactions = conn.execute(
+            f"SELECT COUNT(*) FROM interactions WHERE {prev_inter}"
+        ).fetchone()[0]
+        prev_total_emails = conn.execute(
+            f"SELECT COUNT(*) FROM email_logs WHERE {prev_email}"
+        ).fetchone()[0]
+        prev_total_bookings = conn.execute(
+            f"SELECT COUNT(*) FROM calendar_events WHERE {prev_cal}"
+        ).fetchone()[0]
+        prev_avg_dur = conn.execute(
+            f"SELECT AVG(duration_seconds) FROM sessions WHERE duration_seconds IS NOT NULL AND {prev_sess}"
+        ).fetchone()[0]
+
     return {
         "total_sessions":       total_sessions,
         "total_interactions":   total_interactions,
@@ -393,6 +422,13 @@ def get_stats(period: str = "month") -> dict:
         "avg_session_duration": round(avg_dur or 0),
         "interactions_by_type": [{"type": r["type"], "count": r["cnt"]} for r in type_rows],
         "sessions_per_day":     [{"day": r["day"],  "count": r["cnt"]} for r in chart_rows],
+        "previous_period": {
+            "total_sessions":       prev_total_sessions,
+            "total_interactions":   prev_total_interactions,
+            "total_emails":         prev_total_emails,
+            "total_bookings":       prev_total_bookings,
+            "avg_session_duration": round(prev_avg_dur or 0),
+        },
     }
 
 def get_interactions(limit: int = 100, type_filter: str = "") -> list[dict]:
