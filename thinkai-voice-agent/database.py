@@ -9,7 +9,7 @@ import sqlite3
 import hashlib
 import secrets
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from loguru import logger
@@ -413,6 +413,26 @@ def get_stats(period: str = "month") -> dict:
             f"SELECT AVG(duration_seconds) FROM sessions WHERE duration_seconds IS NOT NULL AND {prev_sess}"
         ).fetchone()[0]
 
+    # ── Fill missing days with 0 so the chart has no gaps ───────────────
+    raw_days = {r["day"]: r["cnt"] for r in chart_rows}
+    today = datetime.utcnow().date()
+    if period == "week":
+        # current Mon..today
+        week_start = today - timedelta(days=today.weekday())
+        all_keys = [(week_start + timedelta(days=i)).isoformat() for i in range((today - week_start).days + 1)]
+    elif period == "month":
+        # 1st of month..today
+        month_start = today.replace(day=1)
+        all_keys = [(month_start + timedelta(days=i)).isoformat() for i in range((today - month_start).days + 1)]
+    else:  # year — monthly buckets
+        all_keys = []
+        d = today.replace(day=1)
+        for _ in range(12):
+            all_keys.insert(0, d.strftime("%Y-%m"))
+            # go back one month
+            d = (d - timedelta(days=1)).replace(day=1)
+    filled_days = [{"day": k, "count": raw_days.get(k, 0)} for k in all_keys]
+
     return {
         "total_sessions":       total_sessions,
         "total_interactions":   total_interactions,
@@ -421,7 +441,7 @@ def get_stats(period: str = "month") -> dict:
         "open_tasks":           open_tasks,
         "avg_session_duration": round(avg_dur or 0),
         "interactions_by_type": [{"type": r["type"], "count": r["cnt"]} for r in type_rows],
-        "sessions_per_day":     [{"day": r["day"],  "count": r["cnt"]} for r in chart_rows],
+        "sessions_per_day":     filled_days,
         "previous_period": {
             "total_sessions":       prev_total_sessions,
             "total_interactions":   prev_total_interactions,
