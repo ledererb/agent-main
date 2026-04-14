@@ -791,7 +791,7 @@
       <div class="page-header" style="margin-bottom:18px;">
         <div>
           <div class="page-title">Agent Beállítások</div>
-          <div class="page-subtitle">Hang, nyitvatartás, tudásbázis és kommunikációs stílus</div>
+          <div class="page-subtitle">Hang, nyitvatartás, tudásbázis, rendszerutasitás és workflow</div>
         </div>
         <button class="btn-settings-save" id="save-settings-btn" onclick="saveSettings()">&#128190; Mentés</button>
       </div>
@@ -863,6 +863,28 @@
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;" id="fmt-hint">Struktúrált JSON formátum &mdash; kulcs: érték párok</div>
         <textarea id="setting-knowledge" class="settings-textarea" placeholder="Tudásbázis tartalma..."></textarea>
+      </div>
+
+      <!-- System Prompt -->
+      <div class="settings-section">
+        <div class="settings-section-title" style="justify-content:space-between;">
+          <span>&#129302; Rendszer Prompt</span>
+          <button class="btn-settings-save" style="padding:8px 20px;font-size:12px;" onclick="saveSystemPrompt()">&#128190; Mentés</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent mögötti fő rendszerutasitás (system_prompt.md). Tartalmazza a személyiséget, nyelvi szabályokat, képességeket. Az <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;">{today}</code> helyetten a mai dátum kerül be automatikusan.</div>
+        <textarea id="setting-system-prompt" class="settings-textarea" style="min-height:420px;font-family:'Courier New',monospace;font-size:12px;" placeholder="Te Balázs vagy, a ThinkAI digitális asszisztense..."></textarea>
+        <div id="system-prompt-status" style="font-size:12px;margin-top:8px;color:var(--text-muted);"></div>
+      </div>
+
+      <!-- Workflow -->
+      <div class="settings-section">
+        <div class="settings-section-title" style="justify-content:space-between;">
+          <span>&#9881;&#65039; Workflow</span>
+          <button class="btn-settings-save" style="padding:8px 20px;font-size:12px;" onclick="saveWorkflow()">&#128190; Mentés</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent viselkedési folyamata és előre definiált lépései (workflow.md). Ide kerülhetnek egyedi munkameneti szabályok, eszkzhívatási sorrend, feltételes logika.</div>
+        <textarea id="setting-workflow" class="settings-textarea" style="min-height:280px;font-family:'Courier New',monospace;font-size:12px;" placeholder="## Workflow lépések&#10;1. Köszöntés&#10;2. Szükséglet feltárás&#10;..."></textarea>
+        <div id="workflow-status" style="font-size:12px;margin-top:8px;color:var(--text-muted);"></div>
       </div>
     </div>
 
@@ -1399,8 +1421,12 @@ let currentKnowledgeFormat = 'json';
 
 async function loadSettings() {
   try {
-    const res  = await authFetch('/admin/api/settings');
-    const data = await res.json();
+    const [settingsRes, spRes, wfRes] = await Promise.all([
+      authFetch('/admin/api/settings'),
+      authFetch('/admin/api/system-prompt'),
+      authFetch('/admin/api/workflow'),
+    ]);
+    const data = await settingsRes.json();
     await loadCartesiaVoices(data.voice_id);
     renderBhTable(data.business_hours || {});
     currentKnowledgeFormat = data.knowledge_format || 'json';
@@ -1411,6 +1437,12 @@ async function loadSettings() {
     toneEl.value = data.tone || 'professional_friendly';
     document.getElementById('setting-tone-custom').value = data.tone_custom || '';
     onToneChange();
+
+    const sp = await spRes.json();
+    document.getElementById('setting-system-prompt').value = sp.content || '';
+
+    const wf = await wfRes.json();
+    document.getElementById('setting-workflow').value = wf.content || '';
   } catch(e) { console.error('Settings load error:', e); }
 }
 
@@ -1533,6 +1565,52 @@ async function saveSettings() {
     alert('Hiba a mentés során: ' + e.message);
     btn.disabled = false;
     btn.innerHTML = '&#128190; Mentés';
+  }
+}
+
+async function saveSystemPrompt() {
+  const content = document.getElementById('setting-system-prompt').value;
+  const statusEl = document.getElementById('system-prompt-status');
+  statusEl.style.color = 'var(--text-muted)';
+  statusEl.textContent = 'Mentés...';
+  try {
+    const res = await authFetch('/admin/api/system-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Hiba');
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✓ System prompt elmentve — agent újraindítás szükséges';
+    document.getElementById('restart-banner').classList.add('visible');
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '✗ Hiba: ' + e.message;
+  }
+}
+
+async function saveWorkflow() {
+  const content = document.getElementById('setting-workflow').value;
+  const statusEl = document.getElementById('workflow-status');
+  statusEl.style.color = 'var(--text-muted)';
+  statusEl.textContent = 'Mentés...';
+  try {
+    const res = await authFetch('/admin/api/workflow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Hiba');
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✓ Workflow elmentve — agent újraindítás szükséges';
+    document.getElementById('restart-banner').classList.add('visible');
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '✗ Hiba: ' + e.message;
   }
 }
 </script>

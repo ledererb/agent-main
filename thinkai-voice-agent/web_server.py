@@ -232,6 +232,8 @@ async def get_emails():
 SETTINGS_FILE  = THIS_DIR / "agent_settings.json"
 KNOWLEDGE_JSON = THIS_DIR / "knowledge.json"
 KNOWLEDGE_MD   = THIS_DIR / "knowledge.md"
+SYSTEM_PROMPT_FILE = THIS_DIR / "system_prompt.md"
+WORKFLOW_FILE      = THIS_DIR / "workflow.md"
 
 DEFAULT_SETTINGS = {
     "voice_id": os.getenv("CARTESIA_VOICE_ID", "93896c4f-aa00-4c17-a360-fec55579d7fa"),
@@ -288,6 +290,10 @@ class SettingsSaveRequest(BaseModel):
     business_hours: dict = {}
 
 
+class TextFileRequest(BaseModel):
+    content: str = ""
+
+
 @app.post("/admin/api/settings")
 async def save_settings(payload: SettingsSaveRequest, username: str = Depends(verify_jwt)):
     """Save agent settings and knowledge base to disk."""
@@ -313,6 +319,38 @@ async def save_settings(payload: SettingsSaveRequest, username: str = Depends(ve
             raise HTTPException(status_code=400, detail=f"Hibás JSON formátum: {e}")
 
     return {"ok": True, "message": "Beállítások elmentve. Az agent újraindítása szükséges a változtatások érvényesítéséhez."}
+
+
+# ── System Prompt ─────────────────────────────────────────────────────────────
+
+@app.get("/admin/api/system-prompt")
+async def get_system_prompt(username: str = Depends(verify_jwt)):
+    """Return the current system prompt (system_prompt.md)."""
+    content = SYSTEM_PROMPT_FILE.read_text(encoding="utf-8") if SYSTEM_PROMPT_FILE.exists() else ""
+    return {"content": content}
+
+
+@app.post("/admin/api/system-prompt")
+async def save_system_prompt(payload: TextFileRequest, username: str = Depends(verify_jwt)):
+    """Overwrite system_prompt.md."""
+    SYSTEM_PROMPT_FILE.write_text(payload.content, encoding="utf-8")
+    return {"ok": True, "message": "System prompt elmentve."}
+
+
+# ── Workflow ───────────────────────────────────────────────────────────────────
+
+@app.get("/admin/api/workflow")
+async def get_workflow(username: str = Depends(verify_jwt)):
+    """Return the current workflow definition (workflow.md)."""
+    content = WORKFLOW_FILE.read_text(encoding="utf-8") if WORKFLOW_FILE.exists() else ""
+    return {"content": content}
+
+
+@app.post("/admin/api/workflow")
+async def save_workflow(payload: TextFileRequest, username: str = Depends(verify_jwt)):
+    """Overwrite workflow.md."""
+    WORKFLOW_FILE.write_text(payload.content, encoding="utf-8")
+    return {"ok": True, "message": "Workflow elmentve."}
 
 
 @app.get("/admin/api/cartesia/voices")
