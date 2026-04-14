@@ -867,24 +867,20 @@
 
       <!-- System Prompt -->
       <div class="settings-section">
-        <div class="settings-section-title" style="justify-content:space-between;">
+        <div class="settings-section-title">
           <span>&#129302; Rendszer Prompt</span>
-          <button class="btn-settings-save" style="padding:8px 20px;font-size:12px;" onclick="saveSystemPrompt()">&#128190; Mentés</button>
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent mögötti fő rendszerutasitás (system_prompt.md). Tartalmazza a személyiséget, nyelvi szabályokat, képességeket. Az <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;">{today}</code> helyetten a mai dátum kerül be automatikusan.</div>
         <textarea id="setting-system-prompt" class="settings-textarea" style="min-height:420px;font-family:'Courier New',monospace;font-size:12px;" placeholder="Te Balázs vagy, a ThinkAI digitális asszisztense..."></textarea>
-        <div id="system-prompt-status" style="font-size:12px;margin-top:8px;color:var(--text-muted);"></div>
       </div>
 
       <!-- Workflow -->
       <div class="settings-section">
-        <div class="settings-section-title" style="justify-content:space-between;">
+        <div class="settings-section-title">
           <span>&#9881;&#65039; Workflow</span>
-          <button class="btn-settings-save" style="padding:8px 20px;font-size:12px;" onclick="saveWorkflow()">&#128190; Mentés</button>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent viselkedési folyamata és előre definiált lépései (workflow.md). Ide kerülhetnek egyedi munkameneti szabályok, eszkzhívatási sorrend, feltételes logika.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent viselkedési folyamata és előre definiált lépései (workflow.md). Ide kerülhetnek egyedi munkameneti szabályok, eszközhívatási sorrend, feltételes logika.</div>
         <textarea id="setting-workflow" class="settings-textarea" style="min-height:280px;font-family:'Courier New',monospace;font-size:12px;" placeholder="## Workflow lépések&#10;1. Köszöntés&#10;2. Szükséglet feltárás&#10;..."></textarea>
-        <div id="workflow-status" style="font-size:12px;margin-top:8px;color:var(--text-muted);"></div>
       </div>
     </div>
 
@@ -1542,7 +1538,7 @@ async function saveSettings() {
   btn.disabled = true;
   btn.textContent = 'Mentés...';
   try {
-    const payload = {
+    const settingsPayload = {
       voice_id:          document.getElementById('setting-voice').value,
       tone:              document.getElementById('setting-tone').value,
       tone_custom:       document.getElementById('setting-tone-custom').value,
@@ -1551,15 +1547,33 @@ async function saveSettings() {
       knowledge_content: document.getElementById('setting-knowledge').value,
       business_hours:    collectBhData(),
     };
-    const res  = await authFetch('/admin/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Hiba');
+    const spContent = document.getElementById('setting-system-prompt').value;
+    const wfContent = document.getElementById('setting-workflow').value;
+
+    const [settingsRes, spRes, wfRes] = await Promise.all([
+      authFetch('/admin/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsPayload)
+      }),
+      authFetch('/admin/api/system-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: spContent })
+      }),
+      authFetch('/admin/api/workflow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: wfContent })
+      }),
+    ]);
+
+    if (!settingsRes.ok) { const d = await settingsRes.json(); throw new Error(d.detail || 'Beállítások hiba'); }
+    if (!spRes.ok)       { const d = await spRes.json();       throw new Error(d.detail || 'System prompt hiba'); }
+    if (!wfRes.ok)       { const d = await wfRes.json();       throw new Error(d.detail || 'Workflow hiba'); }
+
     document.getElementById('restart-banner').classList.add('visible');
-    btn.textContent = '✓ Elmentve';
+    btn.textContent = '✓ Minden elmentve';
     setTimeout(() => { btn.disabled = false; btn.innerHTML = '&#128190; Mentés'; }, 2500);
   } catch(e) {
     alert('Hiba a mentés során: ' + e.message);
@@ -1568,51 +1582,7 @@ async function saveSettings() {
   }
 }
 
-async function saveSystemPrompt() {
-  const content = document.getElementById('setting-system-prompt').value;
-  const statusEl = document.getElementById('system-prompt-status');
-  statusEl.style.color = 'var(--text-muted)';
-  statusEl.textContent = 'Mentés...';
-  try {
-    const res = await authFetch('/admin/api/system-prompt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Hiba');
-    statusEl.style.color = 'var(--green)';
-    statusEl.textContent = '✓ System prompt elmentve — agent újraindítás szükséges';
-    document.getElementById('restart-banner').classList.add('visible');
-    setTimeout(() => { statusEl.textContent = ''; }, 4000);
-  } catch(e) {
-    statusEl.style.color = 'var(--red)';
-    statusEl.textContent = '✗ Hiba: ' + e.message;
-  }
-}
 
-async function saveWorkflow() {
-  const content = document.getElementById('setting-workflow').value;
-  const statusEl = document.getElementById('workflow-status');
-  statusEl.style.color = 'var(--text-muted)';
-  statusEl.textContent = 'Mentés...';
-  try {
-    const res = await authFetch('/admin/api/workflow', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Hiba');
-    statusEl.style.color = 'var(--green)';
-    statusEl.textContent = '✓ Workflow elmentve — agent újraindítás szükséges';
-    document.getElementById('restart-banner').classList.add('visible');
-    setTimeout(() => { statusEl.textContent = ''; }, 4000);
-  } catch(e) {
-    statusEl.style.color = 'var(--red)';
-    statusEl.textContent = '✗ Hiba: ' + e.message;
-  }
-}
 </script>
 </body>
 </html>
