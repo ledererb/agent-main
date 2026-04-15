@@ -20,8 +20,10 @@ from pydantic import BaseModel
 import jwt as pyjwt
 
 from livekit.api import AccessToken, VideoGrants, RoomConfiguration, RoomAgentDispatch
+import asyncio
 
 import database as db
+import email_processor
 
 THIS_DIR = Path(__file__).resolve().parent
 load_dotenv(THIS_DIR / ".env")
@@ -37,6 +39,15 @@ db.seed_admin_from_env()
 db.migrate_from_json()   # one-time migration from legacy JSON files
 
 app = FastAPI(title="ThinkAI Voice Agent")
+
+background_tasks = set()
+
+@app.on_event("startup")
+async def startup_event():
+    # Elindítjuk az email worker loopot a háttérben
+    task = asyncio.create_task(email_processor.email_worker_loop())
+    background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(

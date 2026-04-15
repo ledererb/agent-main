@@ -157,6 +157,12 @@ def init_db():
             for r in rows:
                 c_data = json.dumps({"name": r["name"], "email": r["email"] or "", "phone": r["phone"] or ""})
                 conn.execute("UPDATE clients SET custom_data = ? WHERE id = ?", (c_data, r["id"]))
+        
+        # Ensure beszelgetes_naplo always exists
+        try:
+            conn.execute("INSERT OR IGNORE INTO client_fields (id, name, order_index) VALUES ('beszelgetes_naplo', 'Beszélgetés napló', 4)")
+        except Exception:
+            pass
 
 
         # Seed initial kanban columns if empty
@@ -691,6 +697,54 @@ def add_client(custom_data: dict, status: str = "uj") -> int:
             (sql_name, sql_email or None, sql_phone or None, status, json.dumps(custom_data))
         )
         return cur.lastrowid
+
+def find_client_by_contact(email: str = "", phone: str = "") -> dict | None:
+    if not email and not phone:
+        return None
+    with get_db() as conn:
+        if email and phone:
+            row = conn.execute("SELECT * FROM clients WHERE email = ? OR phone = ? ORDER BY id DESC LIMIT 1", (email, phone)).fetchone()
+        elif email:
+            row = conn.execute("SELECT * FROM clients WHERE email = ? ORDER BY id DESC LIMIT 1", (email,)).fetchone()
+        else:
+            row = conn.execute("SELECT * FROM clients WHERE phone = ? ORDER BY id DESC LIMIT 1", (phone,)).fetchone()
+    return dict(row) if row else None
+
+def upsert_client(custom_data: dict, additional_log: str = "", status: str = "uj") -> int:
+    import json
+    email = custom_data.get("email", "").strip()
+    phone = custom_data.get("phone", "").strip()
+    
+    existing = find_client_by_contact(email, phone)
+    
+    if existing:
+        try:
+            curr_data = json.loads(existing["custom_data"] or "{}")
+        except:
+            curr_data = {}
+        
+        # Merge new fields into existing
+        for k, v in custom_data.items():
+            if v and str(v).strip():
+                curr_data[k] = v
+                
+        if additional_log:
+            old_log = curr_data.get("beszelgetes_naplo", "")
+            from datetime import datetime
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+            new_entry = f"[{now_str}]\n{additional_log}\n"
+            curr_data["beszelgetes_naplo"] = (old_log + "\n" + new_entry).strip()
+            
+        edit_client_details(existing["id"], curr_data)
+        logger.info(f"Updated existing client (ID: {existing['id']})")
+        return existing["id"]
+    else:
+        if additional_log:
+            from datetime import datetime
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+            custom_data["beszelgetes_naplo"] = f"[{now_str}]\n{additional_log}"
+            
+        return add_client(custom_data, status)
 
 
 def get_clients(limit: int = 500) -> list[dict]:

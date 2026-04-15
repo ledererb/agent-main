@@ -1036,6 +1036,14 @@
       </div>
     </div>
 
+    <!-- Log Modal HTML -->
+    <div id="log-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+      <div class="login-card" style="width:600px; max-width:90vw;">
+        <h3 style="margin-bottom:16px;">Beszélgetés napló</h3>
+        <textarea id="log-modal-content" class="settings-textarea" style="min-height:350px; font-family:'Inter',sans-serif; font-size:12px; line-height:1.5; margin-bottom: 20px;" readonly></textarea>
+        <button class="btn-primary" style="background:var(--bg3);color:var(--text);width:100%" onclick="document.getElementById('log-modal').style.display='none'">Bezárás</button>
+      </div>
+    </div>
 
     <div class="page" id="page-interactions">
       <div class="page-header">
@@ -1866,6 +1874,9 @@ async function loadClientsTable() {
         <td class="td-time">${fmtDt(c.created_at)}</td>
         ${displayFields.map((f, i) => {
             let val = c.custom_data ? JSON.parse(c.custom_data)[f.id] : '';
+            if (f.id === 'beszelgetes_naplo') {
+                return `<td>${val ? `<button onclick="openLogModal('${esc(btoa(encodeURIComponent(val)))}')" style="background:rgba(0,212,200,0.1);border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:11px;">Megtekintés</button>` : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+            }
             return `<td ${i === 0 ? 'style="font-weight:500"' : ''}>${esc(val || '—')}</td>`;
         }).join('')}
         <td><span class="badge badge-teal">${esc(statusMap[c.status] || c.status)}</span></td>
@@ -1878,6 +1889,13 @@ async function loadClientsTable() {
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="${3 + displayFields.length}" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>`;
   }
+}
+
+function openLogModal(encodedText) {
+    let t = '';
+    try { t = decodeURIComponent(atob(encodedText)); } catch(e){}
+    document.getElementById('log-modal-content').value = t;
+    document.getElementById('log-modal').style.display = 'flex';
 }
 
 async function openClientModal(id = null, encodedCustomData = 'e30=') {
@@ -1895,6 +1913,18 @@ async function openClientModal(id = null, encodedCustomData = 'e30=') {
   const dynContainer = document.getElementById('client-modal-dynamic-fields');
   dynContainer.innerHTML = currentClientFields.map(f => {
       const val = cData[f.id] || '';
+      
+      if (f.id === 'beszelgetes_naplo') {
+          return `<div class="form-group" style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05);">
+                    <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:8px;font-weight:500">${esc(f.name)}</label>
+                    <textarea id="nc-dyn-${f.id}" class="settings-textarea" style="display:none; min-height:260px; font-family:'Inter',sans-serif; font-size:12px; line-height:1.5;">${esc(val)}</textarea>
+                    ${val ? 
+                      `<button type="button" onclick="document.getElementById('nc-dyn-${f.id}').style.display='block'; this.style.display='none';" style="background:rgba(0,212,200,0.1); border:1px solid var(--accent); color:var(--accent); border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; cursor:pointer; width:100%; transition:all 0.2s;">👀 Beszélgetések megtekintése</button>` 
+                      : `<div style="font-size:11px; color:var(--text-muted); padding:6px 0;">Még nincs előzmény...</div><textarea id="nc-dyn-${f.id}" style="display:none"></textarea>`
+                    }
+                  </div>`;
+      }
+
       return `<div class="form-group">
                 <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:500">${esc(f.name)}</label>
                 <input id="nc-dyn-${f.id}" class="form-input" placeholder="${esc(f.name)}" value="${esc(val)}">
