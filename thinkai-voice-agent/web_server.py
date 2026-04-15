@@ -241,6 +241,107 @@ async def admin_sessions_summary(limit: int = 50, username: str = Depends(verify
     return {"sessions": db.get_sessions_with_summary(limit=limit)}
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLIENTS (KANBAN) API
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ClientCreateRequest(BaseModel):
+    custom_data: dict
+
+class ClientStatusUpdateRequest(BaseModel):
+    status: str
+
+@app.get("/admin/api/clients")
+async def admin_clients(username: str = Depends(verify_jwt)):
+    """List all clients for Kanban."""
+    return {"clients": db.get_clients()}
+
+@app.post("/admin/api/clients")
+async def admin_add_client(req: ClientCreateRequest, username: str = Depends(verify_jwt)):
+    """Add a new client."""
+    client_id = db.add_client(req.custom_data, "uj")
+    return {"ok": True, "id": client_id}
+
+@app.patch("/admin/api/clients/{client_id}/status")
+async def admin_update_client_status(client_id: int, req: ClientStatusUpdateRequest, username: str = Depends(verify_jwt)):
+    """Update client status (drag & drop)."""
+    db.update_client_status(client_id, req.status)
+    return {"ok": True}
+
+@app.delete("/admin/api/clients/{client_id}")
+async def admin_delete_client(client_id: int, username: str = Depends(verify_jwt)):
+    """Delete client."""
+    db.delete_client(client_id)
+    return {"ok": True}
+
+@app.put("/admin/api/clients/{client_id}")
+async def admin_update_client_details(client_id: int, req: ClientCreateRequest, username: str = Depends(verify_jwt)):
+    """Update client basic details."""
+    db.edit_client_details(client_id, req.custom_data)
+    return {"ok": True}
+
+class ClientFieldCreateRequest(BaseModel):
+    id: str
+    name: str
+    order_index: int
+
+class ClientFieldUpdateRequest(BaseModel):
+    name: str
+
+@app.get("/admin/api/client_fields")
+async def admin_get_client_fields(username: str = Depends(verify_jwt)):
+    return {"fields": db.get_client_fields()}
+
+@app.post("/admin/api/client_fields")
+async def admin_add_client_field(req: ClientFieldCreateRequest, username: str = Depends(verify_jwt)):
+    success = db.add_client_field(req.id, req.name, req.order_index)
+    if not success:
+        raise HTTPException(status_code=400, detail="Field ID already exists")
+    return {"ok": True}
+
+@app.put("/admin/api/client_fields/{field_id}")
+async def admin_update_client_field(field_id: str, req: ClientFieldUpdateRequest, username: str = Depends(verify_jwt)):
+    db.update_client_field(field_id, req.name)
+    return {"ok": True}
+
+@app.delete("/admin/api/client_fields/{field_id}")
+async def admin_delete_client_field(field_id: str, username: str = Depends(verify_jwt)):
+    db.delete_client_field(field_id)
+    return {"ok": True}
+
+class KanbanColumnCreateRequest(BaseModel):
+    id: str
+    name: str
+    order_index: int
+
+class KanbanColumnUpdateRequest(BaseModel):
+    name: str
+
+@app.get("/admin/api/kanban_columns")
+async def admin_get_kanban_columns(username: str = Depends(verify_jwt)):
+    return {"columns": db.get_kanban_columns()}
+
+@app.post("/admin/api/kanban_columns")
+async def admin_add_kanban_column(req: KanbanColumnCreateRequest, username: str = Depends(verify_jwt)):
+    success = db.add_kanban_column(req.id, req.name, req.order_index)
+    if not success:
+        raise HTTPException(status_code=400, detail="Column ID already exists")
+    return {"ok": True}
+
+@app.put("/admin/api/kanban_columns/{col_id}")
+async def admin_update_kanban_column(col_id: str, req: KanbanColumnUpdateRequest, username: str = Depends(verify_jwt)):
+    db.update_kanban_column(col_id, req.name)
+    return {"ok": True}
+
+@app.delete("/admin/api/kanban_columns/{col_id}")
+async def admin_delete_kanban_column(col_id: str, username: str = Depends(verify_jwt)):
+    try:
+        db.delete_kanban_column(col_id)
+        return {"ok": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # ── Legacy public API (for backward compat with voice-widget.html) ────────────
 @app.get("/api/calendar")
 async def get_calendar():

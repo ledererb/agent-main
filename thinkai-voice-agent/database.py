@@ -112,7 +112,66 @@ def init_db():
                 completed  INTEGER DEFAULT 0,
                 session_id TEXT
             );
+
+            -- Clients for Kanban
+            CREATE TABLE IF NOT EXISTS clients (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT NOT NULL,
+                email      TEXT,
+                phone      TEXT,
+                status     TEXT DEFAULT 'uj',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            -- Kanban columns (editable statuses)
+            CREATE TABLE IF NOT EXISTS kanban_columns (
+                id          TEXT PRIMARY KEY,
+                name        TEXT NOT NULL,
+                order_index INTEGER NOT NULL
+            );
+            -- Client fields (dynamic form fields)
+            CREATE TABLE IF NOT EXISTS client_fields (
+                id          TEXT PRIMARY KEY,
+                name        TEXT NOT NULL,
+                order_index INTEGER NOT NULL
+            );
         """)
+
+        try:
+            conn.execute("ALTER TABLE clients ADD COLUMN custom_data TEXT DEFAULT '{}'")
+        except sqlite3.OperationalError:
+            pass # Already exists
+            
+        import json
+        count_fields = conn.execute("SELECT COUNT(*) FROM client_fields").fetchone()[0]
+        if count_fields == 0:
+            conn.executemany(
+                "INSERT INTO client_fields (id, name, order_index) VALUES (?, ?, ?)",
+                [
+                    ("name", "Név", 1),
+                    ("email", "Email", 2),
+                    ("phone", "Telefonszám", 3)
+                ]
+            )
+            # Safe JSON migration for custom_data
+            rows = conn.execute("SELECT id, name, email, phone FROM clients WHERE custom_data = '{}' OR custom_data IS NULL").fetchall()
+            for r in rows:
+                c_data = json.dumps({"name": r["name"], "email": r["email"] or "", "phone": r["phone"] or ""})
+                conn.execute("UPDATE clients SET custom_data = ? WHERE id = ?", (c_data, r["id"]))
+
+
+        # Seed initial kanban columns if empty
+        count = conn.execute("SELECT COUNT(*) FROM kanban_columns").fetchone()[0]
+        if count == 0:
+            conn.executemany(
+                "INSERT INTO kanban_columns (id, name, order_index) VALUES (?, ?, ?)",
+                [
+                    ("uj", "Új", 1),
+                    ("kapcsolatfelvetel", "Kapcsolatfelvétel", 2),
+                    ("targyalas", "Tárgyalás", 3),
+                    ("szerzodott", "Szerződött", 4)
+                ]
+            )
+
     logger.info(f"Database initialized at: {DB_PATH}")
 
 
@@ -614,3 +673,113 @@ def migrate_from_json():
     logger.info(f"JSON migration complete. Total migrated: {migrated}")
     return migrated
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLIENTS (KANBAN)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def add_client(custom_data: dict, status: str = "uj") -> int:
+    import json
+    # SQL req: name is NOT NULL
+    sql_name = custom_data.get("name", "Névtelen") if custom_data.get("name", "").strip() else "Névtelen"
+    sql_email = custom_data.get("email", "")
+    sql_phone = custom_data.get("phone", "")
+    
+    with get_db() as conn:
+        cur = conn.execute(
+            "INSERT INTO clients (name, email, phone, status, custom_data) VALUES (?, ?, ?, ?, ?)",
+            (sql_name, sql_email or None, sql_phone or None, status, json.dumps(custom_data))
+        )
+        return cur.lastrowid
+
+
+def get_clients(limit: int = 500) -> list[dict]:
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM clients ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_client_status(client_id: int, status: str) -> bool:
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE clients SET status = ? WHERE id = ?",
+            (status, client_id)
+        )
+    return True
+
+
+def delete_client(client_id: int) -> bool:
+    with get_db() as conn:
+        conn.execute("DELETE FROM clients WHERE id = ?", (client_id,))
+    return True
+
+
+def edit_client_details(client_id: int, custom_data: dict) -> bool:
+    import json
+    sql_name = custom_data.get("name", "Névtelen") if custom_data.get("name", "").strip() else "Névtelen"
+    sql_email = custom_data.get("email", "")
+    sql_phone = custom_data.get("phone", "")
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE clients SET name = ?, email = ?, phone = ?, custom_data = ? WHERE id = ?",
+            (sql_name, sql_email or None, sql_phone or None, json.dumps(custom_data), client_id)
+        )
+    return True
+
+def get_client_fields() -> list[dict]:
+    with get_db() as conn:
+        rows = conn.execute("SELECT * FROM client_fields ORDER BY order_index ASC").fetchall()
+    return [dict(r) for r in rows]
+
+def add_client_field(field_id: str, name: str, order_index: int) -> bool:
+    with get_db() as conn:
+        try:
+            conn.execute(
+                "INSERT INTO client_fields (id, name, order_index) VALUES (?, ?, ?)",
+                (field_id, name, order_index)
+            )
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+def update_client_field(field_id: str, name: str) -> bool:
+    with get_db() as conn:
+        conn.execute("UPDATE client_fields SET name = ? WHERE id = ?", (name, field_id))
+    return True
+
+def delete_client_field(field_id: str) -> bool:
+    with get_db() as conn:
+        conn.execute("DELETE FROM client_fields WHERE id = ?", (field_id,))
+    return True
+
+
+def get_kanban_columns() -> list[dict]:
+    with get_db() as conn:
+        rows = conn.execute("SELECT * FROM kanban_columns ORDER BY order_index ASC").fetchall()
+    return [dict(r) for r in rows]
+
+def add_kanban_column(col_id: str, name: str, order_index: int) -> bool:
+    with get_db() as conn:
+        try:
+            conn.execute(
+                "INSERT INTO kanban_columns (id, name, order_index) VALUES (?, ?, ?)",
+                (col_id, name, order_index)
+            )
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+def update_kanban_column(col_id: str, name: str) -> bool:
+    with get_db() as conn:
+        conn.execute("UPDATE kanban_columns SET name = ? WHERE id = ?", (name, col_id))
+    return True
+
+def delete_kanban_column(col_id: str) -> bool:
+    with get_db() as conn:
+        count = conn.execute("SELECT COUNT(*) FROM clients WHERE status = ?", (col_id,)).fetchone()[0]
+        if count > 0:
+            raise ValueError(f"Nem törölheted: a(z) '{col_id}' oszlopban {count} ügyfél található.")
+        conn.execute("DELETE FROM kanban_columns WHERE id = ?", (col_id,))
+    return True

@@ -260,15 +260,17 @@ async def check_calendar(
 # 3. BOOK A MEETING (local JSON store)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@function_tool(description="Találkozó/meeting foglalása a naptárba. Használd, ha a felhasználó időpontot szeretne foglalni.")
+@function_tool(description="Találkozó/meeting foglalása a naptárba. Használd, ha a felhasználó időpontot szeretne foglalni. KÖTELEZŐ elkérni a felhasználó nevét, telefonszámát és email címét a foglalás előtt!")
 async def book_meeting(
     ctx: RunContext,
     title: Annotated[str, "A meeting címe/témája"],
     date: Annotated[str, "A meeting dátuma (pl. 2026-03-11, március 11, márc 11)"],
     time: Annotated[str, "A meeting kezdési időpontja (pl. 10:00, 10 óra, 14:30)"],
+    attendee: Annotated[str, "A meghívott ügyfél teljes neve (kötelező bekérni)"],
+    attendee_phone: Annotated[str, "A meghívott ügyfél telefonszáma (kötelező bekérni)"],
+    attendee_email: Annotated[str, "A meghívott ügyfél email címe (kötelező bekérni)"],
     duration_minutes: Annotated[int, "A meeting hossza percben"] = 30,
-    attendee: Annotated[str, "A meghívott neve (opcionális, pl. Kovács János)"] = "",
-    attendee_email: Annotated[str, "A meghívott email címe (opcionális)"] = "",
+    additional_info: Annotated[str, "Bármely egyéb kiegészítő adat JSON szövegként (pl. cégnév, lakcím). Hagyd üresen '{}' ha nincsen egyéb."] = "{}",
 ) -> str:
     """Találkozó foglalása a naptárba."""
     logger.info(f"Booking meeting: {title} on {date} at {time}, attendee={attendee}, email={attendee_email}")
@@ -302,7 +304,7 @@ async def book_meeting(
             except Exception:
                 continue
 
-        # ── No conflict — book it ─────────────────────────────────────
+        # ── No conflict — book it in Calendar ───────────────────────────
         db.add_calendar_event(
             title=title,
             start_dt=start_dt.isoformat(),
@@ -311,11 +313,32 @@ async def book_meeting(
             attendee=attendee,
             attendee_email=attendee_email,
         )
+
+        # ── Add to Kanban (Clients Database) ───────────────────────────
+        custom_data = {
+            "name": attendee,
+            "email": attendee_email,
+            "phone": attendee_phone,
+        }
+        
+        # Merge additional info safely if provided
+        try:
+            extra = json.loads(additional_info)
+            if isinstance(extra, dict):
+                custom_data.update(extra)
+        except Exception:
+            pass
+            
+        columns = db.get_kanban_columns()
+        first_col_id = columns[0]['id'] if columns else 'uj'
+        db.add_client(custom_data, status=first_col_id)
+
+        # ── Log interaction ───────────────────────────────────────────
         db.log_interaction(
             type="foglalás",
             topic="Időpontfoglalás",
-            summary=f"{title} — {date} {time}" + (f" | {attendee}" if attendee else "") + (f" <{attendee_email}>" if attendee_email else ""),
-            result="Lefoglalva",
+            summary=f"{title} — {date} {time} | {attendee} <{attendee_email}> ({attendee_phone})",
+            result="Lefoglalva + Kanban kártya létrehozva",
             tool_name="book_meeting",
             session_id=_current_session_id,
         )

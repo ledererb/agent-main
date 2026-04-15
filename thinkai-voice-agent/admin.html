@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <style>
     :root {
       --bg:         #0a0e1a;
@@ -26,7 +27,25 @@
       --yellow:     #f59e0b;
       --purple:     #a855f7;
       --orange:     #f97316;
+      --fc-page-bg-color: transparent;
+      --fc-neutral-bg-color: var(--bg3);
+      --fc-list-event-hover-bg-color: var(--bg2);
+      --fc-theme-standard-border-color: var(--border);
+      --fc-border-color: var(--border);
+      --fc-button-text-color: var(--text);
+      --fc-button-bg-color: var(--bg3);
+      --fc-button-border-color: var(--border);
+      --fc-button-hover-bg-color: var(--bg2);
+      --fc-button-hover-border-color: var(--accent);
+      --fc-button-active-bg-color: var(--bg);
+      --fc-button-active-border-color: var(--accent);
+      --fc-today-bg-color: rgba(0, 212, 200, 0.05);
     }
+    .fc { font-family: 'Inter', sans-serif; }
+    .fc-event { border-radius: 4px; border: none; padding: 2px 4px; font-size:11px; cursor: pointer;}
+    .fc-toolbar-title { font-size: 16px !important; font-weight: 600 !important; color: var(--text); }
+    .fc-col-header-cell-cushion, .fc-daygrid-day-number { color: var(--text) !important; text-decoration: none !important; }
+
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -532,8 +551,67 @@
     /* ── Type color mapping ────────────────────────────────────────── */
     .type-badge-map { display: none; }
 
+    /* ── Kanban ────────────────────────────────────────────────────── */
+    .kanban-board {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      min-height: calc(100vh - 160px);
+    }
+    .kanban-col {
+      flex: 1;
+      min-width: 250px;
+      background: var(--bg3);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .kanban-col-header {
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--bg);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .kanban-col-count {
+      background: rgba(0,0,0,0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    .kanban-cards {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .kanban-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      cursor: grab;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .kanban-card:active { cursor: grabbing; }
+    .kanban-card:hover { border-color: rgba(0,212,200,0.4); transform: translateY(-2px); }
+    .kanban-card.dragging { opacity: 0.5; }
+    .kanban-card .client-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .kanban-card .client-info { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    .kanban-col.drag-over { background: rgba(0,212,200,0.05); border-color: var(--accent); }
+
     /* ── Responsive ────────────────────────────────────────────────── */
     @media (max-width: 1400px) {
+
       .stats-grid { grid-template-columns: repeat(3,1fr); }
     }
     @media (max-width: 1100px) {
@@ -728,6 +806,14 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Beállítások</span>
     </button>
+    <button class="nav-item" onclick="showPage('kanban')" id="nav-kanban">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      <span>Kanban</span>
+    </button>
+    <button class="nav-item" onclick="showPage('clients')" id="nav-clients">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Ügyfelek</span>
+    </button>
 
     <div class="sidebar-bottom">
       <div class="user-info">
@@ -885,6 +971,72 @@
     </div>
 
 
+    <!-- KANBAN PAGE -->
+    <div class="page" id="page-kanban">
+      <div class="page-header" style="margin-bottom:18px;">
+        <div>
+          <div class="page-title">Kanban</div>
+          <div class="page-subtitle">Érdeklődők feladatainak nyomon követése</div>
+        </div>
+        <button class="btn-primary" style="width:auto; margin:0;" onclick="promptAddKanbanColumn()">+ Oszlop hozzáadása</button>
+      </div>
+
+      <div class="kanban-board" id="kanban-board">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- CLIENTS PAGE -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Ügyfelek adatbázisa</div>
+          <div class="page-subtitle">Ügyfelek listázása és alapadatok módosítása</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button onclick="openClientFieldsModal()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Ügyfél mezők beállítása</button>
+          <button onclick="loadClientsTable()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+          <button class="btn-primary" style="width:auto; margin:0;" onclick="openClientModal()">+ Új Ügyfél</button>
+        </div>
+      </div>
+      <div class="table-card" style="overflow-x:auto;">
+        <table class="data-table">
+          <thead id="clients-thead">
+            <!-- Rendered by JS -->
+          </thead>
+          <tbody id="clients-body">
+            <tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Client Fields Setup Modal -->
+    <div id="fields-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center;">
+      <div class="login-card" style="width:480px; max-height:80vh; overflow-y:auto;">
+        <h3 style="margin-bottom:16px;">Ügyfél mezők beállítása</h3>
+        <div id="fields-list" style="margin-bottom:20px;"></div>
+        <button class="btn-primary" style="width:100%; margin-bottom:10px;" onclick="promptAddClientField()">+ Új Mező hozzáadása</button>
+        <button class="btn-primary" style="background:var(--bg3);color:var(--text);width:100%;" onclick="closeClientFieldsModal()">Bezárás</button>
+      </div>
+    </div>
+
+    <!-- Client Modal HTML -->
+    <div id="client-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center;">
+      <div class="login-card" style="width:380px;">
+        <h3 id="client-modal-title" style="margin-bottom:16px;">Új ügyfél</h3>
+        <input type="hidden" id="nc-id">
+        <div id="client-modal-dynamic-fields">
+           <!-- Dynamic inputs rendered here by JS -->
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button class="btn-primary" style="background:var(--bg3);color:var(--text)" onclick="closeClientModal()">Mégse</button>
+          <button class="btn-primary" onclick="submitClient()">Mentés</button>
+        </div>
+      </div>
+    </div>
+
+
     <div class="page" id="page-interactions">
       <div class="page-header">
         <div>
@@ -905,9 +1057,17 @@
           <div class="page-title">Naptár</div>
           <div class="page-subtitle">Foglalt időpontok és megbeszélések</div>
         </div>
-        <button onclick="loadCalendar()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+        <div style="display:flex;gap:12px;">
+          <div class="fmt-toggle">
+            <button class="fmt-btn" id="cal-view-list-btn" onclick="switchCalendarView('list')">Sima lista</button>
+            <button class="fmt-btn active" id="cal-view-grid-btn" onclick="switchCalendarView('grid')">Naptár Nézet</button>
+          </div>
+          <button onclick="loadCalendar()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+        </div>
       </div>
-      <div class="table-card">
+      
+      <!-- List View -->
+      <div class="table-card" id="calendar-list-view" style="display:none;">
         <table class="data-table">
           <thead>
             <tr>
@@ -922,6 +1082,11 @@
             <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Grid View (FullCalendar) -->
+      <div id="calendar-grid-view" style="display:block; background:var(--card); padding:20px; border-radius:12px; border:1px solid var(--border);">
+         <div id="fullcalendar-el"></div>
       </div>
     </div>
 
@@ -1074,6 +1239,8 @@ function showPage(page) {
   if (page === 'emails')       loadEmails();
   if (page === 'sessions')     loadSessions();
   if (page === 'settings')     loadSettings();
+  if (page === 'kanban')       loadKanban();
+  if (page === 'clients')      loadClientsTable();
 }
 
 // ── ANALYTICS ─────────────────────────────────────────────────────────────────
@@ -1307,30 +1474,114 @@ function filterInteractions(type) { /* kept for compat */ }
 
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────────
+let fcInstance = null;
+let currentCalendarView = 'grid';
+
+function switchCalendarView(view) {
+  currentCalendarView = view;
+  const listBtn = document.getElementById('cal-view-list-btn');
+  const gridBtn = document.getElementById('cal-view-grid-btn');
+  const listCont = document.getElementById('calendar-list-view');
+  const gridCont = document.getElementById('calendar-grid-view');
+
+  if (view === 'list') {
+    listBtn.classList.add('active');
+    gridBtn.classList.remove('active');
+    listCont.style.display = 'block';
+    gridCont.style.display = 'none';
+  } else {
+    listBtn.classList.remove('active');
+    gridBtn.classList.add('active');
+    listCont.style.display = 'none';
+    gridCont.style.display = 'block';
+    if (fcInstance) {
+      setTimeout(() => fcInstance.render(), 10);
+    }
+  }
+}
+
 async function loadCalendar() {
   const tbody = document.getElementById('calendar-body');
-  tbody.innerHTML = '<tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>';
+  if(tbody) tbody.innerHTML = '<tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>';
   try {
     const res  = await authFetch('/admin/api/calendar');
     const data = await res.json();
     const events = data.events || [];
+    
+    // --- Render List View ---
     if (!events.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Nincs naptári esemény</div></div></td></tr>`;
-      return;
+      if(tbody) tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Nincs naptári esemény</div></div></td></tr>`;
+    } else {
+      if(tbody) {
+        tbody.innerHTML = events.map(ev => `
+          <tr>
+            <td><div class="td-time">${fmtDt(ev.start_dt)}</div></td>
+            <td style="font-weight:500">${esc(ev.title)}</td>
+            <td>${esc(ev.attendee || '—')}</td>
+            <td><span class="badge badge-teal">${ev.duration_minutes} perc</span></td>
+            <td class="td-summary">${esc(ev.attendee_email || '—')}</td>
+          </tr>
+        `).join('');
+      }
     }
-    tbody.innerHTML = events.map(ev => `
-      <tr>
-        <td><div class="td-time">${fmtDt(ev.start_dt)}</div></td>
-        <td style="font-weight:500">${esc(ev.title)}</td>
-        <td>${esc(ev.attendee || '—')}</td>
-        <td><span class="badge badge-teal">${ev.duration_minutes} perc</span></td>
-        <td class="td-summary">${esc(ev.attendee_email || '—')}</td>
-      </tr>
-    `).join('');
+
+    // --- Render Grid View (FullCalendar) ---
+    const fcEl = document.getElementById('fullcalendar-el');
+    if (fcEl) {
+      if (!fcInstance) {
+        fcInstance = new FullCalendar.Calendar(fcEl, {
+          initialView: 'timeGridWeek',
+          locale: 'hu',
+          contentHeight: 'auto',
+          aspectRatio: 2.1,
+          slotMinTime: '08:00:00',
+          slotMaxTime: '20:00:00',
+          allDaySlot: false,
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridDay,timeGridWeek,dayGridMonth'
+          },
+          buttonText: {
+            today: 'Ma',
+            month: 'Hónap',
+            week: 'Hét',
+            day: 'Nap'
+          },
+          eventColor: 'var(--accent)',
+          events: [],
+          eventTimeFormat: {
+             hour: '2-digit',
+             minute: '2-digit',
+             meridiem: false,
+             hour12: false
+          }
+        });
+        fcInstance.render();
+      }
+      
+      fcInstance.removeAllEvents();
+      events.forEach(ev => {
+          let endDt = null;
+          if (ev.duration_minutes) {
+             endDt = new Date(new Date(ev.start_dt).getTime() + ev.duration_minutes*60000).toISOString();
+          }
+          fcInstance.addEvent({
+             title: ev.title + (ev.attendee ? ' - ' + ev.attendee : ''),
+             start: ev.start_dt,
+             end: endDt || undefined
+          });
+      });
+      if (currentCalendarView === 'grid') {
+          setTimeout(() => fcInstance.render(), 20);
+      }
+    }
+
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
+    if(tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>';
   }
 }
+
 
 // ── EMAILS ────────────────────────────────────────────────────────────────────
 async function loadEmails() {
@@ -1418,6 +1669,353 @@ if (authToken) {
     });
 }
 
+
+// ── KANBAN ──────────────────────────────────────────────────────────────────
+let draggedClientId = null;
+let currentKanbanColumns = [];
+let currentClientFields = [];
+
+async function initClientFields() {
+  if (currentClientFields.length === 0) {
+    try {
+      const res = await authFetch('/admin/api/client_fields');
+      const data = await res.json();
+      currentClientFields = data.fields || [];
+      currentClientFields.sort((a,b) => a.order_index - b.order_index);
+    } catch(e) { console.error("Hiba mezők letöltésekor", e); }
+  }
+}
+
+
+async function loadKanban() {
+  const board = document.getElementById('kanban-board');
+  if(!board) return;
+  board.innerHTML = '<div style="text-align:center;width:100%;padding:40px;color:var(--text-muted);"><div class="spinner"></div></div>';
+
+  try {
+    const colRes = await authFetch('/admin/api/kanban_columns');
+    const colData = await colRes.json();
+    currentKanbanColumns = colData.columns || [];
+    currentKanbanColumns.sort((a,b) => a.order_index - b.order_index);
+
+    const clientRes = await authFetch('/admin/api/clients');
+    const clientData = await clientRes.json();
+    const clients = clientData.clients || [];
+
+    const counts = {};
+    const clientsByStatus = {};
+    currentKanbanColumns.forEach( col => {
+      counts[col.id] = 0;
+      clientsByStatus[col.id] = [];
+    });
+
+    clients.forEach(c => {
+      const status = c.status || 'uj';
+      if (!clientsByStatus[status]) { Object.assign(counts, {[status]: 0}); clientsByStatus[status] = []; }
+      clientsByStatus[status].push(c);
+      counts[status]++;
+    });
+
+    board.innerHTML = currentKanbanColumns.map(col => `
+      <div class="kanban-col" id="col-${col.id}" ondragover="kanbanDragOver(event)" ondrop="kanbanDrop(event, '${col.id}')">
+        <div class="kanban-col-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="col-name-label-${col.id}">${esc(col.name)}</span>
+            <span class="kanban-col-count" id="count-${col.id}">${counts[col.id]}</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button onclick="editKanbanColumn('${col.id}', '${esc(col.name)}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;" title="Átnevezés">✎</button>
+            <button onclick="deleteKanbanColumn('${col.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;" title="Törlés">🗑</button>
+          </div>
+        </div>
+        <div class="kanban-cards" id="cards-${col.id}"></div>
+      </div>
+    `).join('');
+
+    await initClientFields();
+    currentKanbanColumns.forEach( col => {
+        const container = document.getElementById('cards-' + col.id);
+        const colClients = clientsByStatus[col.id] || [];
+        colClients.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'kanban-card';
+            div.draggable = true;
+            div.ondragstart = (e) => { draggedClientId = c.id; div.classList.add('dragging'); };
+            div.ondragend = () => div.classList.remove('dragging');
+            
+            // Allow double click to open client modal directly
+            div.ondblclick = () => openClientModal(c.id, btoa(encodeURIComponent(c.custom_data || '{}')));
+            
+            // Build dynamic UI for card
+            const fieldsCount = currentClientFields.length;
+            let titleVal = fieldsCount > 0 && c.custom_data ? JSON.parse(c.custom_data)[currentClientFields[0].id] : c.name;
+            let otherHtml = currentClientFields.slice(1, 3).map(f => {
+                let val = c.custom_data ? JSON.parse(c.custom_data)[f.id] : '';
+                return val ? `<div class="client-info">🔹 ${esc(val)}</div>` : '';
+            }).join('');
+
+            div.innerHTML = `
+              <div class="client-name">${esc(titleVal || "Névtelen")}</div>
+              ${otherHtml}
+              <div style="text-align:right"><button onclick="deleteClient(${c.id})" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:11px;">Törlés</button></div>
+            `;
+            container.appendChild(div);
+        });
+    });
+  } catch (e) {
+    console.error('Kanban hiba:', e);
+    board.innerHTML = '<div style="text-align:center;width:100%;color:var(--red);padding:40px;">Hiba az adatok betöltésekor</div>';
+  }
+}
+
+async function promptAddKanbanColumn() {
+  const name = prompt("Új oszlop neve:");
+  if (!name) return;
+  const idStr = name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '');
+  if (!idStr) { alert("Érvénytelen név"); return; }
+  const order_index = currentKanbanColumns.length > 0 ? Math.max(...currentKanbanColumns.map(c => c.order_index)) + 1 : 1;
+  const req = { id: idStr, name: name.trim(), order_index: order_index };
+  try {
+    const res = await authFetch('/admin/api/kanban_columns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+    if (!res.ok) { alert("Hiba: Már létezik ilyen oszlop azonosító vagy belső hiba."); return; }
+    loadKanban();
+  } catch (e) { alert("Hálózati hiba"); }
+}
+
+async function editKanbanColumn(id, oldName) {
+  const name = prompt("Oszlop új neve:", oldName);
+  if (!name || name.trim() === oldName) return;
+  const req = { name: name.trim() };
+  try {
+    await authFetch(`/admin/api/kanban_columns/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+    loadKanban();
+  } catch (e) { alert("Hálózati hiba"); }
+}
+
+async function deleteKanbanColumn(id) {
+  if (!confirm("Biztosan törlöd ezt az oszlopot? Csak akkor lehetséges, ha üres!")) return;
+  try {
+    const res = await authFetch(`/admin/api/kanban_columns/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+        const d = await res.json();
+        alert(d.detail || "Hiba a törlésnél. Biztosan üres az oszlop?");
+    } else {
+        loadKanban();
+    }
+  } catch (e) { alert("Hálózati hiba"); }
+}
+
+function kanbanDragOver(e) { e.preventDefault(); }
+
+async function kanbanDrop(e, status) {
+  e.preventDefault();
+  if (!draggedClientId) return;
+  const id = draggedClientId;
+  draggedClientId = null;
+  
+  try {
+    await authFetch(`/admin/api/clients/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    loadKanban();
+  } catch(err) {
+    alert('Hiba a mozgatás során!');
+  }
+}
+
+
+async function loadClientsTable() {
+  await initClientFields();
+  const thead = document.getElementById('clients-thead');
+  const tbody = document.getElementById('clients-body');
+  if(!tbody || !thead) return;
+
+  const displayFields = currentClientFields.slice(0, 4);
+  thead.innerHTML = `
+    <tr>
+      <th>Regisztrálva</th>
+      ${displayFields.map(f => `<th>${esc(f.name)}</th>`).join('')}
+      <th>Kanban Státusz</th>
+      <th>Műveletek</th>
+    </tr>
+  `;
+
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="${3 + displayFields.length}"><div class="spinner"></div></td></tr>`;
+  try {
+    const res = await authFetch('/admin/api/clients');
+    const data = await res.json();
+    const clients = data.clients || [];
+    if (!clients.length) {
+      tbody.innerHTML = `<tr><td colspan="${3 + displayFields.length}"><div class="empty-state"><div class="empty-state-text">Nincs rögzített ügyfél</div></div></td></tr>`;
+      return;
+    }
+    
+    // Auto-load kanban cols to map status
+    if (currentKanbanColumns.length === 0) {
+      const creq = await authFetch('/admin/api/kanban_columns');
+      const cdat = await creq.json();
+      currentKanbanColumns = cdat.columns || [];
+    }
+    const statusMap = {};
+    currentKanbanColumns.forEach(c => { statusMap[c.id] = c.name; });
+
+    tbody.innerHTML = clients.map(c => `
+      <tr>
+        <td class="td-time">${fmtDt(c.created_at)}</td>
+        ${displayFields.map((f, i) => {
+            let val = c.custom_data ? JSON.parse(c.custom_data)[f.id] : '';
+            return `<td ${i === 0 ? 'style="font-weight:500"' : ''}>${esc(val || '—')}</td>`;
+        }).join('')}
+        <td><span class="badge badge-teal">${esc(statusMap[c.status] || c.status)}</span></td>
+        <td>
+          <button onclick="openClientModal(${c.id}, '${esc(btoa(encodeURIComponent(c.custom_data || '{}')))}')" style="background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:12px;margin-right:8px;">Szerkesztés</button>
+          <button onclick="deleteClient(${c.id})" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;">Törlés</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="${3 + displayFields.length}" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>`;
+  }
+}
+
+async function openClientModal(id = null, encodedCustomData = 'e30=') {
+  await initClientFields();
+  let cData = {};
+  try {
+     cData = JSON.parse(decodeURIComponent(atob(encodedCustomData)));
+  } catch(e) {}
+  if (typeof cData === 'string') {
+      try { cData = JSON.parse(cData); } catch(e){}
+  }
+
+  document.getElementById('nc-id').value = id || '';
+  
+  const dynContainer = document.getElementById('client-modal-dynamic-fields');
+  dynContainer.innerHTML = currentClientFields.map(f => {
+      const val = cData[f.id] || '';
+      return `<div class="form-group">
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:500">${esc(f.name)}</label>
+                <input id="nc-dyn-${f.id}" class="form-input" placeholder="${esc(f.name)}" value="${esc(val)}">
+              </div>`;
+  }).join('');
+
+  document.getElementById('client-modal-title').innerText = id ? 'Ügyfél szerkesztése' : 'Új ügyfél';
+  document.getElementById('client-modal').style.display = 'flex';
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal').style.display = 'none';
+}
+
+async function submitClient() {
+  const id = document.getElementById('nc-id').value;
+  
+  let custom_data = {};
+  currentClientFields.forEach(f => {
+      const el = document.getElementById('nc-dyn-' + f.id);
+      if (el) custom_data[f.id] = el.value.trim();
+  });
+  
+  try {
+    const payload = { custom_data };
+    if (id) {
+      await authFetch(`/admin/api/clients/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await authFetch('/admin/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+    closeClientModal();
+    loadKanban();
+    loadClientsTable();
+  } catch (e) {
+    alert('Hiba: ' + e.message);
+  }
+}
+
+// ── CLIENT FIELDS MANAGEMENT ───────────────────────────────────────────────
+function openClientFieldsModal() {
+  renderClientFieldsModal();
+  document.getElementById('fields-modal').style.display = 'flex';
+}
+
+function closeClientFieldsModal() {
+  document.getElementById('fields-modal').style.display = 'none';
+  currentClientFields = [];
+  loadClientsTable();
+  loadKanban();
+}
+
+async function renderClientFieldsModal() {
+  await initClientFields();
+  const list = document.getElementById('fields-list');
+  list.innerHTML = currentClientFields.map(f => `
+     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg3); border-radius:6px; margin-bottom:8px;">
+        <div style="font-weight:500">${esc(f.name)} <small style="color:var(--text-muted);font-weight:normal">(${f.id})</small></div>
+        <div style="display:flex; gap:12px;">
+            <button onclick="editClientField('${f.id}', '${esc(f.name).replace(/'/g, "\\'")}')" style="background:none;border:none;color:var(--blue);cursor:pointer;" title="Átnevezés">✎</button>
+            <button onclick="deleteClientField('${f.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;" title="Törlés">🗑</button>
+        </div>
+     </div>
+  `).join('');
+}
+
+async function promptAddClientField() {
+  const name = prompt("Új mező megjelenítési neve (pl. Cégnév):");
+  if (!name) return;
+  const idStr = name.trim().toLowerCase().replace(/\\s+/g, '-').replace(/[^a-z0-9-]/gi, '');
+  if (!idStr) { alert("Érvénytelen azonosító"); return; }
+  const order_index = currentClientFields.length > 0 ? Math.max(...currentClientFields.map(c => c.order_index)) + 1 : 1;
+  const req = { id: idStr, name: name.trim(), order_index: order_index };
+  try {
+    const res = await authFetch('/admin/api/client_fields', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+    if (!res.ok) { alert("Hiba: Már létezik ilyen mező azonosító vagy belső hiba."); return; }
+    currentClientFields = [];
+    renderClientFieldsModal();
+  } catch (e) { alert("Hálózati hiba"); }
+}
+
+async function editClientField(id, oldName) {
+  const name = prompt("Mező új neve:", oldName);
+  if (!name || name.trim() === oldName) return;
+  const req = { name: name.trim() };
+  try {
+    await authFetch(`/admin/api/client_fields/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+    currentClientFields = [];
+    renderClientFieldsModal();
+  } catch (e) { alert("Hálózati hiba"); }
+}
+
+async function deleteClientField(id) {
+  if (!confirm("Biztosan törlöd ezt a mezőt? Ezzel nem vesznek el az eddig elmentett adatok az adatbázisból, de az űrlapokból és a táblázatból eltűnik a rovat.")) return;
+  try {
+    await authFetch(`/admin/api/client_fields/${id}`, { method: 'DELETE' });
+    currentClientFields = [];
+    renderClientFieldsModal();
+  } catch (e) { alert("Hálózati hiba"); }
+}
+
+async function deleteClient(id) {
+  if(!confirm('Biztosan törlöd ezt az ügyfelet?')) return;
+  try {
+    await authFetch(`/admin/api/clients/${id}`, { method: 'DELETE' });
+    loadKanban();
+    const clientsPage = document.getElementById('page-clients');
+    if(clientsPage && clientsPage.classList.contains('active')) {
+      loadClientsTable();
+    }
+  } catch (e) {
+    alert('Törlési hiba: ' + e.message);
+  }
+}
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 const BH_DAYS = [
