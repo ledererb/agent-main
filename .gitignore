@@ -35,3 +35,15 @@ Thumbs.db
 .venv-linux
 thinkai-voice-agent/.env
 thinkai-voice-agent/google-credentials.json
+
+# Binaries
+*.exe
+*.bin
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Large runtime files
+thinkai-voice-agent/cloudflared.exe
