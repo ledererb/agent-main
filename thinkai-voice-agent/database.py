@@ -698,24 +698,35 @@ def add_client(custom_data: dict, status: str = "uj") -> int:
         )
         return cur.lastrowid
 
-def find_client_by_contact(email: str = "", phone: str = "") -> dict | None:
-    if not email and not phone:
+def find_client_by_contact(email: str = "", phone: str = "", messenger_id: str = "") -> dict | None:
+    if not email and not phone and not messenger_id:
         return None
     with get_db() as conn:
+        if messenger_id:
+            row = conn.execute(
+                "SELECT * FROM clients WHERE custom_data LIKE ? ORDER BY id DESC LIMIT 1", 
+                (f'%"{messenger_id}"%',)
+            ).fetchone()
+            if row:
+                return dict(row)
+
         if email and phone:
             row = conn.execute("SELECT * FROM clients WHERE email = ? OR phone = ? ORDER BY id DESC LIMIT 1", (email, phone)).fetchone()
         elif email:
             row = conn.execute("SELECT * FROM clients WHERE email = ? ORDER BY id DESC LIMIT 1", (email,)).fetchone()
-        else:
+        elif phone:
             row = conn.execute("SELECT * FROM clients WHERE phone = ? ORDER BY id DESC LIMIT 1", (phone,)).fetchone()
+        else:
+            row = None
     return dict(row) if row else None
 
 def upsert_client(custom_data: dict, additional_log: str = "", status: str = "uj") -> int:
     import json
     email = custom_data.get("email", "").strip()
     phone = custom_data.get("phone", "").strip()
+    messenger_id = custom_data.get("messenger_id", "").strip()
     
-    existing = find_client_by_contact(email, phone)
+    existing = find_client_by_contact(email, phone, messenger_id)
     
     if existing:
         try:
@@ -766,6 +777,18 @@ def update_client_status(client_id: int, status: str) -> bool:
 
 def delete_client(client_id: int) -> bool:
     with get_db() as conn:
+        client_row = conn.execute("SELECT name, email FROM clients WHERE id = ?", (client_id,)).fetchone()
+        if client_row:
+            c_name = client_row["name"]
+            c_email = client_row["email"]
+            
+            # Törölni kell a név alapján
+            if c_name and c_name != "Névtelen" and c_name != "-":
+                conn.execute("DELETE FROM calendar_events WHERE title LIKE ? OR attendee LIKE ?", (f"%{c_name}%", f"%{c_name}%"))
+            # Illetve az email alapján is, biztos ami biztos
+            if c_email and c_email != "-":
+                conn.execute("DELETE FROM calendar_events WHERE title LIKE ? OR attendee_email LIKE ?", (f"%{c_email}%", f"%{c_email}%"))
+                
         conn.execute("DELETE FROM clients WHERE id = ?", (client_id,))
     return True
 

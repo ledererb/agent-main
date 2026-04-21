@@ -1844,19 +1844,20 @@ async function loadClientsTable() {
   thead.innerHTML = `
     <tr>
       <th>Regisztrálva</th>
+      <th>Csatorna</th>
       ${displayFields.map(f => `<th>${esc(f.name)}</th>`).join('')}
       <th>Kanban Státusz</th>
       <th>Műveletek</th>
     </tr>
   `;
 
-  tbody.innerHTML = `<tr class="loading-row"><td colspan="${3 + displayFields.length}"><div class="spinner"></div></td></tr>`;
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="${4 + displayFields.length}"><div class="spinner"></div></td></tr>`;
   try {
     const res = await authFetch('/admin/api/clients');
     const data = await res.json();
     const clients = data.clients || [];
     if (!clients.length) {
-      tbody.innerHTML = `<tr><td colspan="${3 + displayFields.length}"><div class="empty-state"><div class="empty-state-text">Nincs rögzített ügyfél</div></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${4 + displayFields.length}"><div class="empty-state"><div class="empty-state-text">Nincs rögzített ügyfél</div></div></td></tr>`;
       return;
     }
     
@@ -1869,11 +1870,19 @@ async function loadClientsTable() {
     const statusMap = {};
     currentKanbanColumns.forEach(c => { statusMap[c.id] = c.name; });
 
-    tbody.innerHTML = clients.map(c => `
+    tbody.innerHTML = clients.map(c => {
+      let customObj = c.custom_data ? JSON.parse(c.custom_data) : {};
+      let csatorna = customObj.forras_csatorna || '';
+      if (!csatorna) {
+          if (customObj.messenger_id) csatorna = "Messenger";
+          else csatorna = "Manuális";
+      }
+      return `
       <tr>
         <td class="td-time">${fmtDt(c.created_at)}</td>
+        <td style="font-weight:600; font-size:12px; color:var(--text);">${esc(csatorna)}</td>
         ${displayFields.map((f, i) => {
-            let val = c.custom_data ? JSON.parse(c.custom_data)[f.id] : '';
+            let val = customObj[f.id] != null ? customObj[f.id] : '';
             if (f.id === 'beszelgetes_naplo') {
                 return `<td>${val ? `<button onclick="openLogModal('${esc(btoa(encodeURIComponent(val)))}')" style="background:rgba(0,212,200,0.1);border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:11px;">Megtekintés</button>` : '<span style="color:var(--text-muted)">—</span>'}</td>`;
             }
@@ -1885,9 +1894,10 @@ async function loadClientsTable() {
           <button onclick="deleteClient(${c.id})" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:12px;">Törlés</button>
         </td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="${3 + displayFields.length}" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${4 + displayFields.length}" style="text-align:center;color:var(--red);padding:40px;">Betöltési hiba</td></tr>`;
   }
 }
 

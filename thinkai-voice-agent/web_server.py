@@ -14,7 +14,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import jwt as pyjwt
@@ -24,6 +24,7 @@ import asyncio
 
 import database as db
 import email_processor
+from anthropic import AsyncAnthropic
 
 THIS_DIR = Path(__file__).resolve().parent
 load_dotenv(THIS_DIR / ".env")
@@ -153,6 +154,231 @@ async def session_end(request: Request):
     except Exception:
         pass
     return {"ok": True}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# META WEBHOOK
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/webhook/meta")
+async def meta_webhook_verify(request: Request):
+    """Meta Webhook verification challenge."""
+    verify_token = os.getenv("META_VERIFY_TOKEN", "")
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    if mode and token:
+        if mode == "subscribe" and token == verify_token:
+            print("META_WEBHOOK_VERIFIED")
+            return PlainTextResponse(content=challenge)
+        raise HTTPException(status_code=403, detail="Verification token mismatch")
+    raise HTTPException(status_code=400, detail="Missing parameters")
+
+async def process_meta_message(sender_id: str, message_text: str, source_channel: str = "Messenger"):
+    """Aszinkron háttérfeladat a Meta Messenger / Instagram üzenetek feldolgozására."""
+    try:
+        # 1. Beolvassuk a rendszer promptot
+        prompt_path = THIS_DIR / "system_prompt.md"
+        system_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else "Te egy asszisztens vagy."
+
+        system_prompt += "\n\nFONTOS INSTRUKCIÓ: Formázz röviden, mint egy Messenger üzenetet. Válaszolj közvetlenül az ügyfélnek. MINDEN ESETBEN KÖTELEZŐ MEGHÍVNOD a 'save_client_data' funkciót (tool-t), ha az ügyfél megadja a nevét, email címét, vagy telefonszámát! HA KÉR EGY IDŐPONTOT (dátum/óra), KÖTELEZŐ MEGHÍVNOD a 'book_appointment' funkciót is a naptárba rögzítéshez!"
+
+        # Először is elmentjük a bejövő üzenetet a Kanbanba, hogy biztosan meglegyen a naplóban!
+        db.upsert_client({"messenger_id": sender_id, "forras_csatorna": source_channel}, additional_log=f"Ügyfél ({source_channel}): {message_text}")
+
+        client_record = db.find_client_by_contact(messenger_id=sender_id)
+        if client_record:
+            try:
+                import json
+                c_data = json.loads(client_record.get("custom_data") or "{}")
+                chat_history = c_data.get("beszelgetes_naplo", "")
+                if chat_history:
+                    system_prompt += f"\n\n--- Eddigi beszélgetés előzménye a felhasználóval ---\n{chat_history}\n----------------------------------------------------"
+            except Exception as e:
+                print(f"[Meta AI Process] Hiba a napló beolvasásakor: {e}")
+
+        # 2. Tool definíciók a Claude-hoz
+        tools = [
+            {
+                "name": "save_client_data",
+                "description": "Elmenti az ügyfélről kinyert adatokat (név, email, telefon, és egyéb releváns információ pl. autó típusa, elvégzendő munka).",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "Az ügyfél neve, ha megadta."},
+                        "email": {"type": "string", "description": "Az ügyfél e-mail címe."},
+                        "phone": {"type": "string", "description": "Az ügyfél telefonszáma."}
+                    }
+                }
+            },
+            {
+                "name": "book_appointment",
+                "description": "Naptár bejegyzést készít (időpontfoglalás). Csak véglegesített időpontnál hívd meg. NE duplikáld (ne hívd meg többször feleslegesen) ugyanarra a megbeszélésre!",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string", "description": "Szabványosított cím: 'Téma' (pl. Olajcsere, Konzultáció, Találkozó)"},
+                        "start_dt": {"type": "string", "description": "Kezdési időpont ISO formátumban, pl. '2026-04-19T10:00:00'"},
+                        "end_dt": {"type": "string", "description": "Befejezési időpont ISO formátumban, különben üres."},
+                        "duration_minutes": {"type": "integer", "description": "Várható időtartam percekben. Alapértelmezett: 30."},
+                        "attendee": {"type": "string", "description": "Az ügyfél neve, ami mellé kerül a címnek."},
+                        "attendee_email": {"type": "string", "description": "Az ügyfél E-mail címe"}
+                    },
+                    "required": ["title", "start_dt", "attendee"]
+                }
+            }
+        ]
+
+        # 3. Claude hívás
+        client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        messages = [{"role": "user", "content": message_text}]
+
+        try:
+            response = await client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=1000,
+                system=system_prompt,
+                messages=messages,
+                tools=tools
+            )
+        except Exception as e:
+            print(f"[Meta AI Process] Kritikus Anthropic API Hiba: {e}")
+            return
+        final_text = ""
+        current_response = response
+
+        while current_response.stop_reason == "tool_use":
+            messages.append({"role": "assistant", "content": current_response.content})
+            
+            tool_results_blocks = []
+            for content_block in current_response.content:
+                if content_block.type == "tool_use":
+                    tool_name = content_block.name
+                    tool_args = content_block.input
+                    tool_call_id = content_block.id
+                    
+                    tool_result = ""
+                    try:
+                        if tool_name == "save_client_data":
+                            custom_data = {
+                                "name": tool_args.get("name", ""),
+                                "email": tool_args.get("email", ""),
+                                "phone": tool_args.get("phone", ""),
+                                "messenger_id": sender_id,
+                                "forras_csatorna": "Messenger"
+                            }
+                            # Üres értékek kiszűrése hogy ne írja felül a Kanbanban lévőt ha már van
+                            custom_data = {k: v for k, v in custom_data.items() if v}
+                            
+                            client_id = db.upsert_client(custom_data)
+                            tool_result = f"Sikeres mentés. ID: {client_id}"
+
+                        elif tool_name == "book_appointment":
+                            start_dt_val = tool_args.get("start_dt", "")
+                            existing = db.get_calendar_events()
+                            # Duplikáció elkerülése, ha ugyanerre a percre már van foglalva valami
+                            if any(ev.get("start_dt") == start_dt_val for ev in existing):
+                                tool_result = "Ebben az időpontban már van rögzítve esemény! Kérlek ismertesd ezt az ügyféllel, dupla foglalást nem rögzítek."
+                            else:
+                                db.add_calendar_event(
+                                    title=tool_args.get("title", "Konzultáció"),
+                                    start_dt=start_dt_val,
+                                    end_dt=tool_args.get("end_dt", ""),
+                                    duration_minutes=tool_args.get("duration_minutes", 30),
+                                    attendee=tool_args.get("attendee", ""),
+                                    attendee_email=tool_args.get("attendee_email", "")
+                                )
+                                tool_result = "Naptár bejegyzés létrehozva."
+                        else:
+                            tool_result = "Ismeretlen Tool."
+                    except Exception as e:
+                        tool_result = f"Tool hiba: {str(e)}"
+                        print(f"[Meta AI Process] Tool hiba: {e}")
+
+                    tool_results_blocks.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_call_id,
+                        "content": tool_result
+                    })
+            
+            if tool_results_blocks:
+                messages.append({
+                    "role": "user", 
+                    "content": tool_results_blocks
+                })
+            
+            try:
+                current_response = await client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=1000,
+                    system=system_prompt,
+                    messages=messages,
+                    tools=tools
+                )
+            except Exception as e:
+                print(f"[Meta AI Process] Kritikus Anthropic API Hiba (Ciklusban): {e}")
+                return
+
+        for content in current_response.content:
+            if content.type == "text":
+                final_text += content.text
+
+        # 4. Válasz küldése Meta Graph API-val
+        if final_text:
+            # Válasz rögzítése a Kanbanba
+            db.upsert_client({"messenger_id": sender_id, "forras_csatorna": source_channel}, additional_log=f"AI Válasz: {final_text}")
+
+            page_access_token = os.getenv("META_PAGE_ACCESS_TOKEN", "")
+            if page_access_token:
+                # Az Instagram üzenetküldést is a Facebook Page token és a me/messages végpont kezeli a háttérben
+                send_endpoint = "https://graph.facebook.com/v25.0/me/messages"
+                
+                async with httpx.AsyncClient() as http_client:
+                    fb_resp = await http_client.post(
+                        send_endpoint,
+                        headers={"Authorization": f"Bearer {page_access_token}"},
+                        json={
+                            "recipient": {"id": sender_id},
+                            "message": {"text": final_text}
+                        }
+                    )
+                    print(f"[Meta AI Process] Graph API response ({source_channel}): {fb_resp.status_code} - {fb_resp.text}")
+            else:
+                print("[Meta AI Process] META_PAGE_ACCESS_TOKEN hiányzik, üzenet nem lett elküldve.")
+
+    except Exception as e:
+        print(f"[Meta AI Process] Hiba: {e}")
+
+@app.post("/api/webhook/meta")
+async def meta_webhook_receive(request: Request):
+    """Receive messages from Meta Messenger."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    
+    obj_type = body.get("object")
+    if obj_type in ("page", "instagram"):
+        is_instagram = (obj_type == "instagram")
+        
+        for entry in body.get("entry", []):
+            for webhook_event in entry.get("messaging", []):
+                sender_id = webhook_event.get("sender", {}).get("id")
+                
+                if "message" in webhook_event and "text" in webhook_event["message"]:
+                    message_text = webhook_event["message"]["text"]
+                    source_channel = "Instagram" if is_instagram else "Messenger"
+                    print(f"[Meta Webhook] Új üzenet feladótól (ID: {sender_id}, Csatorna: {source_channel}): {message_text}")
+                    
+                    # AI aszinkron feldolgozás
+                    task = asyncio.create_task(process_meta_message(sender_id, message_text, source_channel))
+                    background_tasks.add(task)
+                    task.add_done_callback(background_tasks.discard)
+                    
+        return PlainTextResponse(content="EVENT_RECEIVED", status_code=200)
+    
+    raise HTTPException(status_code=404, detail="Not Found")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

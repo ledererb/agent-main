@@ -313,6 +313,7 @@ async def book_meeting(
             "name": attendee,
             "email": attendee_email,
             "phone": attendee_phone,
+            "forras_csatorna": "Voice Agent",
         }
         
         # Merge additional info safely if provided
