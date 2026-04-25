@@ -47,3 +47,6 @@ thinkai-voice-agent/google-credentials.json
 
 # Large runtime files
 thinkai-voice-agent/cloudflared.exe
+
+# Figma reference (local only)
+figma/
