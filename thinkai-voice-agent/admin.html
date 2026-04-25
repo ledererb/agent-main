@@ -429,25 +429,93 @@
     body.dark .kpi-card-figma { box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important; }
     body.dark .badge-gray { background: #1a3548 !important; color: #8ea9c0 !important; }
 
+    /* ── Analytics page dark ─────────────────────────────────────── */
+    body.dark #page-analytics .analytics-shell { background: #0d2538 !important; }
+    body.dark #page-analytics .section-header-figma { color: #e8edf5 !important; }
+    body.dark #page-analytics .section-divider { background: #1a3548 !important; }
+    body.dark #page-analytics .panel-white { background: #0f2d40 !important; border-color: #1a3548 !important; box-shadow: none !important; }
+    body.dark #page-analytics .panel-title { color: #e8edf5 !important; }
+    body.dark #page-analytics .filter-select-figma { background: #0f2d40 !important; border-color: #1a3548 !important; color: #e8edf5 !important; }
+    body.dark #page-analytics .filter-group label { color: #6b8b99 !important; }
+    /* KPI stat cards */
+    body.dark #page-analytics .stat-card { background: #0f2d40 !important; border-color: #1a3548 !important; }
+    body.dark #page-analytics .stat-label { color: #6b8b99 !important; }
+    body.dark #page-analytics .stat-value { color: #e8edf5 !important; }
+    /* Topic rows */
+    body.dark #page-analytics .topic-name { color: #c8d6e5 !important; }
+    body.dark #page-analytics .topic-value { color: #e8edf5 !important; }
+    body.dark #page-analytics .topic-pct { color: #6b8b99 !important; }
+    body.dark #page-analytics .progress-bar-track { background: #1a3548 !important; }
+    body.dark #page-analytics .funnel-conv { color: #6b8b99 !important; }
+    /* Severity / critical cards */
+    body.dark #page-analytics .severity-card.high { background: rgba(239,68,68,0.1) !important; }
+    body.dark #page-analytics .severity-card.medium { background: rgba(249,115,22,0.1) !important; }
+    body.dark #page-analytics .severity-card.low { background: rgba(234,179,8,0.1) !important; }
+    body.dark #page-analytics .severity-label { color: #c8d6e5 !important; }
+    body.dark #page-analytics .severity-count { color: #e8edf5 !important; }
+    body.dark #page-analytics .severity-unit { color: #6b8b99 !important; }
+    /* Suggestion cards */
+    body.dark #page-analytics .suggestion-card { background: rgba(28,238,224,0.06) !important; border-color: rgba(28,238,224,0.2) !important; }
+    body.dark #page-analytics .suggestion-text { color: #c8d6e5 !important; }
+    /* Chart view toggle (Napi/Órás) */
+    body.dark #page-analytics .chart-view-btn { background: #1a3548 !important; color: #6b8b99 !important; }
+    body.dark #page-analytics .chart-view-btn.active { background: #1ceee0 !important; color: #0a1f2e !important; }
+    /* chart-card title */
+    body.dark #page-analytics .chart-title { color: #6b8b99 !important; }
+    /* KPI trend desc */
+    body.dark #page-analytics .kpi-trend-desc { color: #6b8b99 !important; opacity: 1 !important; }
+    body.dark #page-analytics .kpi-trend-neutral { color: #c8d6e5 !important; }
+    /* Out KPI */
+    body.dark #page-analytics .out-kpi-label { color: #0a1f2e !important; }
+    /* Inline styled elements in analytics */
+    body.dark #page-analytics [style*="color:#0a1f2e"] { color: #e8edf5 !important; }
+    body.dark #page-analytics [style*="color:#374151"] { color: #c8d6e5 !important; }
+    body.dark #page-analytics [style*="color:#6b7280"],
+    body.dark #page-analytics [style*="color: #6b7280"] { color: #6b8b99 !important; }
+
+    /* ── Interactions page light ────────────────────────────────────── */
+    .int-toolbar-input {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+      color: #374151; width: 220px; outline: none;
+    }
+    .int-toolbar-select {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 8px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+      color: #374151; cursor: pointer; outline: none;
+    }
+    .int-toolbar-btn {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      color: #6b8b99; padding: 8px 14px; font-size: 13px;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .int-toolbar-btn:hover { border-color: #1ceee0; color: #1ceee0; }
+    .int-table-wrapper {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .int-thead { background: #f9fafb; }
+    .int-thead th {
+      color: #6b7280; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .05em;
+      padding: 12px 16px; border-bottom: 1px solid #e5e7eb;
+    }
+    .int-count { font-size: 12px; color: #9ca3af; margin-top: 10px; text-align: right; }
+
     /* ── Interactions page dark ─────────────────────────────────────── */
     body.dark #page-interactions .analytics-shell { background: #0d2538 !important; }
-    body.dark #interaction-search,
-    body.dark #interaction-type-filter { background: #0f2d40 !important; border-color: #1a3548 !important; color: #e8edf5 !important; }
-    body.dark #page-interactions button[onclick="loadInteractions()"] { background: #0f2d40 !important; border-color: #1a3548 !important; color: #6b8b99 !important; }
-    body.dark #page-interactions > .analytics-shell > div:first-child > div > div:first-child { color: #e8edf5 !important; }
-    body.dark #page-interactions > .analytics-shell > div:first-child > div > div:last-child { color: #6b8b99 !important; }
-    /* The flat table wrapper */
-    body.dark #interactions-flat-table { background: #0d2538 !important; }
-    body.dark #interactions-flat-table thead { background: #0f2d40 !important; }
-    body.dark #interactions-flat-table th { background: #0f2d40 !important; border-color: #1a3548 !important; color: #6b8b99 !important; }
-    body.dark #interactions-count { color: #6b8b99 !important; }
-    /* JS-rendered rows – these have inline bg, override via parent */
+    body.dark .int-toolbar-input,
+    body.dark .int-toolbar-select { background: #0f2d40 !important; border-color: #1a3548 !important; color: #e8edf5 !important; }
+    body.dark .int-toolbar-btn { background: #0f2d40 !important; border-color: #1a3548 !important; color: #6b8b99 !important; }
+    body.dark .int-table-wrapper { background: #0d2538 !important; border-color: #1a3548 !important; box-shadow: none !important; }
+    body.dark .int-thead { background: #0f2d40 !important; }
+    body.dark .int-thead th { color: #6b8b99 !important; border-color: #1a3548 !important; }
+    body.dark .int-count { color: #6b8b99 !important; }
+    /* JS-rendered rows */
     body.dark #interactions-flat-body tr { background: #0d2538 !important; border-color: #1a3548 !important; }
     body.dark #interactions-flat-body tr:hover { background: rgba(28,238,224,0.05) !important; }
     body.dark #interactions-flat-body td { color: #c8d6e5 !important; }
     body.dark #interactions-flat-body td div { color: #e8edf5 !important; }
-    /* Outer white wrapper div */
-    body.dark #page-interactions .analytics-shell > div:nth-child(2) { background: #0d2538 !important; border-color: #1a3548 !important; }
 
     /* ── Tudástár page dark ─────────────────────────────────────────── */
     body.dark #page-tudastar .analytics-shell,
@@ -2462,37 +2530,33 @@
         <!-- Toolbar -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
           <div>
-            <div class="page-title" style="color:#0a1f2e;font-size:22px;">Interakciós lista</div>
-            <div class="page-subtitle" style="color:#6b7280;">Összes beérkező és kimenő interakció</div>
+            <div class="page-title">Interakciós lista</div>
+            <div class="page-subtitle">Összes beérkező és kimenő interakció</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center;">
-            <div style="position:relative;">
-              <input id="interaction-search" type="text" placeholder="🔍 Keresés..." oninput="filterInteractionsTable()"
-                style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 14px;font-size:13px;font-family:'Inter',sans-serif;color:#374151;width:220px;outline:none;">
-            </div>
-            <select id="interaction-type-filter" onchange="filterInteractionsTable()"
-              style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;font-size:13px;font-family:'Inter',sans-serif;color:#374151;cursor:pointer;">
+            <input id="interaction-search" type="text" placeholder="🔍 Keresés..." oninput="filterInteractionsTable()" class="int-toolbar-input">
+            <select id="interaction-type-filter" onchange="filterInteractionsTable()" class="int-toolbar-select">
               <option value="">Minden típus</option>
               <option value="foglalás">Foglalás</option>
               <option value="email">Email</option>
               <option value="feladat">Feladat</option>
               <option value="kérdés">Kérdés</option>
             </select>
-            <button onclick="loadInteractions()" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+            <button onclick="loadInteractions()" class="int-toolbar-btn">↻ Frissítés</button>
           </div>
         </div>
 
         <!-- Flat table -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+        <div class="int-table-wrapper">
           <table class="data-table" id="interactions-flat-table">
-            <thead style="background:#f9fafb;">
+            <thead class="int-thead">
               <tr>
-                <th style="color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;border-bottom:1px solid #e5e7eb;">Dátum / Idő</th>
-                <th style="color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;border-bottom:1px solid #e5e7eb;">Csatorna</th>
-                <th style="color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;border-bottom:1px solid #e5e7eb;">Típus</th>
-                <th style="color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;border-bottom:1px solid #e5e7eb;">Téma</th>
-                <th style="color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;border-bottom:1px solid #e5e7eb;">Összefoglaló</th>
-                <th style="color:#6b7280;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;border-bottom:1px solid #e5e7eb;">Eredmény</th>
+                <th>Dátum / Idő</th>
+                <th>Csatorna</th>
+                <th>Típus</th>
+                <th>Téma</th>
+                <th>Összefoglaló</th>
+                <th>Eredmény</th>
               </tr>
             </thead>
             <tbody id="interactions-flat-body">
@@ -2502,7 +2566,7 @@
         </div>
 
         <!-- Row count -->
-        <div style="font-size:12px;color:#9ca3af;margin-top:10px;text-align:right;" id="interactions-count"></div>
+        <div class="int-count" id="interactions-count"></div>
 
       </div><!-- end analytics-shell -->
     </div>
@@ -2626,6 +2690,10 @@ function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark');
   localStorage.setItem('thinkai_theme', isDark ? 'dark' : 'light');
   _updateThemeBtn(isDark);
+  // Re-render interaction rows so inline colors match the new theme
+  if (typeof filterInteractionsTable === 'function') {
+    filterInteractionsTable();
+  }
 }
 
 function _updateThemeBtn(isDark) {
