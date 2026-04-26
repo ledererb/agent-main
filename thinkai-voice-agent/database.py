@@ -747,6 +747,7 @@ def upsert_client(custom_data: dict, additional_log: str = "", status: str = "uj
             curr_data["beszelgetes_naplo"] = (old_log + "\n" + new_entry).strip()
             
         edit_client_details(existing["id"], curr_data)
+        update_client_status(existing["id"], status)
         logger.info(f"Updated existing client (ID: {existing['id']})")
         return existing["id"]
     else:

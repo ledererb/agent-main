@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 import httpx
 from dotenv import load_dotenv
 from loguru import logger
-from anthropic import AsyncAnthropic
+from google import genai
+from google.genai import types
 
 import database as db
 
@@ -46,9 +47,9 @@ def decode_mime_words(s):
     )
 
 async def process_single_email(from_email: str, from_name: str, subject: str, text_content: str):
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-    if not anthropic_key:
-        logger.error("Nincs ANTHROPIC_API_KEY beállítva. E-mail feldolgozás megszakítva.")
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if not google_key:
+        logger.error("Nincs GOOGLE_API_KEY beállítva. E-mail feldolgozás megszakítva.")
         return
 
     sys_prompt = SYSTEM_PROMPT_FILE.read_text(encoding="utf-8") if SYSTEM_PROMPT_FILE.exists() else "Te egy ügyfélszolgálati asszisztens vagy."
@@ -82,7 +83,7 @@ JSON STRUKTÚRA:
 }
 Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
 """
-    client = AsyncAnthropic(api_key=anthropic_key)
+    client = genai.Client(api_key=google_key)
     
     user_content = f"--- BEJÖVŐ E-MAIL ---\nFeladó: {from_name} <{from_email}>\nTárgy: {subject}\nÜzenet:\n{text_content}\n"
     
@@ -90,18 +91,20 @@ Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
         sys_prompt += f"\n\n--- TUDÁSBÁZIS ---\n{knowledge}"
     sys_prompt += f"\n\n--- JSON UTASÍTÁS ---\n{json_instruction}"
 
-    logger.info(f"Claude 3.5 Sonnet elemzi az e-mailt: {from_email} - {subject}")
+    logger.info(f"Gemini 2.5 Flash elemzi az e-mailt: {from_email} - {subject}")
     try:
-        response = await client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=2048,
-            system=sys_prompt,
-            messages=[{"role": "user", "content": user_content}],
-            temperature=0.2
+        response = await client.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=user_content,
+            config=types.GenerateContentConfig(
+                system_instruction=sys_prompt,
+                temperature=0.2,
+                response_mime_type="application/json"
+            )
         )
-        ai_text = response.content[0].text.strip()
+        ai_text = response.text.strip()
     except Exception as e:
-        logger.error(f"Anthropic API hiba: {e}")
+        logger.error(f"Gemini API hiba: {e}")
         # Mivel a levél már Seen állapotba került, de hiba volt,
         # éles rendszerben vissza lehetne állítani Unseen-re.
         return
@@ -207,13 +210,16 @@ Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
             logger.error(f"Hiba a válaszlevél küldésekor: {e}")
 
         # Naplózás
+        session_id = f"email_{from_email}"
+        db.create_session(session_id=session_id, room_name="Email Thread", participant=from_name)
+        
         db.add_email_log(
             to_name=from_name,
             to_email=from_email,
             subject=f"Re: {subject}",
             message=email_reply,
             status="sent" if sent_ok else f"failed ({error_msg})",
-            session_id=""
+            session_id=session_id
         )
         db.log_interaction(
             type="email",
@@ -221,7 +227,7 @@ Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
             summary=f"Bejövő e-mail {from_email} címről",
             result="Sikeres válasz" if sent_ok else "Hibás küldés",
             tool_name="imap_worker_ai",
-            session_id=""
+            session_id=session_id
         )
 
 

@@ -50,3 +50,5 @@ thinkai-voice-agent/cloudflared.exe
 
 # Figma reference (local only)
 figma/
+node_modules/
+**/node_modules/

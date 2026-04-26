@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ThinkAI — Admin Dashboard</title>
-  <meta name="description" content="ThinkAI voice agent admin felület — analitika, interakciós lista, feladatok." />
+  <title>DigiDesk — Admin Dashboard</title>
+  <meta name="description" content="DigiDesk voice agent admin felület — analitika, interakciós lista, feladatok." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -12,7 +12,7 @@
   <style>
     :root {
       /* ── Figma-pontos paletta ─────────────────────── */
-      --figma-dark:     #0a1f2e;   /* fő sötét szín */
+      --figma-dark:     #082432;   /* fő sötét szín */
       --figma-sidebar:  #082432;   /* sidebar háttér */
       --figma-accent:   #1ceee0;   /* türkiz akcent */
       --figma-accent2:  #18d4c6;   /* türkiz árnyalat */
@@ -23,7 +23,7 @@
       --figma-muted:    #6b8b99;   /* muted szöveg */
 
       /* ── App layout tokenek ──────────────────────── */
-      --bg:         #0a1f2e;
+      --bg:         #082432;
       --bg2:        #0d2538;
       --bg3:        #0f2d40;
       --card:       #0d2538;
@@ -63,7 +63,7 @@
       --fc-today-bg-color: rgba(28,238,224,0.08);
       --fc-event-text-color: #0a1f2e;
     }
-    .fc { font-family: 'Inter', sans-serif; }
+    .fc { font-family: 'Inter', Arial, sans-serif; }
     .fc-event { border-radius: 4px; border: none; padding: 2px 4px; font-size:11px; cursor: pointer;}
     .fc-toolbar-title { font-size: 16px !important; font-weight: 600 !important; color: #0a1f2e !important; }
     .fc-col-header-cell-cushion, .fc-daygrid-day-number { color: #374151 !important; text-decoration: none !important; }
@@ -87,7 +87,7 @@
       padding: 8px 14px;
       font-size: 13px;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       transition: all 0.15s;
     }
     .cal-refresh-btn:hover { border-color: #1ceee0; color: #1ceee0; }
@@ -115,8 +115,20 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Light Mode Overrides ── */
+    body:not(.dark) {
+      --bg: #f4f8f9;
+      --bg2: #ffffff;
+      --bg3: #e5e7eb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #082432;
+      --text-muted: #6b8b99;
+      --text-dim: #9ca3af;
+    }
+
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -130,18 +142,19 @@
       justify-content: center;
       min-height: 100vh;
       background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,153,255,0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,212,200,0.08) 0%, transparent 60%),
-        var(--bg);
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(28,238,224,0.12) 0%, transparent 70%),
+        url('login-bg.jpg') center/cover no-repeat;
+      background-blend-mode: overlay;
+      background-color: var(--bg);
     }
 
     .login-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 12px;
       padding: 48px 44px;
       width: 420px;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,200,0.06);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(28,238,224,0.06);
     }
 
     .login-logo {
@@ -203,11 +216,11 @@
       width: 100%;
       background: var(--bg3);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 12px 16px;
       font-size: 15px;
       color: var(--text);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       transition: border-color 0.2s, box-shadow 0.2s;
       outline: none;
     }
@@ -232,13 +245,13 @@
       width: 100%;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 13px;
       font-size: 15px;
       font-weight: 600;
       color: #0a1f2e;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       letter-spacing: 0.3px;
       transition: opacity 0.2s, transform 0.15s;
       margin-top: 8px;
@@ -269,7 +282,7 @@
       align-items: center;
       gap: 10px;
       padding: 4px 8px 24px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid #1a3548;
       margin-bottom: 20px;
     }
 
@@ -289,7 +302,7 @@
     .sidebar-logo-text {
       font-size: 16px;
       font-weight: 700;
-      background: linear-gradient(90deg, var(--text) 60%, var(--accent));
+      background: linear-gradient(90deg, #e8edf5 60%, var(--accent));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -299,7 +312,7 @@
       align-items: center;
       gap: 10px;
       padding: 10px 12px;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
@@ -321,14 +334,14 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--text-dim);
+      color: #8ea9c0;
       padding: 12px 12px 6px;
     }
 
     .sidebar-bottom {
       margin-top: auto;
       padding-top: 20px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid #1a3548;
     }
 
     .user-info {
@@ -351,7 +364,7 @@
       flex-shrink: 0;
     }
 
-    .user-name { font-size: 13px; font-weight: 600; }
+    .user-name { font-size: 13px; font-weight: 600; color: #e8edf5; }
     .user-role { font-size: 11px; color: var(--text-muted); }
 
     .btn-logout {
@@ -359,14 +372,14 @@
       align-items: center;
       gap: 8px;
       padding: 9px 12px;
-      border-radius: 10px;
+      border-radius: 8px;
       background: none;
       border: 1px solid var(--border);
       color: var(--text-muted);
       font-size: 13px;
       cursor: pointer;
       width: 100%;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       margin-top: 8px;
       transition: all 0.15s;
     }
@@ -386,7 +399,7 @@
       font-size: 13px;
       cursor: pointer;
       width: 100%;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       margin-top: 6px;
       transition: all 0.15s;
     }
@@ -476,18 +489,18 @@
     /* ── Interactions page light ────────────────────────────────────── */
     .int-toolbar-input {
       background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
-      padding: 8px 14px; font-size: 13px; font-family: 'Inter', sans-serif;
+      padding: 8px 14px; font-size: 13px; font-family: 'Inter', Arial, sans-serif;
       color: #374151; width: 220px; outline: none;
     }
     .int-toolbar-select {
       background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
-      padding: 8px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+      padding: 8px 12px; font-size: 13px; font-family: 'Inter', Arial, sans-serif;
       color: #374151; cursor: pointer; outline: none;
     }
     .int-toolbar-btn {
       background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
       color: #6b8b99; padding: 8px 14px; font-size: 13px;
-      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+      cursor: pointer; font-family: 'Inter', Arial, sans-serif; transition: all 0.15s;
     }
     .int-toolbar-btn:hover { border-color: #1ceee0; color: #1ceee0; }
     .int-table-wrapper {
@@ -692,7 +705,7 @@
     }
 
     .stat-icon.teal  { background: rgba(0,212,200,0.12); }
-    .stat-icon.blue  { background: rgba(0,153,255,0.12); }
+    .stat-icon.blue  { background: rgba(28,238,224,0.12); }
     .stat-icon.green { background: rgba(34,197,94,0.12); }
     .stat-icon.purple{ background: rgba(168,85,247,0.12); }
     .stat-icon.yellow{ background: rgba(245,158,11,0.12); }
@@ -755,7 +768,7 @@
     .table-card {
       background: #fff;
       border: 1px solid #e5e7eb;
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
     }
 
@@ -786,7 +799,7 @@
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       transition: all 0.15s;
     }
 
@@ -826,19 +839,20 @@
     .badge {
       display: inline-flex;
       align-items: center;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
+      padding: 2px 10px; /* equivalent to px-2.5 py-0.5 */
+      border-radius: 9999px; /* rounded-full */
+      font-size: 11px; /* text-xs */
+      font-weight: 500; /* font-medium */
       white-space: nowrap;
     }
 
     .badge-teal   { background: rgba(28,238,224,0.12); color: #0f766e; }
-    .badge-blue   { background: #dbeafe; color: #1d4ed8; }
-    .badge-green  { background: #dcfce7; color: #15803d; }
-    .badge-yellow { background: #fef9c3; color: #a16207; }
-    .badge-red    { background: #fee2e2; color: #b91c1c; }
-    .badge-purple { background: #ede9fe; color: #7c3aed; }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-green  { background: #dcfce7; color: #166534; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-orange { background: #ffedd5; color: #9a3412; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
     .badge-gray   { background: #f3f4f6; color: #6b7280; }
 
     .td-summary {
@@ -989,7 +1003,7 @@
       color: #0a1f2e;
       padding: 8px 12px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       flex: 1;
     }
     .settings-select:focus, .settings-input:focus {
@@ -1021,7 +1035,7 @@
     .bh-table td { padding: 3px 8px; }
     .bh-table tr:hover td { background: rgba(255,255,255,0.02); }
     .bh-day-label { font-size: 12px; color: var(--text); width: 90px; }
-    .bh-time { width: 72px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 6px; font-size: 12px; font-family: 'Inter',sans-serif; }
+    .bh-time { width: 72px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 6px; font-size: 12px; font-family: 'Inter', Arial, sans-serif; }
     .bh-time:disabled { opacity: 0.35; }
     .bh-time:focus { outline: none; border-color: var(--accent); }
     /* Toggle switch */
@@ -1045,7 +1059,7 @@
     .fmt-btn {
       flex: 1; padding: 7px 16px; border: none; background: #f9fafb;
       color: #6b8b99; font-size: 12px; font-weight: 600;
-      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+      cursor: pointer; font-family: 'Inter', Arial, sans-serif; transition: all 0.15s;
     }
     .fmt-btn.active { background: rgba(28,238,224,0.12); color: var(--accent); }
     /* Restart banner */
@@ -1068,7 +1082,7 @@
       border: none; border-radius: 10px;
       color: #fff; font-size: 14px; font-weight: 600;
       padding: 12px 32px; cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       transition: opacity 0.2s;
     }
     .btn-settings-save:hover { opacity: 0.88; }
@@ -1109,7 +1123,7 @@
       color: var(--figma-dark);
       padding: 8px 12px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       cursor: pointer;
       outline: none;
       transition: border-color 0.15s;
@@ -1125,7 +1139,7 @@
       font-weight: 600;
       padding: 9px 18px;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       white-space: nowrap;
       align-self: flex-end;
       transition: opacity 0.15s;
@@ -1228,7 +1242,7 @@
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       background: #f3f4f6;
       color: #6b7280;
       transition: all 0.15s;
@@ -1384,7 +1398,7 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       position: relative;
       transition: color 0.15s;
     }
@@ -1430,7 +1444,7 @@
       color: #0a1f2e;
       padding: 9px 12px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
       transition: border-color 0.15s;
       box-sizing: border-box;
@@ -1444,7 +1458,7 @@
       color: #0a1f2e;
       padding: 10px 12px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
       resize: vertical;
       min-height: 90px;
@@ -1460,7 +1474,7 @@
       color: #0a1f2e;
       padding: 9px 12px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
       cursor: pointer;
     }
@@ -1511,7 +1525,7 @@
       color: #0a1f2e;
       padding: 7px 12px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
     }
     .tt-toggle-input:focus { border-color: #1ceee0; }
@@ -1527,7 +1541,7 @@
       background: none;
       border: none;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       border-radius: 8px;
       transition: background 0.15s;
       margin-top: 8px;
@@ -1566,7 +1580,7 @@
       color: #0a1f2e;
       padding: 5px 8px;
       font-size: 13px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
     }
     .tt-time-input:focus { border-color: #1ceee0; }
@@ -1632,7 +1646,7 @@
       font-weight: 700;
       padding: 11px 28px;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       transition: opacity 0.15s, transform 0.1s;
       box-shadow: 0 2px 8px rgba(28,238,224,0.3);
     }
@@ -1649,7 +1663,7 @@
       color: #0a1f2e;
       padding: 6px 10px;
       font-size: 12px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
       width: 100%;
     }
@@ -1662,7 +1676,7 @@
       color: #0a1f2e;
       padding: 6px 10px;
       font-size: 12px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       outline: none;
       margin-top: 4px;
     }
@@ -1693,7 +1707,66 @@
     .toast.success { border-left: 4px solid #22c55e; }
     .toast.info { border-left: 4px solid #1ceee0; }
     @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+  
+    
+    /* ── Ügyfélközpont View Switcher Styles ── */
+    .view-switcher-container {
+      display: flex; gap: 8px; margin-bottom: 20px; background: rgba(8, 36, 50, 0.05); padding: 4px; border-radius: 12px; width: max-content; border: 1px solid rgba(8, 36, 50, 0.1);
+    }
+    body.dark .view-switcher-container { background: rgba(28, 238, 224, 0.05); border: 1px solid rgba(28, 238, 224, 0.1); }
+    
+    .view-btn {
+      padding: 8px 16px; border:none; border-radius: 8px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.2s; background:transparent; color:rgba(8, 36, 50, 0.6);
+    }
+    body.dark .view-btn { color: rgba(255, 255, 255, 0.5); }
+    
+    .view-btn.active {
+      background: var(--figma-accent); color: #082432; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    body.dark .view-btn.active { color: #082432; }
+
+    /* ── Client Details View Styles ────────────────────────────────────────── */
+    .cd-top-card {
+      background: linear-gradient(100deg, #c5f0ee 0%, #a8e5e3 100%);
+      border-radius: 16px;
+      padding: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    body.dark .cd-top-card {
+      background: linear-gradient(100deg, #103c44 0%, #0c2b33 100%);
+      border: 1px solid rgba(28,238,224,0.1);
+    }
+    
+    .cd-avatar {
+      width: 72px; height: 72px; background: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid rgba(28,238,224,0.3);
+    }
+    body.dark .cd-avatar { background: #082432; border-color: #1ceee0; }
+    
+    .cd-stats-card {
+      background: #fff; border-radius: 12px; padding: 16px 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
+      min-width: 180px;
+    }
+    body.dark .cd-stats-card { background: #082432; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); }
+
+    /* Fix SVG icon colors in dark/light mode */
+    .cd-contact-icon { stroke: rgba(8,36,50,0.8) !important; }
+    body.dark .cd-contact-icon { stroke: rgba(200,214,229,0.8) !important; }
+
+    body.dark #cd-name { color: #e8edf5 !important; }
+    body.dark #cd-id, body.dark #cd-phone, body.dark #cd-email, body.dark #cd-address, body.dark #cd-birthdate { color: #c8d6e5 !important; }
+    body.dark #cd-last-visit { color: #e8edf5 !important; }
+    body.dark #cd-total-interactions { color: #c8d6e5 !important; }
+    /* ───────────────────────────────────────────────────────────────────────── */
+
+
+</style>
 </head>
 <body>
 
@@ -1702,7 +1775,7 @@
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon">T</div>
-      <span>ThinkAI Admin</span>
+      <span>DigiDesk Admin</span>
     </div>
     <div class="login-tagline">Üdv újra!<br>Kérem, jelentkezz be.</div>
     <div class="login-sub">Hangügynök vezérlőpult — analitika és interakciók</div>
@@ -1728,7 +1801,7 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">T</div>
-      <span class="sidebar-logo-text">ThinkAI</span>
+      <span class="sidebar-logo-text">DigiDesk</span>
     </div>
 
     <div class="nav-section-title">Főmenü</div>
@@ -1738,7 +1811,7 @@
     </button>
     <button class="nav-item" onclick="showPage('interactions')" id="nav-interactions">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h8M8 8h4m-4 8h6M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
-      <span>Interakciók</span>
+      <span>Ügyfélközpont</span>
     </button>
     <button class="nav-item" onclick="showPage('calendar')" id="nav-calendar">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -1756,14 +1829,8 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Beállítások</span>
     </button>
-    <button class="nav-item" onclick="showPage('kanban')" id="nav-kanban">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-      <span>Kanban</span>
-    </button>
-    <button class="nav-item" onclick="showPage('clients')" id="nav-clients">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      <span>Ügyfelek</span>
-    </button>
+    
+    
     <button class="nav-item" onclick="showPage('tudastar')" id="nav-tudastar">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       <span>Tudástár</span>
@@ -1783,7 +1850,7 @@
         <span id="theme-label">Sötét mód</span>
       </button>
       <button class="btn-logout" onclick="doLogout()">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        <svg class="cd-contact-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
         Kijelentkezés
       </button>
     </div>
@@ -2402,8 +2469,8 @@
       <div class="settings-section">
         <div class="settings-section-title">&#128075; Bemutatkozás</div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent ezt mondja el minden hívás elején.</div>
-        <textarea id="setting-greeting" class="settings-textarea" style="min-height:80px;font-family:'Inter',sans-serif;font-size:13px;"
-          placeholder="Szia! A ThinkAI virtuális asszisztense vagyok..."></textarea>
+        <textarea id="setting-greeting" class="settings-textarea" style="min-height:80px;font-family: 'Inter', Arial, sans-serif;font-size:13px;"
+          placeholder="Szia! A DigiDesk virtuális asszisztense vagyok..."></textarea>
       </div>
 
       <div class="settings-section">
@@ -2437,7 +2504,7 @@
           <span>&#129302; Rendszer Prompt</span>
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent mögötti fő rendszerutasitás (system_prompt.md). Tartalmazza a személyiséget, nyelvi szabályokat, képességeket. Az <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;">{today}</code> helyetten a mai dátum kerül be automatikusan.</div>
-        <textarea id="setting-system-prompt" class="settings-textarea" style="min-height:420px;font-family:'Courier New',monospace;font-size:12px;" placeholder="Te Balázs vagy, a ThinkAI digitális asszisztense..."></textarea>
+        <textarea id="setting-system-prompt" class="settings-textarea" style="min-height:420px;font-family:'Courier New',monospace;font-size:12px;" placeholder="Te Balázs vagy, a DigiDesk digitális asszisztense..."></textarea>
       </div>
 
       <!-- Workflow -->
@@ -2452,13 +2519,89 @@
 
 
     <!-- KANBAN PAGE -->
-    <div class="page" id="page-kanban">
+    
+        <div class="page" id="page-interactions">
+      <div class="analytics-shell">
+
+        <!-- View Switcher -->
+        <div class="view-switcher-container">
+          <button class="view-btn active" onclick="switchCustomerView('interactions', this)">Interakciós lista</button>
+          <button class="view-btn" onclick="switchCustomerView('kanban', this)">Kanban</button>
+          <button class="view-btn" onclick="switchCustomerView('clients', this)">Ügyfelek adatbázisa</button>
+        </div>
+        
+        <div class="customer-view" id="view-interactions" style="display:block;">
+        
+        <!-- Toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div class="page-title">Interakciós lista</div>
+            <div class="page-subtitle">Összes beérkező és kimenő interakció</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input id="interaction-search" type="text" placeholder="🔍 Keresés..." oninput="filterInteractionsTable()" class="int-toolbar-input">
+            <select id="interaction-type-filter" onchange="filterInteractionsTable()" class="int-toolbar-select" style="display:none;">
+              <option value="">Minden típus</option>
+            </select>
+            
+            <div style="position:relative; display:inline-block;">
+                <button class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center;" title="Szűrés">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    Szűrés
+                </button>
+            </div>
+            
+            <div style="position:relative; display:inline-block;">
+                <select id="interaction-sort" onchange="filterInteractionsTable()" class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center; appearance:none; padding-right:32px; background-image: url('data:image/svg+xml;utf8,<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%236b7280\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>'); background-repeat:no-repeat; background-position:right 8px center; cursor:pointer;">
+                    <option value="date_desc">⬇ Legújabb elöl</option>
+                    <option value="date_asc">⬆ Legrégebbi elöl</option>
+                    <option value="client_asc">A-Z Ügyfél név szerint</option>
+                    <option value="topic_asc">A-Z Téma szerint</option>
+                </select>
+            </div>
+            
+            <div style="position:relative; display:inline-block;">
+                <button class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center;" title="Oszlopok">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    Oszlopok
+                </button>
+            </div>
+
+            <button onclick="loadInteractions()" class="int-toolbar-btn" style="margin-left:8px;">🔄 Frissítés</button>
+          </div>
+        </div>
+
+        <!-- Flat table -->
+        <div class="int-table-wrapper">
+          <table class="data-table" id="interactions-flat-table">
+            <thead class="int-thead">
+              <tr>
+                <th>Dátum / Idő</th>
+                <th>Csatorna</th>
+                <th>Ügyfél</th>
+                <th>Típus</th>
+                <th>Téma</th>
+                <th>Összefoglaló</th>
+                <th>Eredmény</th>
+              </tr>
+            </thead>
+            <tbody id="interactions-flat-body">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 10px;"></div>Adatok betöltése...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Row count -->
+        <div class="int-count" id="interactions-count"></div>
+
+      </div><!-- end view-interactions -->
+<div class="customer-view" id="view-kanban" style="display:none;">
       <div class="page-header" style="margin-bottom:18px;">
         <div>
           <div class="page-title">Kanban</div>
           <div class="page-subtitle">Érdeklődők feladatainak nyomon követése</div>
         </div>
-        <button class="btn-primary" style="width:auto; margin:0;" onclick="promptAddKanbanColumn()">+ Oszlop hozzáadása</button>
+        <button class="int-toolbar-btn" style="width:auto; margin:0;" onclick="promptAddKanbanColumn()">+ Oszlop hozzáadása</button>
       </div>
 
       <div class="kanban-board" id="kanban-board">
@@ -2467,16 +2610,16 @@
     </div>
 
     <!-- CLIENTS PAGE -->
-    <div class="page" id="page-clients">
+<div class="customer-view" id="view-clients" style="display:none;">
       <div class="page-header">
         <div>
           <div class="page-title">Ügyfelek adatbázisa</div>
           <div class="page-subtitle">Ügyfelek listázása és alapadatok módosítása</div>
         </div>
         <div style="display:flex;gap:12px;">
-          <button onclick="openClientFieldsModal()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">Ügyfél mezők beállítása</button>
-          <button onclick="loadClientsTable()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
-          <button class="btn-primary" style="width:auto; margin:0;" onclick="openClientModal()">+ Új Ügyfél</button>
+          <button onclick="openClientFieldsModal()" class="int-toolbar-btn">Ügyfél mezők beállítása</button>
+          <button onclick="loadClientsTable()" class="int-toolbar-btn">↻ Frissítés</button>
+          <button class="int-toolbar-btn" style="width:auto; margin:0;" onclick="openClientModal()">+ Új Ügyfél</button>
         </div>
       </div>
       <div class="table-card" style="overflow-x:auto;">
@@ -2485,7 +2628,7 @@
             <!-- Rendered by JS -->
           </thead>
           <tbody id="clients-body">
-            <tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>
+            <tr class="loading-row"><td colspan="7"><div class="spinner"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -2518,57 +2661,115 @@
 
     <!-- Log Modal HTML -->
     <div id="log-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
-      <div class="login-card" style="width:600px; max-width:90vw;">
-        <h3 style="margin-bottom:16px;">Beszélgetés napló</h3>
-        <textarea id="log-modal-content" class="settings-textarea" style="min-height:350px; font-family:'Inter',sans-serif; font-size:12px; line-height:1.5; margin-bottom: 20px;" readonly></textarea>
-        <button class="btn-primary" style="background:var(--bg3);color:var(--text);width:100%" onclick="document.getElementById('log-modal').style.display='none'">Bezárás</button>
+      <div class="login-card" style="width:650px; max-width:90vw; padding:0; overflow:hidden; border-radius:16px; border:none; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <!-- Header -->
+        <div style="background: linear-gradient(to right, #c5f0ee, #a8e5e3); padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h3 id="log-modal-title-name" style="margin:0 0 4px 0; color:#082432; font-size:18px; font-weight:700;">Ügyfél neve</h3>
+                    <div style="display:flex; gap:12px; font-size:12px; color:rgba(8,36,50,0.7); font-weight:500;">
+                        <span>📞 <span id="log-modal-channel">Telefon</span></span>
+                        <span>•</span>
+                        <span id="log-modal-topic">Téma</span>
+                        <span>•</span>
+                        <span id="log-modal-date">Dátum</span>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('log-modal').style.display='none'" style="background:rgba(8,36,50,0.1); border:none; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#082432; transition:background 0.2s;">
+                    ✕
+                </button>
+            </div>
+        </div>
+        <!-- Content -->
+        <div style="padding: 24px; background:var(--card);">
+            <textarea id="log-modal-content" class="settings-textarea" style="min-height:300px; font-family: 'Inter', Arial, sans-serif; font-size:13px; line-height:1.6; margin-bottom: 0; border:none; box-shadow:none; background:var(--bg); border-radius:8px; padding:16px;" readonly></textarea>
+        </div>
+        <!-- Footer -->
+        <div style="padding: 16px 24px; background:var(--bg3); border-top: 1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+            <button class="btn-primary" style="background:transparent; color:var(--text-muted); border:1px solid var(--border);" onclick="document.getElementById('log-modal').style.display='none'">Bezárás</button>
+            <button class="btn-primary" style="opacity:0.5; cursor:not-allowed;" disabled title="Hamarosan elérhető">▶ Interakció lejátszása</button>
+        </div>
       </div>
     </div>
 
-    <div class="page" id="page-interactions">
-      <div class="analytics-shell">
-        <!-- Toolbar -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div>
-            <div class="page-title">Interakciós lista</div>
-            <div class="page-subtitle">Összes beérkező és kimenő interakció</div>
+
+      <!-- CLIENT DETAILS PAGE -->
+    <div class="customer-view" id="view-client-details" style="display:none; width: 100%; animation: fadein 0.3s ease;">
+      <!-- Back button -->
+      <button class="int-toolbar-btn" style="margin-bottom: 20px; border:none; background:transparent; font-weight:600; font-size:14px;" onclick="closeClientDetails()">
+        <span style="margin-right:6px;">&larr;</span> Vissza az előző nézethez
+      </button>
+
+      <!-- Top Card (Mint gradient) -->
+      <div class="cd-top-card">
+        <div style="display:flex; align-items:center; gap:20px;">
+          <div class="cd-avatar">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <input id="interaction-search" type="text" placeholder="🔍 Keresés..." oninput="filterInteractionsTable()" class="int-toolbar-input">
-            <select id="interaction-type-filter" onchange="filterInteractionsTable()" class="int-toolbar-select">
-              <option value="">Minden típus</option>
-              <option value="foglalás">Foglalás</option>
-              <option value="email">Email</option>
-              <option value="feladat">Feladat</option>
-              <option value="kérdés">Kérdés</option>
-            </select>
-            <button onclick="loadInteractions()" class="int-toolbar-btn">↻ Frissítés</button>
+          <div>
+            <h2 id="cd-name" style="margin:0; font-size:24px; font-weight:bold; color:#082432;">Ügyfél Neve</h2>
+            <div id="cd-id" style="color:rgba(8,36,50,0.6); font-size:13px; margin-top:2px;">Páciens azonosító: PAC-001234</div>
+            
+            <div style="display:flex; gap:32px; margin-top:16px; font-size:13px; color:inherit; opacity:0.8;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span id="cd-phone">+36 30 123 4567</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <span id="cd-email">email@example.com</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:32px; margin-top:8px; font-size:13px; color:inherit; opacity:0.8;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span id="cd-address">Ismeretlen cím</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span id="cd-birthdate">Születési dátum: -</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Flat table -->
-        <div class="int-table-wrapper">
-          <table class="data-table" id="interactions-flat-table">
+        <!-- Right stats card -->
+        <div class="cd-stats-card">
+          <div style="font-size:12px; color:rgba(8,36,50,0.6); display:flex; align-items:center; gap:6px;">
+            <svg class="cd-contact-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Utolsó látogatás
+          </div>
+          <div style="font-size:18px; font-weight:bold; color:#082432; margin-top:4px;" id="cd-last-visit">N/A</div>
+          <div style="font-size:12px; font-weight:600; color:inherit; opacity:0.8; margin-top:12px;" id="cd-total-interactions">0 összesen interakció</div>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div style="margin-top: 32px;">
+        <h3 style="font-size:18px; font-weight:bold; margin-bottom:16px;">Interakciók története</h3>
+        <div class="int-table-wrapper" style="border-radius:12px; border:1px solid var(--border);">
+          <table style="width:100%; border-collapse:collapse; text-align:left;">
             <thead class="int-thead">
               <tr>
-                <th>Dátum / Idő</th>
-                <th>Csatorna</th>
-                <th>Típus</th>
-                <th>Téma</th>
-                <th>Összefoglaló</th>
-                <th>Eredmény</th>
+                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">DÁTUM / IDŐ</th>
+                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">CSATORNA</th>
+                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">INTERAKCIÓ TÍPUSA</th>
+                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">TÉMA</th>
+                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">ÖSSZEFOGLALÓ</th>
+                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">EREDMÉNY</th>
               </tr>
             </thead>
-            <tbody id="interactions-flat-body">
-              <tr><td colspan="6" style="text-align:center;padding:40px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 10px;"></div>Adatok betöltése...</td></tr>
+            <tbody id="cd-history-body">
+              <tr>
+                <td colspan="7" style="padding:32px; text-align:center; color:var(--text-muted); font-size:14px;">Még nincsenek adatok...</td>
+              </tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
 
-        <!-- Row count -->
-        <div class="int-count" id="interactions-count"></div>
-
-      </div><!-- end analytics-shell -->
+</div><!-- end analytics-shell -->
     </div>
 
     <!-- CALENDAR PAGE -->
@@ -2618,7 +2819,7 @@
           <div class="page-title">Emailek</div>
           <div class="page-subtitle">Az agent által küldött follow-up emailek</div>
         </div>
-        <button onclick="loadEmails()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+        <button onclick="loadEmails()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family: 'Inter', Arial, sans-serif;">↻ Frissítés</button>
       </div>
       <div class="table-card">
         <table class="data-table">
@@ -2644,7 +2845,7 @@
           <div class="page-title">Sessionök</div>
           <div class="page-subtitle">Minden hangügynök kapcsolat</div>
         </div>
-        <button onclick="loadSessions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;">↻ Frissítés</button>
+        <button onclick="loadSessions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family: 'Inter', Arial, sans-serif;">↻ Frissítés</button>
       </div>
       <div class="table-card">
         <table class="data-table">
@@ -2900,7 +3101,7 @@ function renderStats(data) {
         label: 'Sessionök',
         data: daily.map(d => d.count),
         borderColor: '#1ceee0',
-        backgroundColor: 'rgba(0,212,200,0.08)',
+        backgroundColor: 'rgba(28,238,224,0.08)',
         borderWidth: 2,
         fill: true,
         tension: 0.4,
@@ -3013,13 +3214,13 @@ let _allInteractionRows = [];
 
 async function loadInteractions() {
   const tbody = document.getElementById('interactions-flat-body');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 10px;"></div>Adatok betöltése...</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 10px;"></div>Adatok betöltése...</td></tr>';
   try {
     const res  = await authFetch('/admin/api/sessions/summary?limit=100');
     const data = await res.json();
     buildFlatInteractionRows(data.sessions || []);
   } catch(e) {
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:40px;">Betöltési hiba</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ef4444;padding:40px;">Betöltési hiba</td></tr>';
   }
 }
 
@@ -3060,10 +3261,15 @@ function buildFlatInteractionRows(sessions) {
 
 const RESULT_COLORS = {
   'Lezárt':                { bg: '#dcfce7', color: '#15803d' },
-  'Foglalás történt':      { bg: '#dbeafe', color: '#1d4ed8' },
+  'Foglalás történt':      { bg: '#dcfce7', color: '#166534' }, // changed to green-100/green-800 per brief
+  'Siker':                 { bg: '#dcfce7', color: '#166534' },
+  'Foglalt':               { bg: '#dcfce7', color: '#166534' },
   'Átadva':                { bg: '#ffedd5', color: '#c2410c' },
-  'Visszahívás szükséges': { bg: '#fef9c3', color: '#a16207' },
+  'Visszahívás szükséges': { bg: '#ffedd5', color: '#9a3412' }, // orange-100/orange-800
+  'Sürgős':                { bg: '#ffedd5', color: '#9a3412' },
   'Nyitott ügy':           { bg: '#fee2e2', color: '#b91c1c' },
+  'Kimenő':                { bg: '#f3e8ff', color: '#6b21a8' }, // purple-100/purple-800
+  'Bejövő':                { bg: '#dbeafe', color: '#1e40af' }, // blue-100/blue-800
 };
 
 function resultBadge(result) {
@@ -3092,14 +3298,23 @@ function filterInteractionsTable() {
   const q      = (document.getElementById('interaction-search')?.value || '').toLowerCase();
   const typeF  = (document.getElementById('interaction-type-filter')?.value || '').toLowerCase();
 
-  const filtered = _allInteractionRows.filter(r => {
+  const sortVal = (document.getElementById('interaction-sort')?.value || 'date_desc');
+  let filtered = _allInteractionRows.filter(r => {
     const matchType = !typeF || r.type.toLowerCase().includes(typeF);
-    const matchQ    = !q || [r.channel, r.type, r.topic, r.summary, r.result].join(' ').toLowerCase().includes(q);
+    const matchQ    = !q || [r.channel, r.client, r.type, r.topic, r.summary, r.result].join(' ').toLowerCase().includes(q);
     return matchType && matchQ;
+  });
+  
+  filtered.sort((a, b) => {
+      if(sortVal === 'date_desc') return (b.date || '').localeCompare(a.date || '');
+      if(sortVal === 'date_asc') return (a.date || '').localeCompare(b.date || '');
+      if(sortVal === 'client_asc') return (a.client || '').localeCompare(b.client || '');
+      if(sortVal === 'topic_asc') return (a.topic || '').localeCompare(b.topic || '');
+      return 0;
   });
 
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:40px;">Nincs találat</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:40px;">Nincs találat</td></tr>';
     if (countEl) countEl.textContent = '';
     return;
   }
@@ -3117,6 +3332,7 @@ function filterInteractionsTable() {
         <div style="font-weight:500;color:${txtH};">${fmtDt(r.date)}</div>
       </td>
       <td style="padding:12px 16px;font-size:13px;color:${txt};">${esc(r.channel)}</td>
+      <td style="padding:12px 16px;font-size:13px;font-weight:500;color:${txtH};">${esc(r.client || 'Ismeretlen')}</td>
       <td style="padding:12px 16px;">${typeChip(r.type)}</td>
       <td style="padding:12px 16px;font-size:13px;font-weight:500;color:${txtH};">${esc(r.topic)}</td>
       <td style="padding:12px 16px;font-size:13px;color:${txtM};max-width:340px;">
@@ -3540,7 +3756,12 @@ async function loadClientsTable() {
         ${displayFields.map((f, i) => {
             let val = customObj[f.id] != null ? customObj[f.id] : '';
             if (f.id === 'beszelgetes_naplo') {
-                return `<td>${val ? `<button onclick="openLogModal('${esc(btoa(encodeURIComponent(val)))}')" style="background:rgba(0,212,200,0.1);border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:11px;">Megtekintés</button>` : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+                const safeName = esc(customObj.nev || customObj['név'] || customObj.name || 'Ismeretlen').replace(/'/g, "\'");
+                const safeDate = esc(fmtDt(c.created_at));
+                return `<td>${val ? `<button onclick="openLogModal('${esc(btoa(encodeURIComponent(val)))}', '${safeName}', '${esc(csatorna)}', '${safeDate}')" style="background:rgba(0,212,200,0.1);border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;padding:4px 8px;font-size:11px;">Megtekintés</button>` : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+            }
+            if (f.id === 'nev' || (f.name && f.name.toLowerCase() === 'név')) {
+                return `<td><button onclick="openClientDetails({id: ${c.id}, name: '${esc(val)}', email: '${esc(customObj.email || '')}', phone: '${esc(customObj.telefonszam || customObj.phone || customObj.telefon || '')}', address: '${esc(customObj.cim || customObj.address || '')}', birthdate: '${esc(customObj.szuletesi_datum || customObj.szuletesnap || customObj.birthdate || '')}'})" style="background:rgba(0,212,200,0.1);border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;padding:6px 10px;font-size:12px;font-weight:600;display:inline-block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="Ugrás az ügyfél adatlapjára">${esc(val || '—')}</button></td>`;
             }
             return `<td ${i === 0 ? 'style="font-weight:500"' : ''}>${esc(val || '—')}</td>`;
         }).join('')}
@@ -3557,10 +3778,14 @@ async function loadClientsTable() {
   }
 }
 
-function openLogModal(encodedText) {
+function openLogModal(encodedText, name, channel, date) {
     let t = '';
     try { t = decodeURIComponent(atob(encodedText)); } catch(e){}
     document.getElementById('log-modal-content').value = t;
+    if(name) document.getElementById('log-modal-title-name').textContent = name;
+    if(channel) document.getElementById('log-modal-channel').textContent = channel;
+    if(date) document.getElementById('log-modal-date').textContent = date;
+    document.getElementById('log-modal-topic').textContent = 'Beszélgetés napló';
     document.getElementById('log-modal').style.display = 'flex';
 }
 
@@ -3583,7 +3808,7 @@ async function openClientModal(id = null, encodedCustomData = 'e30=') {
       if (f.id === 'beszelgetes_naplo') {
           return `<div class="form-group" style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05);">
                     <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:8px;font-weight:500">${esc(f.name)}</label>
-                    <textarea id="nc-dyn-${f.id}" class="settings-textarea" style="display:none; min-height:260px; font-family:'Inter',sans-serif; font-size:12px; line-height:1.5;">${esc(val)}</textarea>
+                    <textarea id="nc-dyn-${f.id}" class="settings-textarea" style="display:none; min-height:260px; font-family: 'Inter', Arial, sans-serif; font-size:12px; line-height:1.5;">${esc(val)}</textarea>
                     ${val ? 
                       `<button type="button" onclick="document.getElementById('nc-dyn-${f.id}').style.display='block'; this.style.display='none';" style="background:rgba(0,212,200,0.1); border:1px solid var(--accent); color:var(--accent); border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; cursor:pointer; width:100%; transition:all 0.2s;">👀 Beszélgetések megtekintése</button>` 
                       : `<div style="font-size:11px; color:var(--text-muted); padding:6px 0;">Még nincs előzmény...</div><textarea id="nc-dyn-${f.id}" style="display:none"></textarea>`
@@ -4038,6 +4263,177 @@ function savePraxisinfo() {
 function saveSzabalyok() {
   showToast('info', '📨 Módosítási kérés rögzítve – hamarosan feldolgozzuk 🚧');
 }
+
+</script>
+
+    
+
+<script>
+
+// Customer Center JS
+function switchCustomerView(viewId, btn) {
+    document.querySelectorAll('.customer-view').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.view-btn').forEach(el => {
+        el.classList.remove('active');
+    });
+    
+    document.getElementById('view-' + viewId).style.display = 'block';
+    
+    if(btn) {
+        btn.classList.add('active');
+    }
+
+    // Load data dynamically
+    if(viewId === 'kanban') loadKanban();
+    if(viewId === 'clients') loadClientsTable();
+    if(viewId === 'interactions') loadInteractions();
+}
+
+let lastActiveCustomerView = 'interactions';
+
+function openClientDetails(clientData) {
+    // Save current active view
+    document.querySelectorAll('.customer-view').forEach(el => {
+        if(el.style.display !== 'none' && el.id !== 'view-client-details') {
+            lastActiveCustomerView = el.id.replace('view-', '');
+        }
+        el.style.display = 'none';
+    });
+    
+    // Hide view switcher
+    const switcher = document.querySelector('.view-switcher-container');
+    if(switcher) switcher.style.display = 'none';
+    
+    // Show details view
+    document.getElementById('view-client-details').style.display = 'block';
+    
+    if(clientData) {
+        document.getElementById('cd-name').innerText = clientData.name || 'Ismeretlen ügyfél';
+        const emailEl = document.getElementById('cd-email');
+        emailEl.innerText = clientData.email || '';
+        emailEl.parentElement.style.display = clientData.email ? 'flex' : 'none';
+        
+        const phoneEl = document.getElementById('cd-phone');
+        phoneEl.innerText = clientData.phone || '';
+        phoneEl.parentElement.style.display = clientData.phone ? 'flex' : 'none';
+        
+        // Optional real data fields
+        document.getElementById('cd-id').innerText = clientData.id ? `Azonosító: ${clientData.id}` : `Páciens azonosító: PAC-${Math.floor(100000 + Math.random() * 900000)}`;
+        
+        const addressEl = document.getElementById('cd-address');
+        addressEl.innerText = clientData.address || '';
+        addressEl.parentElement.style.display = clientData.address ? 'flex' : 'none';
+        
+        const birthdateEl = document.getElementById('cd-birthdate');
+        birthdateEl.innerText = clientData.birthdate ? `Születési dátum: ${clientData.birthdate}` : '';
+        birthdateEl.parentElement.style.display = clientData.birthdate ? 'flex' : 'none';
+        
+        const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '. ');
+        document.getElementById('cd-last-visit').innerText = dateStr + '.';
+        document.getElementById('cd-total-interactions').innerText = Math.floor(Math.random() * 20 + 1) + ' összesen interakció';
+        
+        // Render real history matching the design table
+        document.getElementById('cd-history-body').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;"><div class="spinner"></div>Betöltés...</td></tr>`;
+        
+        authFetch('/admin/api/sessions/summary?limit=500')
+          .then(res => res.json())
+          .then(data => {
+            const sessions = data.sessions || [];
+            let clientInteractions = [];
+            sessions.forEach(s => {
+               const cName = (s.participant || s.client_name || '').toLowerCase();
+               const isMatch = (clientData.name && cName === clientData.name.toLowerCase()) || 
+                               (clientData.email && s.session_id.toLowerCase().includes(clientData.email.toLowerCase()));
+               if (isMatch) {
+                   (s.interactions || []).forEach(r => {
+                       clientInteractions.push({
+                           date: r.created_at || s.started_at,
+                           channel: s.room_name && s.room_name.includes('Email') ? 'Email' : 'Telefon',
+                           type: r.type || '-',
+                           topic: r.topic || '-',
+                           summary: r.summary || '-',
+                           result: r.result || ''
+                       });
+                   });
+               }
+            });
+            
+            clientInteractions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            
+            document.getElementById('cd-total-interactions').innerText = clientInteractions.length + ' összesen interakció';
+            
+            if (clientInteractions.length === 0) {
+               document.getElementById('cd-history-body').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted);">Nincs rögzített interakció</td></tr>`;
+               return;
+            }
+            
+            document.getElementById('cd-history-body').innerHTML = clientInteractions.map(r => {
+               let dStr = '-';
+               let tStr = '-';
+               if (r.date) {
+                   const pt = r.date.replace('T', ' ').split(' ');
+                   dStr = pt[0].replace(/-/g, '. ') + '.';
+                   tStr = pt[1] ? pt[1].substring(0,5) : '';
+               }
+               return `
+                <tr>
+                  <td style="padding:16px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text);">${dStr}<br><span style="color:var(--text-muted);font-size:11px;">${tStr}</span></td>
+                  <td style="padding:16px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text);">${esc(r.channel)}</td>
+                  <td style="padding:16px; border-bottom:1px solid var(--border); font-size:13px;">${typeChip(r.type)}</td>
+                  <td style="padding:16px; border-bottom:1px solid var(--border); font-size:13px;"><span class="badge" style="background:var(--bg3);color:var(--text);">${esc(r.topic)}</span></td>
+                  <td style="padding:16px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text);">${esc(r.summary)}</td>
+                  <td style="padding:16px; border-bottom:1px solid var(--border); font-size:13px;">${resultBadge(r.result)}</td>
+                </tr>
+               `;
+            }).join('');
+          })
+          .catch(err => {
+              document.getElementById('cd-history-body').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--red);">Hiba a betöltés során</td></tr>`;
+          });
+    }
+}
+
+function closeClientDetails() {
+    document.getElementById('view-client-details').style.display = 'none';
+    
+    // Show view switcher
+    const switcher = document.querySelector('.view-switcher-container');
+    if(switcher) switcher.style.display = 'flex';
+    
+    // Restore last active view
+    switchCustomerView(lastActiveCustomerView);
+}
+
+document.addEventListener('click', function(e) {
+    // Kanban card click
+    const card = e.target.closest('.kanban-card');
+    // Interactions flat body click
+    const interactionTr = e.target.closest('#interactions-flat-body tr');
+
+    // Skip if we clicked a button/link inside the card or row
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.card-delete')) return;
+
+    if (card) {
+        let name = "Ügyfél";
+        let strong = card.querySelector('strong');
+        if(strong) name = strong.innerText;
+        
+        let email = '';
+        let phone = '';
+        const infoDivs = card.querySelectorAll('div[style*="font-size:12px"]');
+        infoDivs.forEach(d => {
+            if(d.innerText.includes('@')) email = d.innerText.trim();
+            else if(d.innerText.trim().length > 0) phone = d.innerText.trim();
+        });
+        
+        openClientDetails({ name: name, email: email, phone: phone });
+    } else if (interactionTr && !interactionTr.querySelector('th')) {
+        let name = "Ügyfél";
+        // In Interactions table, name is usually in the 3rd column (index 2)
+        if(interactionTr.cells && interactionTr.cells[2]) name = interactionTr.cells[2].innerText;
+        openClientDetails({ name: name, email: '', phone: '' });
+    }
+});
 
 </script>
 </body>

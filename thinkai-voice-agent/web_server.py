@@ -110,6 +110,10 @@ async def admin_page():
 async def logo():
     return FileResponse(THIS_DIR / "thinkai-logo.png", media_type="image/png")
 
+@app.get("/login-bg.jpg")
+async def bg():
+    return FileResponse(THIS_DIR / "login-bg.jpg", media_type="image/jpeg")
+
 @app.get("/api/token")
 async def get_token():
     """Generate a LiveKit room token for a new user."""
