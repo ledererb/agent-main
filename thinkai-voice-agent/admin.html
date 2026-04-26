@@ -1,15 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="hu">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiDesk — Admin Dashboard</title>
-  <meta name="description" content="DigiDesk voice agent admin felület — analitika, interakciós lista, feladatok." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DigiDesk — Admin Dashboard</title>
+<meta content="DigiDesk voice agent admin felület — analitika, interakciós lista, feladatok." name="description"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<style>
     :root {
       /* ── Figma-pontos paletta ─────────────────────── */
       --figma-dark:     #082432;   /* fő sötét szín */
@@ -1769,1105 +1770,1010 @@
 </style>
 </head>
 <body>
-
 <!-- ═══════════════════════  LOGIN  ═══════════════════════ -->
 <div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="login-logo-icon">T</div>
-      <span>DigiDesk Admin</span>
-    </div>
-    <div class="login-tagline">Üdv újra!<br>Kérem, jelentkezz be.</div>
-    <div class="login-sub">Hangügynök vezérlőpult — analitika és interakciók</div>
-
-    <div id="login-error" class="login-error"></div>
-
-    <div class="form-group">
-      <label class="form-label" for="login-username">Felhasználónév</label>
-      <input id="login-username" class="form-input" type="text" placeholder="admin" autocomplete="username" />
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="login-password">Jelszó</label>
-      <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <button id="login-btn" class="btn-primary" onclick="doLogin()">BELÉPÉS</button>
-  </div>
+<div class="login-card">
+<div class="login-logo">
+<div class="login-logo-icon">T</div>
+<span>DigiDesk Admin</span>
 </div>
-
+<div class="login-tagline">Üdv újra!<br/>Kérem, jelentkezz be.</div>
+<div class="login-sub">Hangügynök vezérlőpult — analitika és interakciók</div>
+<div class="login-error" id="login-error"></div>
+<div class="form-group">
+<label class="form-label" for="login-username">Felhasználónév</label>
+<input autocomplete="username" class="form-input" id="login-username" placeholder="admin" type="text"/>
+</div>
+<div class="form-group">
+<label class="form-label" for="login-password">Jelszó</label>
+<input autocomplete="current-password" class="form-input" id="login-password" placeholder="••••••••" type="password"/>
+</div>
+<button class="btn-primary" id="login-btn" onclick="doLogin()">BELÉPÉS</button>
+</div>
+</div>
 <!-- ═══════════════════════  APP  ═══════════════════════════ -->
 <div id="app">
+<!-- Sidebar -->
+<aside class="sidebar">
+<div class="sidebar-logo">
+<div class="sidebar-logo-icon">T</div>
+<span class="sidebar-logo-text">DigiDesk</span>
+</div>
+<div class="nav-section-title">Főmenü</div>
+<button class="nav-item active" id="nav-analytics" onclick="showPage('analytics')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M3 12h2l3-9 4 18 3-9h6"></path></svg>
+<span>Analitika</span>
+</button>
+<button class="nav-item" id="nav-interactions" onclick="showPage('interactions')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M8 12h8M8 8h4m-4 8h6M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"></path></svg>
+<span>Ügyfélközpont</span>
+</button>
+<button class="nav-item" id="nav-calendar" onclick="showPage('calendar')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><rect height="18" rx="2" width="18" x="3" y="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+<span>Naptár</span>
+</button>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">T</div>
-      <span class="sidebar-logo-text">DigiDesk</span>
-    </div>
 
-    <div class="nav-section-title">Főmenü</div>
-    <button class="nav-item active" onclick="showPage('analytics')" id="nav-analytics">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h2l3-9 4 18 3-9h6"/></svg>
-      <span>Analitika</span>
-    </button>
-    <button class="nav-item" onclick="showPage('interactions')" id="nav-interactions">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h8M8 8h4m-4 8h6M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
-      <span>Ügyfélközpont</span>
-    </button>
-    <button class="nav-item" onclick="showPage('calendar')" id="nav-calendar">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <span>Naptár</span>
-    </button>
-    <button class="nav-item" onclick="showPage('emails')" id="nav-emails">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 0l8 7 8-7"/></svg>
-      <span>Emailek</span>
-    </button>
-    <button class="nav-item" onclick="showPage('sessions')" id="nav-sessions">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      <span>Sessionök</span>
-    </button>
-    <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      <span>Beállítások</span>
-    </button>
-    
-    
-    <button class="nav-item" onclick="showPage('tudastar')" id="nav-tudastar">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      <span>Tudástár</span>
-    </button>
-
-    <div class="sidebar-bottom">
-      <div class="user-info">
-        <div class="user-avatar" id="user-avatar-char">A</div>
-        <div>
-          <div class="user-name" id="sidebar-username">admin</div>
-          <div class="user-role">Adminisztrátor</div>
-        </div>
-      </div>
-      <!-- Dark mode toggle -->
-      <button class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleDarkMode()">
-        <span id="theme-icon">🌙</span>
-        <span id="theme-label">Sötét mód</span>
-      </button>
-      <button class="btn-logout" onclick="doLogout()">
-        <svg class="cd-contact-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+<button class="nav-item" id="nav-settings" onclick="showPage('settings')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"></path><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
+<span>Beállítások</span>
+</button>
+<button class="nav-item" id="nav-tudastar" onclick="showPage('tudastar')">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>
+<span>Tudástár</span>
+</button>
+<div class="sidebar-bottom">
+<div class="user-info">
+<div class="user-avatar" id="user-avatar-char">A</div>
+<div>
+<div class="user-name" id="sidebar-username">admin</div>
+<div class="user-role">Adminisztrátor</div>
+</div>
+</div>
+<!-- Dark mode toggle -->
+<button class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleDarkMode()">
+<span id="theme-icon">🌙</span>
+<span id="theme-label">Sötét mód</span>
+</button>
+<button class="btn-logout" onclick="doLogout()">
+<svg class="cd-contact-icon" fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"></path></svg>
         Kijelentkezés
       </button>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="main">
-
-    <!-- ANALYTICS PAGE -->
-    <div class="page active" id="page-analytics">
-      <div class="analytics-shell">
-
-        <!-- Filter row -->
-        <div class="filter-row-figma">
-          <div class="filter-group">
-            <label>Telephely <span class="wip-badge">🚧</span></label>
-            <select class="filter-select-figma" id="filter-telephely" disabled>
-              <option value="mind">Mind</option>
-              <option value="telephely1">Telephely 1</option>
-              <option value="telephely2">Telephely 2</option>
-            </select>
+</div>
+</aside>
+<!-- Main content -->
+<main class="main">
+<!-- ANALYTICS PAGE -->
+<div class="page active" id="page-analytics">
+<div class="analytics-shell">
+<!-- Filter row -->
+<div class="filter-row-figma">
+<div class="filter-group">
+<label>Telephely <span class="wip-badge">🚧</span></label>
+<select class="filter-select-figma" disabled="" id="filter-telephely">
+<option value="mind">Mind</option>
+<option value="telephely1">Telephely 1</option>
+<option value="telephely2">Telephely 2</option>
+</select>
+</div>
+<div class="filter-group">
+<label>Csatorna</label>
+<select class="filter-select-figma" id="filter-csatorna">
+<option value="mind">Mind</option>
+<option value="telefon">Telefon</option>
+<option value="email">E-mail</option>
+<option value="whatsapp">WhatsApp</option>
+<option value="facebook">Facebook</option>
+<option value="instagram">Instagram</option>
+</select>
+</div>
+<div class="filter-group">
+<label>Időszak</label>
+<select class="filter-select-figma" id="stats-days" onchange="loadStats()">
+<option value="week">Jelenlegi hét</option>
+<option selected="" value="month">Jelen hónap</option>
+<option value="year">Éves nézet</option>
+</select>
+</div>
+<button class="btn-filter-apply" onclick="loadStats()">Szűrés alkalmazása</button>
+</div>
+<!-- KPI grid -->
+<div class="kpi-grid-figma" id="kpi-grid-figma">
+<div style="grid-column:1/-1;text-align:center;padding:20px;color:#6b7280;">
+<div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;"></div>  Adatok betöltése...
           </div>
-          <div class="filter-group">
-            <label>Csatorna</label>
-            <select class="filter-select-figma" id="filter-csatorna">
-              <option value="mind">Mind</option>
-              <option value="telefon">Telefon</option>
-              <option value="email">E-mail</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="facebook">Facebook</option>
-              <option value="instagram">Instagram</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Időszak</label>
-            <select class="filter-select-figma" id="stats-days" onchange="loadStats()">
-              <option value="week">Jelenlegi hét</option>
-              <option value="month" selected>Jelen hónap</option>
-              <option value="year">Éves nézet</option>
-            </select>
-          </div>
-          <button class="btn-filter-apply" onclick="loadStats()">Szűrés alkalmazása</button>
-        </div>
-
-        <!-- KPI grid -->
-        <div class="kpi-grid-figma" id="kpi-grid-figma">
-          <div style="grid-column:1/-1;text-align:center;padding:20px;color:#6b7280;">
-            <div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;"></div>&nbsp; Adatok betöltése...
-          </div>
-        </div>
-
-        <!-- 1. Blokk: Grafikonok -->
-        <div class="section-divider"></div>
-        <h2 class="section-header-figma">Működési áttekintés</h2>
-        <div class="charts-row" style="margin-bottom:36px;">
-          <div class="chart-card" style="height:300px;">
-            <div class="chart-title">Sessionök időbeli alakulása</div>
-            <div style="position:relative;height:calc(100% - 30px);">
-              <canvas id="sessions-chart" class="chart-canvas"></canvas>
-            </div>
-          </div>
-          <div class="chart-card" style="height:300px;">
-            <div class="chart-title">Interakció típusonként</div>
-            <div style="position:relative;height:calc(100% - 30px);">
-              <canvas id="types-chart" class="chart-canvas"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. Blokk: Minőség és teljesítmény -->
-        <div class="section-divider"></div>
-        <h2 class="section-header-figma">Minőség és teljesítmény</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:36px;">
-
-          <!-- Top témák -->
-          <div class="panel-white">
-            <div class="panel-title">Top kérdéstípusok / témák</div>
-            <div id="top-topics-list">
-              <div style="color:#6b7280;font-size:13px;text-align:center;padding:20px;">
-                <div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 8px;"></div>
+</div>
+<!-- 1. Blokk: Grafikonok -->
+<div class="section-divider"></div>
+<h2 class="section-header-figma">Működési áttekintés</h2>
+<div class="charts-row" style="margin-bottom:36px;">
+<div class="chart-card" style="height:300px;">
+<div class="chart-title">Sessionök időbeli alakulása</div>
+<div style="position:relative;height:calc(100% - 30px);">
+<canvas class="chart-canvas" id="sessions-chart"></canvas>
+</div>
+</div>
+<div class="chart-card" style="height:300px;">
+<div class="chart-title">Interakció típusonként</div>
+<div style="position:relative;height:calc(100% - 30px);">
+<canvas class="chart-canvas" id="types-chart"></canvas>
+</div>
+</div>
+</div>
+<!-- 2. Blokk: Minőség és teljesítmény -->
+<div class="section-divider"></div>
+<h2 class="section-header-figma">Minőség és teljesítmény</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:36px;">
+<!-- Top témák -->
+<div class="panel-white">
+<div class="panel-title">Top kérdéstípusok / témák</div>
+<div id="top-topics-list">
+<div style="color:#6b7280;font-size:13px;text-align:center;padding:20px;">
+<div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 8px;"></div>
                 Betöltés...
               </div>
-            </div>
-          </div>
-
-          <!-- Átadási okok 🚧 -->
-          <div class="panel-white">
-            <div class="panel-title">Átadási okok <span class="wip-badge">🚧</span></div>
-            <div style="position:relative;height:240px;">
-              <canvas id="handoff-chart"></canvas>
-            </div>
-          </div>
-
-          <!-- Foglalási tölcsér 🚧 -->
-          <div class="panel-white">
-            <div class="panel-title">Foglalási tölcsér <span class="wip-badge">🚧</span></div>
-            <div>
-              <div class="funnel-step" style="width:100%;">
-                <div class="funnel-step-label">Összes releváns megkeresés</div>
-                <div><span class="funnel-step-val">1,284</span><span class="funnel-step-pct">(100%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 90% konverzió</div>
-              <div class="funnel-step" style="width:90%;">
-                <div class="funnel-step-label">Válaszolt ügyek</div>
-                <div><span class="funnel-step-val">1,156</span><span class="funnel-step-pct">(90%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 60% konverzió</div>
-              <div class="funnel-step" style="width:70%;">
-                <div class="funnel-step-label">Foglalási ajánlatig jutott</div>
-                <div><span class="funnel-step-val">694</span><span class="funnel-step-pct">(60%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 63% konverzió</div>
-              <div class="funnel-step" style="width:50%;">
-                <div class="funnel-step-label">Időpont lett belőle</div>
-                <div><span class="funnel-step-val">437</span><span class="funnel-step-pct">(63%)</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Blokk: Operatív figyelmeztetések 🚧 -->
-        <div class="section-divider"></div>
-        <h2 class="section-header-figma">Operatív figyelmeztetések és teendők <span class="wip-badge">🚧</span></h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:36px;">
-
-          <!-- Kritikus ügyek -->
-          <div class="panel-white">
-            <div class="panel-title">⚠️ Kritikus ügyek</div>
-            <div class="severity-card high">
-              <span class="severity-label">Sürgős megkeresés</span>
-              <span><span class="severity-count">3</span><span class="severity-unit">eset</span></span>
-            </div>
-            <div class="severity-card high">
-              <span class="severity-label">Panasz</span>
-              <span><span class="severity-count">7</span><span class="severity-unit">eset</span></span>
-            </div>
-            <div class="severity-card medium">
-              <span class="severity-label">Nem kezelt / elakadt ügy</span>
-              <span><span class="severity-count">12</span><span class="severity-unit">eset</span></span>
-            </div>
-            <div class="severity-card medium">
-              <span class="severity-label">Visszahívást igénylő lead</span>
-              <span><span class="severity-count">18</span><span class="severity-unit">eset</span></span>
-            </div>
-            <div class="severity-card low">
-              <span class="severity-label">Többször visszatérő kérdés</span>
-              <span><span class="severity-count">5</span><span class="severity-unit">eset</span></span>
-            </div>
-          </div>
-
-          <!-- AI javaslatok -->
-          <div class="panel-white">
-            <div class="panel-title">💡 Finomhangolási javaslatok</div>
-            <div class="suggestion-card">
-              <span class="suggestion-icon">📈</span>
-              <span class="suggestion-text">Az árkérdések aránya 28%-kal nőtt – érdemes bővíteni az árakkal kapcsolatos tudásbázist.</span>
-            </div>
-            <div class="suggestion-card">
-              <span class="suggestion-icon">📈</span>
-              <span class="suggestion-text">Az angol nyelvű megkeresések aránya nő – megfontolható az angol nyelvű válaszok fejlesztése.</span>
-            </div>
-            <div class="suggestion-card">
-              <span class="suggestion-icon">⚠️</span>
-              <span class="suggestion-text">A 16:00–18:00 közti sávban emelkedett az átadási arány – érdemes vizsgálni az okot.</span>
-            </div>
-            <div class="suggestion-card">
-              <span class="suggestion-icon">💡</span>
-              <span class="suggestion-text">Az időpontmódosítási kérdésekre érdemes új szabályt rögzíteni a Szabályok menüben.</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. Blokk: Kimenő kommunikáció 🚧 -->
-        <div class="section-divider"></div>
-        <h2 class="section-header-figma">Kimenő kommunikáció <span class="wip-badge">🚧</span></h2>
-        <div style="display:grid;grid-template-columns:220px 1fr 1fr;gap:18px;margin-bottom:20px;">
-
-          <!-- Mini KPI-k -->
-          <div>
-            <div class="out-kpi-card">
-              <div class="out-kpi-label">Összes kimenő</div>
-              <div class="out-kpi-value">326</div>
-              <div class="out-kpi-trend kpi-trend-up">▲ +18% <span class="kpi-trend-desc">előző időszakhoz</span></div>
-            </div>
-            <div class="out-kpi-card">
-              <div class="out-kpi-label">Elért páciensek</div>
-              <div class="out-kpi-value">72%</div>
-              <div class="out-kpi-sub">az összes indított kapcsolatfelvételből</div>
-            </div>
-            <div class="out-kpi-card">
-              <div class="out-kpi-label">Foglalássá vált</div>
-              <div class="out-kpi-value">48</div>
-              <div class="out-kpi-trend kpi-trend-up">▲ 15% konverziós arány</div>
-            </div>
-            <div class="out-kpi-card">
-              <div class="out-kpi-label">Nyitott utánkövetés</div>
-              <div class="out-kpi-value">19</div>
-              <div class="out-kpi-sub">emberi lépést igényel</div>
-            </div>
-          </div>
-
-          <!-- Aktivitástípusok -->
-          <div class="panel-white">
-            <div class="panel-title">Aktivitás típusok</div>
-            <div style="position:relative;height:300px;">
-              <canvas id="outgoing-activity-chart"></canvas>
-            </div>
-          </div>
-
-          <!-- Konverziós funnel zöld -->
-          <div class="panel-white">
-            <div class="panel-title">Eredményesség és konverzió</div>
-            <div>
-              <div class="green-funnel-step" style="width:100%;">
-                <div class="green-funnel-label">Kimenő kommunikáció indítva</div>
-                <div><span class="green-funnel-val">326</span><span class="green-funnel-pct">(100%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 72% konverzió</div>
-              <div class="green-funnel-step" style="width:72%;">
-                <div class="green-funnel-label">Páciens elérve</div>
-                <div><span class="green-funnel-val">235</span><span class="green-funnel-pct">(72%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 60% konverzió</div>
-              <div class="green-funnel-step" style="width:55%;">
-                <div class="green-funnel-label">Reagált / kapcsolat létrejött</div>
-                <div><span class="green-funnel-val">141</span><span class="green-funnel-pct">(60%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 52% konverzió</div>
-              <div class="green-funnel-step" style="width:40%;">
-                <div class="green-funnel-label">Időpont egyeztetve</div>
-                <div><span class="green-funnel-val">73</span><span class="green-funnel-pct">(52%)</span></div>
-              </div>
-              <div class="funnel-conv">▼ 66% konverzió</div>
-              <div class="green-funnel-step" style="width:28%;">
-                <div class="green-funnel-label">Foglalás létrejött</div>
-                <div><span class="green-funnel-val">48</span><span class="green-funnel-pct">(66%)</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- end analytics-shell -->
-    </div><!-- end page-analytics -->
-
-
-    <!-- TUDÁSTÁR PAGE -->
-    <div class="page" id="page-tudastar">
-      <div class="tudastar-shell">
-        <div class="tudastar-tabs">
-          <button class="tudastar-tab active" id="tt-tab-praxis" onclick="switchTudastarTab('praxis')">📋 Praxisinformáció</button>
-          <button class="tudastar-tab" id="tt-tab-szabalyok" onclick="switchTudastarTab('szabalyok')">⚖️ Szabályok <span class="wip-badge">🚧</span></button>
-        </div>
-
-        <!-- PRAXISINFORMÁCIÓ TAB -->
-        <div id="tt-content-praxis">
-
-          <!-- 1. Intézményi adatok -->
-          <div class="tt-section">
-            <div class="tt-section-title">🏥 Intézményi adatok</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-              <div>
-                <label class="tt-label">Intézmény neve</label>
-                <input class="tt-input" id="tt-nev" type="text" value="Dental Clinic Budapest">
-              </div>
-              <div>
-                <label class="tt-label">Márkanév <span class="wip-badge">🚧</span></label>
-                <input class="tt-input" id="tt-markanev" type="text" placeholder="pl. Dental Clinic" disabled style="opacity:.5;">
-              </div>
-              <div style="grid-column:1/-1;">
-                <label class="tt-label">Rövid bemutatkozás</label>
-                <textarea class="tt-textarea" id="tt-bemutatkozas">Modern fogászati rendelő a belvárosban, barátságos környezettel és tapasztalt szakemberekkel.</textarea>
-              </div>
-              <div>
-                <label class="tt-label">Szakterület <span class="wip-badge">🚧</span></label>
-                <input class="tt-input" type="text" placeholder="pl. Fogászat, szájsebészet" disabled style="opacity:.5;">
-              </div>
-              <div>
-                <label class="tt-label">Pozicionáló kulcsszavak <span class="wip-badge">🚧</span></label>
-                <input class="tt-input" type="text" placeholder="pl. fogorvos, implantáció" disabled style="opacity:.5;">
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Telephely -->
-          <div class="tt-section">
-            <div class="tt-section-title">📍 Telephely és megközelítés</div>
-            <div style="display:grid;grid-template-columns:1fr;gap:14px;">
-              <div>
-                <label class="tt-label">Cím</label>
-                <input class="tt-input" id="tt-cim" type="text" value="1052 Budapest, Petőfi Sándor utca 12.">
-              </div>
-              <div>
-                <label class="tt-label">Megközelítési információk <span class="wip-badge">🚧</span></label>
-                <textarea class="tt-textarea" placeholder="pl. 2-es metró Astoria megállótól 3 perc..." disabled style="opacity:.5;"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. Orvosok -->
-          <div class="tt-section">
-            <div class="tt-section-title">👨‍⚕️ Orvosok <span class="wip-badge">🚧</span></div>
-            <div id="tt-orvosok-list">
-              <div class="tt-dynamic-row tt-doctor-row" style="font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">
-                <span>Név</span><span>Szakterület</span><span>Szolgáltatás</span><span></span>
-              </div>
-              <div class="tt-dynamic-row tt-doctor-row" data-id="1">
-                <input class="tt-input" type="text" value="Dr. Szabó Júlia" placeholder="Név">
-                <input class="tt-input" type="text" value="Általános fogászat" placeholder="Szakterület">
-                <input class="tt-input" type="text" value="Vizsgálat, tömés" placeholder="Szolgáltatás">
-                <button class="tt-remove-btn" onclick="removeDoctorRow(1)">✕</button>
-              </div>
-              <div class="tt-dynamic-row tt-doctor-row" data-id="2">
-                <input class="tt-input" type="text" value="Dr. Kiss Péter" placeholder="Név">
-                <input class="tt-input" type="text" value="Implantológia" placeholder="Szakterület">
-                <input class="tt-input" type="text" value="Implantátum beültetés" placeholder="Szolgáltatás">
-                <button class="tt-remove-btn" onclick="removeDoctorRow(2)">✕</button>
-              </div>
-            </div>
-            <button class="tt-add-btn" onclick="addDoctorRow()">+ Orvos hozzáadása</button>
-          </div>
-
-          <!-- 4. Nyitvatartás -->
-          <div class="tt-section">
-            <div class="tt-section-title">🕐 Nyitvatartás</div>
-            <table class="tt-bh-table">
-              <thead><tr><th>Nap</th><th>Nyitva</th><th>Nyit</th><th>Zár</th></tr></thead>
-              <tbody>
-                <tr><td class="tt-bh-day">Hétfő</td><td><label class="tt-toggle"><input type="checkbox" checked onchange="ttToggleBh(this,'hetfo')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-hetfo-from" type="time" value="08:00"></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-hetfo-to" type="time" value="18:00"></td></tr>
-                <tr><td class="tt-bh-day">Kedd</td><td><label class="tt-toggle"><input type="checkbox" checked onchange="ttToggleBh(this,'kedd')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-kedd-from" type="time" value="08:00"></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-kedd-to" type="time" value="18:00"></td></tr>
-                <tr><td class="tt-bh-day">Szerda</td><td><label class="tt-toggle"><input type="checkbox" checked onchange="ttToggleBh(this,'szerda')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-szerda-from" type="time" value="08:00"></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-szerda-to" type="time" value="20:00"></td></tr>
-                <tr><td class="tt-bh-day">Csütörtök</td><td><label class="tt-toggle"><input type="checkbox" checked onchange="ttToggleBh(this,'csutortok')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-csutortok-from" type="time" value="08:00"></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-csutortok-to" type="time" value="18:00"></td></tr>
-                <tr><td class="tt-bh-day">Péntek</td><td><label class="tt-toggle"><input type="checkbox" checked onchange="ttToggleBh(this,'pentek')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-pentek-from" type="time" value="08:00"></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-pentek-to" type="time" value="16:00"></td></tr>
-                <tr><td class="tt-bh-day">Szombat</td><td><label class="tt-toggle"><input type="checkbox" checked onchange="ttToggleBh(this,'szombat')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-szombat-from" type="time" value="09:00"></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-szombat-to" type="time" value="13:00"></td></tr>
-                <tr><td class="tt-bh-day">Vasárnap</td><td><label class="tt-toggle"><input type="checkbox" onchange="ttToggleBh(this,'vasarnap')"><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-vasarnap-from" type="time" value="00:00" disabled></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-vasarnap-to" type="time" value="00:00" disabled></td></tr>
-              </tbody>
-            </table>
-            <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;">
-              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;">Speciális nyitvatartás <span class="wip-badge">🚧</span></div>
-              <div style="font-size:12px;color:#9ca3af;">Ünnepnapok, szünetek egyedi beállítása – hamarosan elérhető.</div>
-            </div>
-          </div>
-
-          <!-- 5. Árlista -->
-          <div class="tt-section">
-            <div class="tt-section-title">💰 Árlista <span class="wip-badge">🚧</span></div>
-            <div class="tt-file-uploaded">
-              <span style="font-size:24px;">📄</span>
-              <div>
-                <div style="font-size:13px;font-weight:600;color:#16a34a;">arlista_2026_q2.xlsx</div>
-                <div style="font-size:11px;color:#6b7280;">Feltöltve: 2026. 04. 08. &nbsp;·&nbsp; 45 KB</div>
-              </div>
-            </div>
-            <div class="tt-upload-area" style="margin-top:12px;" onclick="showToast('info','📤 Feltöltés funkció hamarosan elérhető 🚧')">
-              <div class="tt-upload-icon">📤</div>
-              <div style="font-size:13px;color:#6b7280;font-weight:600;">Árlista frissítése</div>
-              <div style="font-size:11px;color:#9ca3af;margin-top:4px;">XLSX vagy CSV fájl – max. 5 MB</div>
-            </div>
-          </div>
-
-          <!-- 6. Kampányok -->
-          <div class="tt-section">
-            <div class="tt-section-title">📣 Kampányok <span class="wip-badge">🚧</span></div>
-            <div id="tt-kampanyok-list">
-              <div class="tt-campaign-card">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                  <label class="tt-toggle"><input type="checkbox" checked><span class="tt-toggle-slider"></span></label>
-                  <span style="font-size:12px;font-weight:600;color:#374151;">Kampány aktív</span>
-                  <button class="tt-remove-btn" style="margin-left:auto;" onclick="this.closest('.tt-campaign-card').remove()">✕</button>
-                </div>
-                <textarea class="tt-textarea" style="min-height:60px;">Tavaszi fogfehérítési akció: 20% kedvezmény minden fogfehérítési kezelésre április 30-ig. Az akció kódja: TAVASZ2026</textarea>
-              </div>
-            </div>
-            <button class="tt-add-btn" onclick="addKampany()">+ Kampány hozzáadása</button>
-          </div>
-
-          <!-- 7. GYIK -->
-          <div class="tt-section">
-            <div class="tt-section-title">❓ GYIK – Kérdés-válasz párok <span class="wip-badge">🚧</span></div>
-            <div id="tt-gyik-list">
-              <div class="tt-campaign-card" data-gyik>
-                <button class="tt-remove-btn" style="position:absolute;top:14px;right:14px;" onclick="this.closest('[data-gyik]').remove()">✕</button>
-                <label class="tt-label">Kérdés</label>
-                <input class="tt-input" type="text" value="Mennyi idővel előre kell foglalni időpontot?" style="margin-bottom:10px;">
-                <label class="tt-label">Válasz</label>
-                <textarea class="tt-textarea" style="min-height:60px;">Általában 1-2 héttel előre javasoljuk az időpontfoglalást, de sürgős esetekben akár azonnali ellátást is tudunk biztosítani.</textarea>
-              </div>
-              <div class="tt-campaign-card" data-gyik>
-                <button class="tt-remove-btn" style="position:absolute;top:14px;right:14px;" onclick="this.closest('[data-gyik]').remove()">✕</button>
-                <label class="tt-label">Kérdés</label>
-                <input class="tt-input" type="text" value="Fogadnak-e TB-s betegeket?" style="margin-bottom:10px;">
-                <label class="tt-label">Válasz</label>
-                <textarea class="tt-textarea" style="min-height:60px;">Igen, TB-s ellátást is biztosítunk. Kérjük, hozza magával a TAJ-kártyáját.</textarea>
-              </div>
-            </div>
-            <button class="tt-add-btn" onclick="addGyik()">+ Kérdés-válasz hozzáadása</button>
-          </div>
-
-          <!-- Action bar -->
-          <div class="tt-action-bar">
-            <div class="tt-action-meta">
-              <strong>Utolsó frissítés:</strong> 2026. április 12. 14:30
-              &nbsp;&nbsp;
+</div>
+</div>
+<!-- Átadási okok 🚧 -->
+<div class="panel-white">
+<div class="panel-title">Átadási okok <span class="wip-badge">🚧</span></div>
+<div style="position:relative;height:240px;">
+<canvas id="handoff-chart"></canvas>
+</div>
+</div>
+<!-- Foglalási tölcsér 🚧 -->
+<div class="panel-white">
+<div class="panel-title">Foglalási tölcsér <span class="wip-badge">🚧</span></div>
+<div>
+<div class="funnel-step" style="width:100%;">
+<div class="funnel-step-label">Összes releváns megkeresés</div>
+<div><span class="funnel-step-val">1,284</span><span class="funnel-step-pct">(100%)</span></div>
+</div>
+<div class="funnel-conv">▼ 90% konverzió</div>
+<div class="funnel-step" style="width:90%;">
+<div class="funnel-step-label">Válaszolt ügyek</div>
+<div><span class="funnel-step-val">1,156</span><span class="funnel-step-pct">(90%)</span></div>
+</div>
+<div class="funnel-conv">▼ 60% konverzió</div>
+<div class="funnel-step" style="width:70%;">
+<div class="funnel-step-label">Foglalási ajánlatig jutott</div>
+<div><span class="funnel-step-val">694</span><span class="funnel-step-pct">(60%)</span></div>
+</div>
+<div class="funnel-conv">▼ 63% konverzió</div>
+<div class="funnel-step" style="width:50%;">
+<div class="funnel-step-label">Időpont lett belőle</div>
+<div><span class="funnel-step-val">437</span><span class="funnel-step-pct">(63%)</span></div>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Blokk: Operatív figyelmeztetések 🚧 -->
+<div class="section-divider"></div>
+<h2 class="section-header-figma">Operatív figyelmeztetések és teendők <span class="wip-badge">🚧</span></h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:36px;">
+<!-- Kritikus ügyek -->
+<div class="panel-white">
+<div class="panel-title">⚠️ Kritikus ügyek</div>
+<div class="severity-card high">
+<span class="severity-label">Sürgős megkeresés</span>
+<span><span class="severity-count">3</span><span class="severity-unit">eset</span></span>
+</div>
+<div class="severity-card high">
+<span class="severity-label">Panasz</span>
+<span><span class="severity-count">7</span><span class="severity-unit">eset</span></span>
+</div>
+<div class="severity-card medium">
+<span class="severity-label">Nem kezelt / elakadt ügy</span>
+<span><span class="severity-count">12</span><span class="severity-unit">eset</span></span>
+</div>
+<div class="severity-card medium">
+<span class="severity-label">Visszahívást igénylő lead</span>
+<span><span class="severity-count">18</span><span class="severity-unit">eset</span></span>
+</div>
+<div class="severity-card low">
+<span class="severity-label">Többször visszatérő kérdés</span>
+<span><span class="severity-count">5</span><span class="severity-unit">eset</span></span>
+</div>
+</div>
+<!-- AI javaslatok -->
+<div class="panel-white">
+<div class="panel-title">💡 Finomhangolási javaslatok</div>
+<div class="suggestion-card">
+<span class="suggestion-icon">📈</span>
+<span class="suggestion-text">Az árkérdések aránya 28%-kal nőtt – érdemes bővíteni az árakkal kapcsolatos tudásbázist.</span>
+</div>
+<div class="suggestion-card">
+<span class="suggestion-icon">📈</span>
+<span class="suggestion-text">Az angol nyelvű megkeresések aránya nő – megfontolható az angol nyelvű válaszok fejlesztése.</span>
+</div>
+<div class="suggestion-card">
+<span class="suggestion-icon">⚠️</span>
+<span class="suggestion-text">A 16:00–18:00 közti sávban emelkedett az átadási arány – érdemes vizsgálni az okot.</span>
+</div>
+<div class="suggestion-card">
+<span class="suggestion-icon">💡</span>
+<span class="suggestion-text">Az időpontmódosítási kérdésekre érdemes új szabályt rögzíteni a Szabályok menüben.</span>
+</div>
+</div>
+</div>
+<!-- 4. Blokk: Kimenő kommunikáció 🚧 -->
+<div class="section-divider"></div>
+<h2 class="section-header-figma">Kimenő kommunikáció <span class="wip-badge">🚧</span></h2>
+<div style="display:grid;grid-template-columns:220px 1fr 1fr;gap:18px;margin-bottom:20px;">
+<!-- Mini KPI-k -->
+<div>
+<div class="out-kpi-card">
+<div class="out-kpi-label">Összes kimenő</div>
+<div class="out-kpi-value">326</div>
+<div class="out-kpi-trend kpi-trend-up">▲ +18% <span class="kpi-trend-desc">előző időszakhoz</span></div>
+</div>
+<div class="out-kpi-card">
+<div class="out-kpi-label">Elért páciensek</div>
+<div class="out-kpi-value">72%</div>
+<div class="out-kpi-sub">az összes indított kapcsolatfelvételből</div>
+</div>
+<div class="out-kpi-card">
+<div class="out-kpi-label">Foglalássá vált</div>
+<div class="out-kpi-value">48</div>
+<div class="out-kpi-trend kpi-trend-up">▲ 15% konverziós arány</div>
+</div>
+<div class="out-kpi-card">
+<div class="out-kpi-label">Nyitott utánkövetés</div>
+<div class="out-kpi-value">19</div>
+<div class="out-kpi-sub">emberi lépést igényel</div>
+</div>
+</div>
+<!-- Aktivitástípusok -->
+<div class="panel-white">
+<div class="panel-title">Aktivitás típusok</div>
+<div style="position:relative;height:300px;">
+<canvas id="outgoing-activity-chart"></canvas>
+</div>
+</div>
+<!-- Konverziós funnel zöld -->
+<div class="panel-white">
+<div class="panel-title">Eredményesség és konverzió</div>
+<div>
+<div class="green-funnel-step" style="width:100%;">
+<div class="green-funnel-label">Kimenő kommunikáció indítva</div>
+<div><span class="green-funnel-val">326</span><span class="green-funnel-pct">(100%)</span></div>
+</div>
+<div class="funnel-conv">▼ 72% konverzió</div>
+<div class="green-funnel-step" style="width:72%;">
+<div class="green-funnel-label">Páciens elérve</div>
+<div><span class="green-funnel-val">235</span><span class="green-funnel-pct">(72%)</span></div>
+</div>
+<div class="funnel-conv">▼ 60% konverzió</div>
+<div class="green-funnel-step" style="width:55%;">
+<div class="green-funnel-label">Reagált / kapcsolat létrejött</div>
+<div><span class="green-funnel-val">141</span><span class="green-funnel-pct">(60%)</span></div>
+</div>
+<div class="funnel-conv">▼ 52% konverzió</div>
+<div class="green-funnel-step" style="width:40%;">
+<div class="green-funnel-label">Időpont egyeztetve</div>
+<div><span class="green-funnel-val">73</span><span class="green-funnel-pct">(52%)</span></div>
+</div>
+<div class="funnel-conv">▼ 66% konverzió</div>
+<div class="green-funnel-step" style="width:28%;">
+<div class="green-funnel-label">Foglalás létrejött</div>
+<div><span class="green-funnel-val">48</span><span class="green-funnel-pct">(66%)</span></div>
+</div>
+</div>
+</div>
+</div>
+</div><!-- end analytics-shell -->
+</div><!-- end page-analytics -->
+<!-- TUDÁSTÁR PAGE -->
+<div class="page" id="page-tudastar">
+<div class="tudastar-shell">
+<div class="tudastar-tabs">
+<button class="tudastar-tab active" id="tt-tab-praxis" onclick="switchTudastarTab('praxis')">📋 Praxisinformáció</button>
+<button class="tudastar-tab" id="tt-tab-szabalyok" onclick="switchTudastarTab('szabalyok')">⚖️ Szabályok <span class="wip-badge">🚧</span></button>
+</div>
+<!-- PRAXISINFORMÁCIÓ TAB -->
+<div id="tt-content-praxis">
+<!-- 1. Intézményi adatok -->
+<div class="tt-section">
+<div class="tt-section-title">🏥 Intézményi adatok</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+<div>
+<label class="tt-label">Intézmény neve</label>
+<input class="tt-input" id="tt-nev" type="text" value="Dental Clinic Budapest"/>
+</div>
+<div>
+<label class="tt-label">Márkanév <span class="wip-badge">🚧</span></label>
+<input class="tt-input" disabled="" id="tt-markanev" placeholder="pl. Dental Clinic" style="opacity:.5;" type="text"/>
+</div>
+<div style="grid-column:1/-1;">
+<label class="tt-label">Rövid bemutatkozás</label>
+<textarea class="tt-textarea" id="tt-bemutatkozas">Modern fogászati rendelő a belvárosban, barátságos környezettel és tapasztalt szakemberekkel.</textarea>
+</div>
+<div>
+<label class="tt-label">Szakterület <span class="wip-badge">🚧</span></label>
+<input class="tt-input" disabled="" placeholder="pl. Fogászat, szájsebészet" style="opacity:.5;" type="text"/>
+</div>
+<div>
+<label class="tt-label">Pozicionáló kulcsszavak <span class="wip-badge">🚧</span></label>
+<input class="tt-input" disabled="" placeholder="pl. fogorvos, implantáció" style="opacity:.5;" type="text"/>
+</div>
+</div>
+</div>
+<!-- 2. Telephely -->
+<div class="tt-section">
+<div class="tt-section-title">📍 Telephely és megközelítés</div>
+<div style="display:grid;grid-template-columns:1fr;gap:14px;">
+<div>
+<label class="tt-label">Cím</label>
+<input class="tt-input" id="tt-cim" type="text" value="1052 Budapest, Petőfi Sándor utca 12."/>
+</div>
+<div>
+<label class="tt-label">Megközelítési információk <span class="wip-badge">🚧</span></label>
+<textarea class="tt-textarea" disabled="" placeholder="pl. 2-es metró Astoria megállótól 3 perc..." style="opacity:.5;"></textarea>
+</div>
+</div>
+</div>
+<!-- 3. Orvosok -->
+<div class="tt-section">
+<div class="tt-section-title">👨‍⚕️ Orvosok <span class="wip-badge">🚧</span></div>
+<div id="tt-orvosok-list">
+<div class="tt-dynamic-row tt-doctor-row" style="font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;">
+<span>Név</span><span>Szakterület</span><span>Szolgáltatás</span><span></span>
+</div>
+<div class="tt-dynamic-row tt-doctor-row" data-id="1">
+<input class="tt-input" placeholder="Név" type="text" value="Dr. Szabó Júlia"/>
+<input class="tt-input" placeholder="Szakterület" type="text" value="Általános fogászat"/>
+<input class="tt-input" placeholder="Szolgáltatás" type="text" value="Vizsgálat, tömés"/>
+<button class="tt-remove-btn" onclick="removeDoctorRow(1)">✕</button>
+</div>
+<div class="tt-dynamic-row tt-doctor-row" data-id="2">
+<input class="tt-input" placeholder="Név" type="text" value="Dr. Kiss Péter"/>
+<input class="tt-input" placeholder="Szakterület" type="text" value="Implantológia"/>
+<input class="tt-input" placeholder="Szolgáltatás" type="text" value="Implantátum beültetés"/>
+<button class="tt-remove-btn" onclick="removeDoctorRow(2)">✕</button>
+</div>
+</div>
+<button class="tt-add-btn" onclick="addDoctorRow()">+ Orvos hozzáadása</button>
+</div>
+<!-- 4. Nyitvatartás -->
+<div class="tt-section">
+<div class="tt-section-title">🕐 Nyitvatartás</div>
+<table class="tt-bh-table">
+<thead><tr><th>Nap</th><th>Nyitva</th><th>Nyit</th><th>Zár</th></tr></thead>
+<tbody>
+<tr><td class="tt-bh-day">Hétfő</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'hetfo')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-hetfo-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-hetfo-to" type="time" value="18:00"/></td></tr>
+<tr><td class="tt-bh-day">Kedd</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'kedd')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-kedd-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-kedd-to" type="time" value="18:00"/></td></tr>
+<tr><td class="tt-bh-day">Szerda</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'szerda')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-szerda-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-szerda-to" type="time" value="20:00"/></td></tr>
+<tr><td class="tt-bh-day">Csütörtök</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'csutortok')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-csutortok-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-csutortok-to" type="time" value="18:00"/></td></tr>
+<tr><td class="tt-bh-day">Péntek</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'pentek')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-pentek-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-pentek-to" type="time" value="16:00"/></td></tr>
+<tr><td class="tt-bh-day">Szombat</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'szombat')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-szombat-from" type="time" value="09:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-szombat-to" type="time" value="13:00"/></td></tr>
+<tr><td class="tt-bh-day">Vasárnap</td><td><label class="tt-toggle"><input onchange="ttToggleBh(this,'vasarnap')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" disabled="" id="tt-bh-vasarnap-from" type="time" value="00:00"/></td><td><input class="tt-time-input tt-bh-to" disabled="" id="tt-bh-vasarnap-to" type="time" value="00:00"/></td></tr>
+</tbody>
+</table>
+<div style="margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;">
+<div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;">Speciális nyitvatartás <span class="wip-badge">🚧</span></div>
+<div style="font-size:12px;color:#9ca3af;">Ünnepnapok, szünetek egyedi beállítása – hamarosan elérhető.</div>
+</div>
+</div>
+<!-- 5. Árlista -->
+<div class="tt-section">
+<div class="tt-section-title">💰 Árlista <span class="wip-badge">🚧</span></div>
+<div class="tt-file-uploaded">
+<span style="font-size:24px;">📄</span>
+<div>
+<div style="font-size:13px;font-weight:600;color:#16a34a;">arlista_2026_q2.xlsx</div>
+<div style="font-size:11px;color:#6b7280;">Feltöltve: 2026. 04. 08.  ·  45 KB</div>
+</div>
+</div>
+<div class="tt-upload-area" onclick="showToast('info','📤 Feltöltés funkció hamarosan elérhető 🚧')" style="margin-top:12px;">
+<div class="tt-upload-icon">📤</div>
+<div style="font-size:13px;color:#6b7280;font-weight:600;">Árlista frissítése</div>
+<div style="font-size:11px;color:#9ca3af;margin-top:4px;">XLSX vagy CSV fájl – max. 5 MB</div>
+</div>
+</div>
+<!-- 6. Kampányok -->
+<div class="tt-section">
+<div class="tt-section-title">📣 Kampányok <span class="wip-badge">🚧</span></div>
+<div id="tt-kampanyok-list">
+<div class="tt-campaign-card">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+<label class="tt-toggle"><input checked="" type="checkbox"/><span class="tt-toggle-slider"></span></label>
+<span style="font-size:12px;font-weight:600;color:#374151;">Kampány aktív</span>
+<button class="tt-remove-btn" onclick="this.closest('.tt-campaign-card').remove()" style="margin-left:auto;">✕</button>
+</div>
+<textarea class="tt-textarea" style="min-height:60px;">Tavaszi fogfehérítési akció: 20% kedvezmény minden fogfehérítési kezelésre április 30-ig. Az akció kódja: TAVASZ2026</textarea>
+</div>
+</div>
+<button class="tt-add-btn" onclick="addKampany()">+ Kampány hozzáadása</button>
+</div>
+<!-- 7. GYIK -->
+<div class="tt-section">
+<div class="tt-section-title">❓ GYIK – Kérdés-válasz párok <span class="wip-badge">🚧</span></div>
+<div id="tt-gyik-list">
+<div class="tt-campaign-card" data-gyik="">
+<button class="tt-remove-btn" onclick="this.closest('[data-gyik]').remove()" style="position:absolute;top:14px;right:14px;">✕</button>
+<label class="tt-label">Kérdés</label>
+<input class="tt-input" style="margin-bottom:10px;" type="text" value="Mennyi idővel előre kell foglalni időpontot?"/>
+<label class="tt-label">Válasz</label>
+<textarea class="tt-textarea" style="min-height:60px;">Általában 1-2 héttel előre javasoljuk az időpontfoglalást, de sürgős esetekben akár azonnali ellátást is tudunk biztosítani.</textarea>
+</div>
+<div class="tt-campaign-card" data-gyik="">
+<button class="tt-remove-btn" onclick="this.closest('[data-gyik]').remove()" style="position:absolute;top:14px;right:14px;">✕</button>
+<label class="tt-label">Kérdés</label>
+<input class="tt-input" style="margin-bottom:10px;" type="text" value="Fogadnak-e TB-s betegeket?"/>
+<label class="tt-label">Válasz</label>
+<textarea class="tt-textarea" style="min-height:60px;">Igen, TB-s ellátást is biztosítunk. Kérjük, hozza magával a TAJ-kártyáját.</textarea>
+</div>
+</div>
+<button class="tt-add-btn" onclick="addGyik()">+ Kérdés-válasz hozzáadása</button>
+</div>
+<!-- Action bar -->
+<div class="tt-action-bar">
+<div class="tt-action-meta">
+<strong>Utolsó frissítés:</strong> 2026. április 12. 14:30
+                
               <strong>Állapot:</strong> <span class="tt-status-badge">Aktív</span>
-            </div>
-            <button class="tt-save-btn" onclick="savePraxisinfo()">💾 Változtatások mentése</button>
-          </div>
-
-        </div><!-- end praxis content -->
-
-        <!-- SZABÁLYOK TAB -->
-        <div id="tt-content-szabalyok" style="display:none;">
-
-          <!-- Foglalási szabályok – 1. blokk -->
-          <div class="tt-section">
-            <div class="tt-section-title">
+</div>
+<button class="tt-save-btn" onclick="savePraxisinfo()">💾 Változtatások mentése</button>
+</div>
+</div><!-- end praxis content -->
+<!-- SZABÁLYOK TAB -->
+<div id="tt-content-szabalyok" style="display:none;">
+<!-- Foglalási szabályok – 1. blokk -->
+<div class="tt-section">
+<div class="tt-section-title">
               👥 Új és visszatérő páciensek kezelése
               <span class="wip-badge">🚧</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-              <div>
-                <label class="tt-label">Páciens beazonosítását szolgáló kérdés</label>
-                <input class="tt-input" type="text" value="Korábban járt már a rendelőnkben?">
-              </div>
-              <div>
-                <label class="tt-label">Új páciens – kötelezően bekérendő adat</label>
-                <input class="tt-input" type="text" value="Születési dátum, teljes név">
-              </div>
-              <div style="display:flex;align-items:center;gap:12px;">
-                <label class="tt-label" style="margin:0;white-space:nowrap;">Új páciensnek automatikus első vizit</label>
-                <label class="tt-toggle"><input type="checkbox" checked><span class="tt-toggle-slider"></span></label>
-              </div>
-              <div>
-                <label class="tt-label">Visszatérő páciens – kötelező szabály</label>
-                <input class="tt-input" type="text" value="Páciens azonosító vagy telefonszám">
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Szolgáltatások -->
-          <div class="tt-section">
-            <div class="tt-section-title">🗓️ Szolgáltatások és időtartamok <span class="wip-badge">🚧</span></div>
-            <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr auto;gap:8px;margin-bottom:8px;font-size:11px;font-weight:600;color:#6b7280;">
-              <span>Szolgáltatás</span><span>Időtartam</span><span>Orvos</span><span>Megjegyzés</span><span></span>
-            </div>
-            <div id="tt-szolgaltatasok-list">
-              <div class="tt-dynamic-row tt-service-row" data-svc>
-                <input class="tt-input" type="text" value="Konzultáció" placeholder="Szolgáltatás neve">
-                <input class="tt-input" type="text" value="30" placeholder="perc">
-                <select class="tt-select"><option>Mind</option><option>Dr. Szabó Júlia</option><option>Dr. Kiss Péter</option></select>
-                <input class="tt-input" type="text" placeholder="Megjegyzés">
-                <button class="tt-remove-btn" onclick="this.closest('[data-svc]').remove()">✕</button>
-              </div>
-              <div class="tt-dynamic-row tt-service-row" data-svc>
-                <input class="tt-input" type="text" value="Fogászati vizsgálat" placeholder="Szolgáltatás neve">
-                <input class="tt-input" type="text" value="45" placeholder="perc">
-                <select class="tt-select"><option>Mind</option><option>Dr. Szabó Júlia</option><option>Dr. Kiss Péter</option></select>
-                <input class="tt-input" type="text" placeholder="Megjegyzés">
-                <button class="tt-remove-btn" onclick="this.closest('[data-svc]').remove()">✕</button>
-              </div>
-            </div>
-            <button class="tt-add-btn" onclick="addSzolgaltatas()">+ Szolgáltatás hozzáadása</button>
-          </div>
-
-          <!-- 3. Kivételek -->
-          <div class="tt-section">
-            <div class="tt-section-title">🚫 Kivételek kezelése <span class="wip-badge">🚧</span></div>
-            <p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Add meg azokat a helyzeteket, amikor a DigiDesk nem foglalhat automatikusan.</p>
-            <div id="tt-kivetelek-list">
-              <div class="tt-dynamic-row tt-exception-row" data-exc>
-                <input class="tt-input" type="text" value="Altatásos szájsebészet">
-                <button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()">✕</button>
-              </div>
-              <div class="tt-dynamic-row tt-exception-row" data-exc>
-                <input class="tt-input" type="text" value="Komplex implantáció">
-                <button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()">✕</button>
-              </div>
-            </div>
-            <button class="tt-add-btn" onclick="addKivetel()">+ Kivétel hozzáadása</button>
-          </div>
-
-          <!-- 4. Lemondás és módosítás -->
-          <div class="tt-section">
-            <div class="tt-section-title">📝 Lemondás és módosítás <span class="wip-badge">🚧</span></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-              <div>
-                <label class="tt-label">Időpont módosításának engedélyezése</label>
-                <select class="tt-select" id="tt-modositas-eng">
-                  <option value="igen">Igen</option>
-                  <option value="nem">Nem</option>
-                </select>
-              </div>
-              <div>
-                <label class="tt-label">24 órán belüli lemondás kezelése</label>
-                <select class="tt-select" id="tt-lemondas-24h" onchange="toggleFigyelmeztetoSzoveg()">
-                  <option value="elfogadhato">Elfogadható</option>
-                  <option value="figyelmeztetoSzoveggel" selected>Elfogadható figyelmeztető szöveggel</option>
-                  <option value="eloAtadas">Élő átadás szükséges</option>
-                </select>
-              </div>
-              <div style="grid-column:1/-1;" id="tt-figyelmezteto-wrap">
-                <label class="tt-label">Figyelmeztető szöveg</label>
-                <textarea class="tt-textarea">Tájékoztatjuk, hogy 24 órán belüli lemondás esetén rendelőnk külön szabályzata lehet érvényben.</textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- 5. Triázs szabályok -->
-          <div class="tt-section">
-            <div class="tt-section-title">🚨 Triázs szabályok <span class="wip-badge">🚧</span></div>
-            <table class="triage-table">
-              <thead>
-                <tr><th>Helyzet</th><th>Prioritás</th><th>Eszkalációs e-mail (sürgős esetén)</th></tr>
-              </thead>
-              <tbody id="triage-tbody">
-                <tr>
-                  <td>Általános kérdés</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Időpontkérés</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Árkérdés</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Panasz</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option selected>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Fájdalom / sürgős eset</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option selected>Sürgős</option><option>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"><input class="escalation-input" type="email" placeholder="eszkalációs e-mail"></td>
-                </tr>
-                <tr>
-                  <td>Szövődmény / komplikáció</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option selected>Sürgős</option><option>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"><input class="escalation-input" type="email" placeholder="eszkalációs e-mail"></td>
-                </tr>
-                <tr>
-                  <td>Konfliktus / indulatosság</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option selected>Kiemelt</option></select></td>
-                  <td class="triage-email-cell"><input class="escalation-input" type="email" value="vezeto@mintaklinika.hu"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Action bar -->
-          <div class="tt-action-bar">
-            <div class="tt-action-meta">
-              <strong>Utolsó frissítés:</strong> 2026. április 12. 14:30
-              &nbsp;&nbsp;
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<div>
+<label class="tt-label">Páciens beazonosítását szolgáló kérdés</label>
+<input class="tt-input" type="text" value="Korábban járt már a rendelőnkben?"/>
+</div>
+<div>
+<label class="tt-label">Új páciens – kötelezően bekérendő adat</label>
+<input class="tt-input" type="text" value="Születési dátum, teljes név"/>
+</div>
+<div style="display:flex;align-items:center;gap:12px;">
+<label class="tt-label" style="margin:0;white-space:nowrap;">Új páciensnek automatikus első vizit</label>
+<label class="tt-toggle"><input checked="" type="checkbox"/><span class="tt-toggle-slider"></span></label>
+</div>
+<div>
+<label class="tt-label">Visszatérő páciens – kötelező szabály</label>
+<input class="tt-input" type="text" value="Páciens azonosító vagy telefonszám"/>
+</div>
+</div>
+</div>
+<!-- 2. Szolgáltatások -->
+<div class="tt-section">
+<div class="tt-section-title">🗓️ Szolgáltatások és időtartamok <span class="wip-badge">🚧</span></div>
+<div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr auto;gap:8px;margin-bottom:8px;font-size:11px;font-weight:600;color:#6b7280;">
+<span>Szolgáltatás</span><span>Időtartam</span><span>Orvos</span><span>Megjegyzés</span><span></span>
+</div>
+<div id="tt-szolgaltatasok-list">
+<div class="tt-dynamic-row tt-service-row" data-svc="">
+<input class="tt-input" placeholder="Szolgáltatás neve" type="text" value="Konzultáció"/>
+<input class="tt-input" placeholder="perc" type="text" value="30"/>
+<select class="tt-select"><option>Mind</option><option>Dr. Szabó Júlia</option><option>Dr. Kiss Péter</option></select>
+<input class="tt-input" placeholder="Megjegyzés" type="text"/>
+<button class="tt-remove-btn" onclick="this.closest('[data-svc]').remove()">✕</button>
+</div>
+<div class="tt-dynamic-row tt-service-row" data-svc="">
+<input class="tt-input" placeholder="Szolgáltatás neve" type="text" value="Fogászati vizsgálat"/>
+<input class="tt-input" placeholder="perc" type="text" value="45"/>
+<select class="tt-select"><option>Mind</option><option>Dr. Szabó Júlia</option><option>Dr. Kiss Péter</option></select>
+<input class="tt-input" placeholder="Megjegyzés" type="text"/>
+<button class="tt-remove-btn" onclick="this.closest('[data-svc]').remove()">✕</button>
+</div>
+</div>
+<button class="tt-add-btn" onclick="addSzolgaltatas()">+ Szolgáltatás hozzáadása</button>
+</div>
+<!-- 3. Kivételek -->
+<div class="tt-section">
+<div class="tt-section-title">🚫 Kivételek kezelése <span class="wip-badge">🚧</span></div>
+<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Add meg azokat a helyzeteket, amikor a DigiDesk nem foglalhat automatikusan.</p>
+<div id="tt-kivetelek-list">
+<div class="tt-dynamic-row tt-exception-row" data-exc="">
+<input class="tt-input" type="text" value="Altatásos szájsebészet"/>
+<button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()">✕</button>
+</div>
+<div class="tt-dynamic-row tt-exception-row" data-exc="">
+<input class="tt-input" type="text" value="Komplex implantáció"/>
+<button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()">✕</button>
+</div>
+</div>
+<button class="tt-add-btn" onclick="addKivetel()">+ Kivétel hozzáadása</button>
+</div>
+<!-- 4. Lemondás és módosítás -->
+<div class="tt-section">
+<div class="tt-section-title">📝 Lemondás és módosítás <span class="wip-badge">🚧</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<div>
+<label class="tt-label">Időpont módosításának engedélyezése</label>
+<select class="tt-select" id="tt-modositas-eng">
+<option value="igen">Igen</option>
+<option value="nem">Nem</option>
+</select>
+</div>
+<div>
+<label class="tt-label">24 órán belüli lemondás kezelése</label>
+<select class="tt-select" id="tt-lemondas-24h" onchange="toggleFigyelmeztetoSzoveg()">
+<option value="elfogadhato">Elfogadható</option>
+<option selected="" value="figyelmeztetoSzoveggel">Elfogadható figyelmeztető szöveggel</option>
+<option value="eloAtadas">Élő átadás szükséges</option>
+</select>
+</div>
+<div id="tt-figyelmezteto-wrap" style="grid-column:1/-1;">
+<label class="tt-label">Figyelmeztető szöveg</label>
+<textarea class="tt-textarea">Tájékoztatjuk, hogy 24 órán belüli lemondás esetén rendelőnk külön szabályzata lehet érvényben.</textarea>
+</div>
+</div>
+</div>
+<!-- 5. Triázs szabályok -->
+<div class="tt-section">
+<div class="tt-section-title">🚨 Triázs szabályok <span class="wip-badge">🚧</span></div>
+<table class="triage-table">
+<thead>
+<tr><th>Helyzet</th><th>Prioritás</th><th>Eszkalációs e-mail (sürgős esetén)</th></tr>
+</thead>
+<tbody id="triage-tbody">
+<tr>
+<td>Általános kérdés</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
+<td class="triage-email-cell"></td>
+</tr>
+<tr>
+<td>Időpontkérés</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
+<td class="triage-email-cell"></td>
+</tr>
+<tr>
+<td>Árkérdés</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
+<td class="triage-email-cell"></td>
+</tr>
+<tr>
+<td>Panasz</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option selected="">Fontos</option><option>Sürgős</option><option>Kiemelt</option></select></td>
+<td class="triage-email-cell"></td>
+</tr>
+<tr>
+<td>Fájdalom / sürgős eset</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option selected="">Sürgős</option><option>Kiemelt</option></select></td>
+<td class="triage-email-cell"><input class="escalation-input" placeholder="eszkalációs e-mail" type="email"/></td>
+</tr>
+<tr>
+<td>Szövődmény / komplikáció</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option selected="">Sürgős</option><option>Kiemelt</option></select></td>
+<td class="triage-email-cell"><input class="escalation-input" placeholder="eszkalációs e-mail" type="email"/></td>
+</tr>
+<tr>
+<td>Konfliktus / indulatosság</td>
+<td><select class="priority-select" onchange="triazsChange(this)"><option>Normál</option><option>Fontos</option><option>Sürgős</option><option selected="">Kiemelt</option></select></td>
+<td class="triage-email-cell"><input class="escalation-input" type="email" value="vezeto@mintaklinika.hu"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Action bar -->
+<div class="tt-action-bar">
+<div class="tt-action-meta">
+<strong>Utolsó frissítés:</strong> 2026. április 12. 14:30
+                
               <strong>Állapot:</strong> <span class="tt-status-badge">Aktív</span>
-            </div>
-            <button class="tt-save-btn" onclick="saveSzabalyok()">📨 Módosítást kérek!</button>
-          </div>
-
-        </div><!-- end szabalyok content -->
-
-      </div><!-- end tudastar-shell -->
-    </div><!-- end page-tudastar -->
-
-    <!-- SETTINGS PAGE -->
-    <div class="page" id="page-settings">
-      <div class="page-header" style="margin-bottom:18px;">
-        <div>
-          <div class="page-title">Agent Beállítások</div>
-          <div class="page-subtitle">Hang, nyitvatartás, tudásbázis, rendszerutasitás és workflow</div>
-        </div>
-        <button class="btn-settings-save" id="save-settings-btn" onclick="saveSettings()">&#128190; Mentés</button>
-      </div>
-
-      <!-- Restart banner -->
-      <div class="restart-banner" id="restart-banner">
-        <span>&#9888;&#65039;</span>
-        <span>A változtatások elmentve! Az agent szerver újraindítása szükséges az érvényesítéshez: <code style="background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;">python server.py</code></span>
-      </div>
-
-      <!-- 1. Voice + Tone in one row -->
-      <div class="settings-section">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
-          <!-- Voice -->
-          <div>
-            <div class="settings-section-title" style="margin-bottom:10px;">&#127897;&#65039; Hang</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <select id="setting-voice" class="settings-select">
-                <option value="">Betöltés...</option>
-              </select>
-              <span id="voice-load-status" style="font-size:11px;color:var(--text-muted);white-space:nowrap;"></span>
-            </div>
-          </div>
-          <!-- Tone -->
-          <div>
-            <div class="settings-section-title" style="margin-bottom:10px;">&#127917; Kommunikációs stílus</div>
-            <select id="setting-tone" class="settings-select" onchange="onToneChange()">
-              <option value="professional_friendly">Professzionális, barátságos</option>
-              <option value="formal">Formális, tárgyszerű</option>
-              <option value="informal">Informális, közvetlen</option>
-              <option value="empathetic">Empatikus, támogató</option>
-              <option value="custom">Egyedi leírás...</option>
-            </select>
-            <div id="tone-custom-row" style="display:none;margin-top:8px;">
-              <textarea id="setting-tone-custom" class="settings-textarea" style="min-height:70px;" placeholder="Leírd a kívánt kommunikációs stílust..."></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Greeting -->
-      <div class="settings-section">
-        <div class="settings-section-title">&#128075; Bemutatkozás</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent ezt mondja el minden hívás elején.</div>
-        <textarea id="setting-greeting" class="settings-textarea" style="min-height:80px;font-family: 'Inter', Arial, sans-serif;font-size:13px;"
-          placeholder="Szia! A DigiDesk virtuális asszisztense vagyok..."></textarea>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-title">&#128336; Nyitvatartás</div>
-        <table class="bh-table">
-          <thead><tr>
-            <th>Nap</th><th>Nyit</th><th>Zár</th><th>Nyitva?</th>
-          </tr></thead>
-          <tbody id="bh-tbody">
-            <!-- JS renders rows -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- 3. Knowledge base -->
-      <div class="settings-section">
-        <div class="settings-section-title" style="justify-content:space-between;">
-          <span>&#128222; Tudásbázis</span>
-          <div class="fmt-toggle">
-            <button class="fmt-btn active" id="fmt-json-btn" onclick="switchKnowledgeFormat('json')">JSON</button>
-            <button class="fmt-btn" id="fmt-md-btn" onclick="switchKnowledgeFormat('md')">Markdown</button>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;" id="fmt-hint">Struktúrált JSON formátum &mdash; kulcs: érték párok</div>
-        <textarea id="setting-knowledge" class="settings-textarea" placeholder="Tudásbázis tartalma..."></textarea>
-      </div>
-
-      <!-- System Prompt -->
-      <div class="settings-section">
-        <div class="settings-section-title">
-          <span>&#129302; Rendszer Prompt</span>
-        </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent mögötti fő rendszerutasitás (system_prompt.md). Tartalmazza a személyiséget, nyelvi szabályokat, képességeket. Az <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;">{today}</code> helyetten a mai dátum kerül be automatikusan.</div>
-        <textarea id="setting-system-prompt" class="settings-textarea" style="min-height:420px;font-family:'Courier New',monospace;font-size:12px;" placeholder="Te Balázs vagy, a DigiDesk digitális asszisztense..."></textarea>
-      </div>
-
-      <!-- Workflow -->
-      <div class="settings-section">
-        <div class="settings-section-title">
-          <span>&#9881;&#65039; Workflow</span>
-        </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent viselkedési folyamata és előre definiált lépései (workflow.md). Ide kerülhetnek egyedi munkameneti szabályok, eszközhívatási sorrend, feltételes logika.</div>
-        <textarea id="setting-workflow" class="settings-textarea" style="min-height:280px;font-family:'Courier New',monospace;font-size:12px;" placeholder="## Workflow lépések&#10;1. Köszöntés&#10;2. Szükséglet feltárás&#10;..."></textarea>
-      </div>
-    </div>
-
-
-    <!-- KANBAN PAGE -->
-    
-        <div class="page" id="page-interactions">
-      <div class="analytics-shell">
-
-        <!-- View Switcher -->
-        <div class="view-switcher-container">
-          <button class="view-btn active" onclick="switchCustomerView('interactions', this)">Interakciós lista</button>
-          <button class="view-btn" onclick="switchCustomerView('kanban', this)">Kanban</button>
-          <button class="view-btn" onclick="switchCustomerView('clients', this)">Ügyfelek adatbázisa</button>
-        </div>
-        
-        <div class="customer-view" id="view-interactions" style="display:block;">
-        
-        <!-- Toolbar -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div>
-            <div class="page-title">Interakciós lista</div>
-            <div class="page-subtitle">Összes beérkező és kimenő interakció</div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <input id="interaction-search" type="text" placeholder="🔍 Keresés..." oninput="filterInteractionsTable()" class="int-toolbar-input">
-            <select id="interaction-type-filter" onchange="filterInteractionsTable()" class="int-toolbar-select" style="display:none;">
-              <option value="">Minden típus</option>
-            </select>
-            
-            <div style="position:relative; display:inline-block;">
-                <button class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center;" title="Szűrés">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+</div>
+<button class="tt-save-btn" onclick="saveSzabalyok()">📨 Módosítást kérek!</button>
+</div>
+</div><!-- end szabalyok content -->
+</div><!-- end tudastar-shell -->
+</div><!-- end page-tudastar -->
+<!-- SETTINGS PAGE -->
+<div class="page" id="page-settings">
+<div class="page-header" style="margin-bottom:18px;">
+<div>
+<div class="page-title">Agent Beállítások</div>
+<div class="page-subtitle">Hang, nyitvatartás, tudásbázis, rendszerutasitás és workflow</div>
+</div>
+<button class="btn-settings-save" id="save-settings-btn" onclick="saveSettings()">💾 Mentés</button>
+</div>
+<!-- Restart banner -->
+<div class="restart-banner" id="restart-banner">
+<span>⚠️</span>
+<span>A változtatások elmentve! Az agent szerver újraindítása szükséges az érvényesítéshez: <code style="background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px;">python server.py</code></span>
+</div>
+<!-- 1. Voice + Tone in one row -->
+<div class="settings-section">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<!-- Voice -->
+<div>
+<div class="settings-section-title" style="margin-bottom:10px;">🎙️ Hang</div>
+<div style="display:flex;align-items:center;gap:8px;">
+<select class="settings-select" id="setting-voice">
+<option value="">Betöltés...</option>
+</select>
+<span id="voice-load-status" style="font-size:11px;color:var(--text-muted);white-space:nowrap;"></span>
+</div>
+</div>
+<!-- Tone -->
+<div>
+<div class="settings-section-title" style="margin-bottom:10px;">🎭 Kommunikációs stílus</div>
+<select class="settings-select" id="setting-tone" onchange="onToneChange()">
+<option value="professional_friendly">Professzionális, barátságos</option>
+<option value="formal">Formális, tárgyszerű</option>
+<option value="informal">Informális, közvetlen</option>
+<option value="empathetic">Empatikus, támogató</option>
+<option value="custom">Egyedi leírás...</option>
+</select>
+<div id="tone-custom-row" style="display:none;margin-top:8px;">
+<textarea class="settings-textarea" id="setting-tone-custom" placeholder="Leírd a kívánt kommunikációs stílust..." style="min-height:70px;"></textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- Greeting -->
+<div class="settings-section">
+<div class="settings-section-title">👋 Bemutatkozás</div>
+<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent ezt mondja el minden hívás elején.</div>
+<textarea class="settings-textarea" id="setting-greeting" placeholder="Szia! A DigiDesk virtuális asszisztense vagyok..." style="min-height:80px;font-family: 'Inter', Arial, sans-serif;font-size:13px;"></textarea>
+</div>
+<div class="settings-section">
+<div class="settings-section-title">🕐 Nyitvatartás</div>
+<table class="bh-table">
+<thead><tr>
+<th>Nap</th><th>Nyit</th><th>Zár</th><th>Nyitva?</th>
+</tr></thead>
+<tbody id="bh-tbody">
+<!-- JS renders rows -->
+</tbody>
+</table>
+</div>
+<!-- 3. Knowledge base -->
+<div class="settings-section">
+<div class="settings-section-title" style="justify-content:space-between;">
+<span>📞 Tudásbázis</span>
+<div class="fmt-toggle">
+<button class="fmt-btn active" id="fmt-json-btn" onclick="switchKnowledgeFormat('json')">JSON</button>
+<button class="fmt-btn" id="fmt-md-btn" onclick="switchKnowledgeFormat('md')">Markdown</button>
+</div>
+</div>
+<div id="fmt-hint" style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Struktúrált JSON formátum — kulcs: érték párok</div>
+<textarea class="settings-textarea" id="setting-knowledge" placeholder="Tudásbázis tartalma..."></textarea>
+</div>
+<!-- System Prompt -->
+<div class="settings-section">
+<div class="settings-section-title">
+<span>🤖 Rendszer Prompt</span>
+</div>
+<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent mögötti fő rendszerutasitás (system_prompt.md). Tartalmazza a személyiséget, nyelvi szabályokat, képességeket. Az <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;">{today}</code> helyetten a mai dátum kerül be automatikusan.</div>
+<textarea class="settings-textarea" id="setting-system-prompt" placeholder="Te Balázs vagy, a DigiDesk digitális asszisztense..." style="min-height:420px;font-family:'Courier New',monospace;font-size:12px;"></textarea>
+</div>
+<!-- Workflow -->
+<div class="settings-section">
+<div class="settings-section-title">
+<span>⚙️ Workflow</span>
+</div>
+<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Az agent viselkedési folyamata és előre definiált lépései (workflow.md). Ide kerülhetnek egyedi munkameneti szabályok, eszközhívatási sorrend, feltételes logika.</div>
+<textarea class="settings-textarea" id="setting-workflow" placeholder="## Workflow lépések
+1. Köszöntés
+2. Szükséglet feltárás
+..." style="min-height:280px;font-family:'Courier New',monospace;font-size:12px;"></textarea>
+</div>
+</div>
+<!-- KANBAN PAGE -->
+<div class="page" id="page-interactions">
+<div class="analytics-shell">
+<!-- View Switcher -->
+<div class="view-switcher-container"><button class="view-btn active" onclick="switchCustomerView('clients', this)">Ügyfelek adatbázisa</button><button class="view-btn" onclick="switchCustomerView('kanban', this)">Kanban</button><button class="view-btn" onclick="switchCustomerView('interactions', this)">Interakciós lista</button><button class="view-btn" onclick="switchCustomerView('emails', this)">E-mailek</button><button class="view-btn" onclick="switchCustomerView('sessions', this)">Sessionok</button></div>
+<div class="customer-view" id="view-interactions" style="display:none;">
+<!-- Toolbar -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+<div>
+<div class="page-title">Interakciós lista</div>
+<div class="page-subtitle">Összes beérkező és kimenő interakció</div>
+</div>
+<div style="display:flex;gap:10px;align-items:center;">
+<input class="int-toolbar-input" id="interaction-search" oninput="filterInteractionsTable()" placeholder="🔍 Keresés..." type="text"/>
+<select class="int-toolbar-select" id="interaction-type-filter" onchange="filterInteractionsTable()" style="display:none;">
+<option value="">Minden típus</option>
+</select>
+<div style="position:relative; display:inline-block;">
+<button class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center;" title="Szűrés">
+<svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                     Szűrés
                 </button>
-            </div>
-            
-            <div style="position:relative; display:inline-block;">
-                <select id="interaction-sort" onchange="filterInteractionsTable()" class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center; appearance:none; padding-right:32px; background-image: url('data:image/svg+xml;utf8,<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%236b7280\" stroke-width=\"2\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>'); background-repeat:no-repeat; background-position:right 8px center; cursor:pointer;">
+</div>
+<div style="position:relative; display:inline-block;">
+<select 0="" 14\"="" 24="" 24\"="" class="int-toolbar-btn" fill='\"none\"' height='\"14\"' id="interaction-sort" onchange="filterInteractionsTable()" stroke='\"%236b7280\"' stroke-width='\"2\"' style="gap:6px; display:flex; align-items:center; appearance:none; padding-right:32px; background-image: url('data:image/svg+xml;utf8,&lt;svg width=\" viewbox='\"0'><polyline 12="" 15="" 18="" 9="" 9\"="" points='\"6'></polyline>'); background-repeat:no-repeat; background-position:right 8px center; cursor:pointer;"&gt;
                     <option value="date_desc">⬇ Legújabb elöl</option>
-                    <option value="date_asc">⬆ Legrégebbi elöl</option>
-                    <option value="client_asc">A-Z Ügyfél név szerint</option>
-                    <option value="topic_asc">A-Z Téma szerint</option>
-                </select>
-            </div>
-            
-            <div style="position:relative; display:inline-block;">
-                <button class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center;" title="Oszlopok">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+<option value="date_asc">⬆ Legrégebbi elöl</option>
+<option value="client_asc">A-Z Ügyfél név szerint</option>
+<option value="topic_asc">A-Z Téma szerint</option>
+</select>
+</div>
+<div style="position:relative; display:inline-block;">
+<button class="int-toolbar-btn" style="gap:6px; display:flex; align-items:center;" title="Oszlopok">
+<svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><rect height="18" rx="2" ry="2" width="18" x="3" y="3"></rect><line x1="9" x2="9" y1="3" y2="21"></line></svg>
                     Oszlopok
                 </button>
-            </div>
-
-            <button onclick="loadInteractions()" class="int-toolbar-btn" style="margin-left:8px;">🔄 Frissítés</button>
-          </div>
-        </div>
-
-        <!-- Flat table -->
-        <div class="int-table-wrapper">
-          <table class="data-table" id="interactions-flat-table">
-            <thead class="int-thead">
-              <tr>
-                <th>Dátum / Idő</th>
-                <th>Csatorna</th>
-                <th>Ügyfél</th>
-                <th>Típus</th>
-                <th>Téma</th>
-                <th>Összefoglaló</th>
-                <th>Eredmény</th>
-              </tr>
-            </thead>
-            <tbody id="interactions-flat-body">
-              <tr><td colspan="7" style="text-align:center;padding:40px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 10px;"></div>Adatok betöltése...</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Row count -->
-        <div class="int-count" id="interactions-count"></div>
-
-      </div><!-- end view-interactions -->
+</div>
+<button class="int-toolbar-btn" onclick="loadInteractions()" style="margin-left:8px;">🔄 Frissítés</button>
+</div>
+</div>
+<!-- Flat table -->
+<div class="int-table-wrapper">
+<table class="data-table" id="interactions-flat-table">
+<thead class="int-thead">
+<tr>
+<th>Dátum / Idő</th>
+<th>Csatorna</th>
+<th>Ügyfél</th>
+<th>Típus</th>
+<th>Téma</th>
+<th>Összefoglaló</th>
+<th>Eredmény</th>
+</tr>
+</thead>
+<tbody id="interactions-flat-body">
+<tr><td colspan="7" style="text-align:center;padding:40px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;margin:0 auto 10px;"></div>Adatok betöltése...</td></tr>
+</tbody>
+</table>
+</div>
+<!-- Row count -->
+<div class="int-count" id="interactions-count"></div>
+</div><!-- end view-interactions -->
 <div class="customer-view" id="view-kanban" style="display:none;">
-      <div class="page-header" style="margin-bottom:18px;">
-        <div>
-          <div class="page-title">Kanban</div>
-          <div class="page-subtitle">Érdeklődők feladatainak nyomon követése</div>
-        </div>
-        <button class="int-toolbar-btn" style="width:auto; margin:0;" onclick="promptAddKanbanColumn()">+ Oszlop hozzáadása</button>
-      </div>
-
-      <div class="kanban-board" id="kanban-board">
-        <!-- Rendered by JS -->
-      </div>
-    </div>
-
-    <!-- CLIENTS PAGE -->
-<div class="customer-view" id="view-clients" style="display:none;">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Ügyfelek adatbázisa</div>
-          <div class="page-subtitle">Ügyfelek listázása és alapadatok módosítása</div>
-        </div>
-        <div style="display:flex;gap:12px;">
-          <button onclick="openClientFieldsModal()" class="int-toolbar-btn">Ügyfél mezők beállítása</button>
-          <button onclick="loadClientsTable()" class="int-toolbar-btn">↻ Frissítés</button>
-          <button class="int-toolbar-btn" style="width:auto; margin:0;" onclick="openClientModal()">+ Új Ügyfél</button>
-        </div>
-      </div>
-      <div class="table-card" style="overflow-x:auto;">
-        <table class="data-table">
-          <thead id="clients-thead">
-            <!-- Rendered by JS -->
-          </thead>
-          <tbody id="clients-body">
-            <tr class="loading-row"><td colspan="7"><div class="spinner"></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Client Fields Setup Modal -->
-    <div id="fields-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center;">
-      <div class="login-card" style="width:480px; max-height:80vh; overflow-y:auto;">
-        <h3 style="margin-bottom:16px;">Ügyfél mezők beállítása</h3>
-        <div id="fields-list" style="margin-bottom:20px;"></div>
-        <button class="btn-primary" style="width:100%; margin-bottom:10px;" onclick="promptAddClientField()">+ Új Mező hozzáadása</button>
-        <button class="btn-primary" style="background:var(--bg3);color:var(--text);width:100%;" onclick="closeClientFieldsModal()">Bezárás</button>
-      </div>
-    </div>
-
-    <!-- Client Modal HTML -->
-    <div id="client-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center;">
-      <div class="login-card" style="width:380px;">
-        <h3 id="client-modal-title" style="margin-bottom:16px;">Új ügyfél</h3>
-        <input type="hidden" id="nc-id">
-        <div id="client-modal-dynamic-fields">
-           <!-- Dynamic inputs rendered here by JS -->
-        </div>
-        <div style="display:flex;gap:10px;margin-top:20px;">
-          <button class="btn-primary" style="background:var(--bg3);color:var(--text)" onclick="closeClientModal()">Mégse</button>
-          <button class="btn-primary" onclick="submitClient()">Mentés</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Log Modal HTML -->
-    <div id="log-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
-      <div class="login-card" style="width:650px; max-width:90vw; padding:0; overflow:hidden; border-radius:16px; border:none; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-        <!-- Header -->
-        <div style="background: linear-gradient(to right, #c5f0ee, #a8e5e3); padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.05);">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <h3 id="log-modal-title-name" style="margin:0 0 4px 0; color:#082432; font-size:18px; font-weight:700;">Ügyfél neve</h3>
-                    <div style="display:flex; gap:12px; font-size:12px; color:rgba(8,36,50,0.7); font-weight:500;">
-                        <span>📞 <span id="log-modal-channel">Telefon</span></span>
-                        <span>•</span>
-                        <span id="log-modal-topic">Téma</span>
-                        <span>•</span>
-                        <span id="log-modal-date">Dátum</span>
-                    </div>
-                </div>
-                <button onclick="document.getElementById('log-modal').style.display='none'" style="background:rgba(8,36,50,0.1); border:none; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#082432; transition:background 0.2s;">
+<div class="page-header" style="margin-bottom:18px;">
+<div>
+<div class="page-title">Kanban</div>
+<div class="page-subtitle">Érdeklődők feladatainak nyomon követése</div>
+</div>
+<button class="int-toolbar-btn" onclick="promptAddKanbanColumn()" style="width:auto; margin:0;">+ Oszlop hozzáadása</button>
+</div>
+<div class="kanban-board" id="kanban-board">
+<!-- Rendered by JS -->
+</div>
+</div>
+<!-- CLIENTS PAGE -->
+<div class="customer-view" id="view-clients" style="display:block;">
+<div class="page-header">
+<div>
+<div class="page-title">Ügyfelek adatbázisa</div>
+<div class="page-subtitle">Ügyfelek listázása és alapadatok módosítása</div>
+</div>
+<div style="display:flex;gap:12px;">
+<button class="int-toolbar-btn" onclick="openClientFieldsModal()">Ügyfél mezők beállítása</button>
+<button class="int-toolbar-btn" onclick="loadClientsTable()">↻ Frissítés</button>
+<button class="int-toolbar-btn" onclick="openClientModal()" style="width:auto; margin:0;">+ Új Ügyfél</button>
+</div>
+</div>
+<div class="table-card" style="overflow-x:auto;">
+<table class="data-table">
+<thead id="clients-thead">
+<!-- Rendered by JS -->
+</thead>
+<tbody id="clients-body">
+<tr class="loading-row"><td colspan="7"><div class="spinner"></div></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Client Fields Setup Modal -->
+<div id="fields-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center;">
+<div class="login-card" style="width:480px; max-height:80vh; overflow-y:auto;">
+<h3 style="margin-bottom:16px;">Ügyfél mezők beállítása</h3>
+<div id="fields-list" style="margin-bottom:20px;"></div>
+<button class="btn-primary" onclick="promptAddClientField()" style="width:100%; margin-bottom:10px;">+ Új Mező hozzáadása</button>
+<button class="btn-primary" onclick="closeClientFieldsModal()" style="background:var(--bg3);color:var(--text);width:100%;">Bezárás</button>
+</div>
+</div>
+<!-- Client Modal HTML -->
+<div id="client-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:999; align-items:center; justify-content:center;">
+<div class="login-card" style="width:380px;">
+<h3 id="client-modal-title" style="margin-bottom:16px;">Új ügyfél</h3>
+<input id="nc-id" type="hidden"/>
+<div id="client-modal-dynamic-fields">
+<!-- Dynamic inputs rendered here by JS -->
+</div>
+<div style="display:flex;gap:10px;margin-top:20px;">
+<button class="btn-primary" onclick="closeClientModal()" style="background:var(--bg3);color:var(--text)">Mégse</button>
+<button class="btn-primary" onclick="submitClient()">Mentés</button>
+</div>
+</div>
+</div>
+<!-- Log Modal HTML -->
+<div id="log-modal" style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+<div class="login-card" style="width:650px; max-width:90vw; padding:0; overflow:hidden; border-radius:16px; border:none; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+<!-- Header -->
+<div style="background: linear-gradient(to right, #c5f0ee, #a8e5e3); padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+<div style="display:flex; justify-content:space-between; align-items:flex-start;">
+<div>
+<h3 id="log-modal-title-name" style="margin:0 0 4px 0; color:#082432; font-size:18px; font-weight:700;">Ügyfél neve</h3>
+<div style="display:flex; gap:12px; font-size:12px; color:rgba(8,36,50,0.7); font-weight:500;">
+<span>📞 <span id="log-modal-channel">Telefon</span></span>
+<span>•</span>
+<span id="log-modal-topic">Téma</span>
+<span>•</span>
+<span id="log-modal-date">Dátum</span>
+</div>
+</div>
+<button onclick="document.getElementById('log-modal').style.display='none'" style="background:rgba(8,36,50,0.1); border:none; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#082432; transition:background 0.2s;">
                     ✕
                 </button>
-            </div>
-        </div>
-        <!-- Content -->
-        <div style="padding: 24px; background:var(--card);">
-            <textarea id="log-modal-content" class="settings-textarea" style="min-height:300px; font-family: 'Inter', Arial, sans-serif; font-size:13px; line-height:1.6; margin-bottom: 0; border:none; box-shadow:none; background:var(--bg); border-radius:8px; padding:16px;" readonly></textarea>
-        </div>
-        <!-- Footer -->
-        <div style="padding: 16px 24px; background:var(--bg3); border-top: 1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
-            <button class="btn-primary" style="background:transparent; color:var(--text-muted); border:1px solid var(--border);" onclick="document.getElementById('log-modal').style.display='none'">Bezárás</button>
-            <button class="btn-primary" style="opacity:0.5; cursor:not-allowed;" disabled title="Hamarosan elérhető">▶ Interakció lejátszása</button>
-        </div>
-      </div>
-    </div>
-
-
-      <!-- CLIENT DETAILS PAGE -->
-    <div class="customer-view" id="view-client-details" style="display:none; width: 100%; animation: fadein 0.3s ease;">
-      <!-- Back button -->
-      <button class="int-toolbar-btn" style="margin-bottom: 20px; border:none; background:transparent; font-weight:600; font-size:14px;" onclick="closeClientDetails()">
-        <span style="margin-right:6px;">&larr;</span> Vissza az előző nézethez
+</div>
+</div>
+<!-- Content -->
+<div style="padding: 24px; background:var(--card);">
+<textarea class="settings-textarea" id="log-modal-content" readonly="" style="min-height:300px; font-family: 'Inter', Arial, sans-serif; font-size:13px; line-height:1.6; margin-bottom: 0; border:none; box-shadow:none; background:var(--bg); border-radius:8px; padding:16px;"></textarea>
+</div>
+<!-- Footer -->
+<div style="padding: 16px 24px; background:var(--bg3); border-top: 1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+<button class="btn-primary" onclick="document.getElementById('log-modal').style.display='none'" style="background:transparent; color:var(--text-muted); border:1px solid var(--border);">Bezárás</button>
+<button class="btn-primary" disabled="" style="opacity:0.5; cursor:not-allowed;" title="Hamarosan elérhető">▶ Interakció lejátszása</button>
+</div>
+</div>
+</div>
+<!-- CLIENT DETAILS PAGE -->
+<div class="customer-view" id="view-client-details" style="display:none; width: 100%; animation: fadein 0.3s ease;">
+<!-- Back button -->
+<button class="int-toolbar-btn" onclick="closeClientDetails()" style="margin-bottom: 20px; border:none; background:transparent; font-weight:600; font-size:14px;">
+<span style="margin-right:6px;">←</span> Vissza az előző nézethez
       </button>
-
-      <!-- Top Card (Mint gradient) -->
-      <div class="cd-top-card">
-        <div style="display:flex; align-items:center; gap:20px;">
-          <div class="cd-avatar">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          </div>
-          <div>
-            <h2 id="cd-name" style="margin:0; font-size:24px; font-weight:bold; color:#082432;">Ügyfél Neve</h2>
-            <div id="cd-id" style="color:rgba(8,36,50,0.6); font-size:13px; margin-top:2px;">Páciens azonosító: PAC-001234</div>
-            
-            <div style="display:flex; gap:32px; margin-top:16px; font-size:13px; color:inherit; opacity:0.8;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                <span id="cd-phone">+36 30 123 4567</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                <span id="cd-email">email@example.com</span>
-              </div>
-            </div>
-            <div style="display:flex; gap:32px; margin-top:8px; font-size:13px; color:inherit; opacity:0.8;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                <span id="cd-address">Ismeretlen cím</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <svg class="cd-contact-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span id="cd-birthdate">Születési dátum: -</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right stats card -->
-        <div class="cd-stats-card">
-          <div style="font-size:12px; color:rgba(8,36,50,0.6); display:flex; align-items:center; gap:6px;">
-            <svg class="cd-contact-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+<!-- Top Card (Mint gradient) -->
+<div class="cd-top-card">
+<div style="display:flex; align-items:center; gap:20px;">
+<div class="cd-avatar">
+<svg fill="none" height="32" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="color:var(--accent);" viewbox="0 0 24 24" width="32"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+</div>
+<div>
+<h2 id="cd-name" style="margin:0; font-size:24px; font-weight:bold; color:#082432;">Ügyfél Neve</h2>
+<div id="cd-id" style="color:rgba(8,36,50,0.6); font-size:13px; margin-top:2px;">Páciens azonosító: PAC-001234</div>
+<div style="display:flex; gap:32px; margin-top:16px; font-size:13px; color:inherit; opacity:0.8;">
+<div style="display:flex; align-items:center; gap:8px;">
+<svg class="cd-contact-icon" fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+<span id="cd-phone">+36 30 123 4567</span>
+</div>
+<div style="display:flex; align-items:center; gap:8px;">
+<svg class="cd-contact-icon" fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+<span id="cd-email">email@example.com</span>
+</div>
+</div>
+<div style="display:flex; gap:32px; margin-top:8px; font-size:13px; color:inherit; opacity:0.8;">
+<div style="display:flex; align-items:center; gap:8px;">
+<svg class="cd-contact-icon" fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+<span id="cd-address">Ismeretlen cím</span>
+</div>
+<div style="display:flex; align-items:center; gap:8px;">
+<svg class="cd-contact-icon" fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+<span id="cd-birthdate">Születési dátum: -</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right stats card -->
+<div class="cd-stats-card">
+<div style="font-size:12px; color:rgba(8,36,50,0.6); display:flex; align-items:center; gap:6px;">
+<svg class="cd-contact-icon" fill="none" height="12" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="12"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             Utolsó látogatás
           </div>
-          <div style="font-size:18px; font-weight:bold; color:#082432; margin-top:4px;" id="cd-last-visit">N/A</div>
-          <div style="font-size:12px; font-weight:600; color:inherit; opacity:0.8; margin-top:12px;" id="cd-total-interactions">0 összesen interakció</div>
-        </div>
-      </div>
-
-      <!-- History Table -->
-      <div style="margin-top: 32px;">
-        <h3 style="font-size:18px; font-weight:bold; margin-bottom:16px;">Interakciók története</h3>
-        <div class="int-table-wrapper" style="border-radius:12px; border:1px solid var(--border);">
-          <table style="width:100%; border-collapse:collapse; text-align:left;">
-            <thead class="int-thead">
-              <tr>
-                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">DÁTUM / IDŐ</th>
-                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">CSATORNA</th>
-                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">INTERAKCIÓ TÍPUSA</th>
-                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">TÉMA</th>
-                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">ÖSSZEFOGLALÓ</th>
-                <th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">EREDMÉNY</th>
-              </tr>
-            </thead>
-            <tbody id="cd-history-body">
-              <tr>
-                <td colspan="7" style="padding:32px; text-align:center; color:var(--text-muted); font-size:14px;">Még nincsenek adatok...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-</div><!-- end analytics-shell -->
-    </div>
-
-    <!-- CALENDAR PAGE -->
-    <div class="page" id="page-calendar">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Naptár</div>
-          <div class="page-subtitle">Foglalt időpontok és megbeszélések</div>
-        </div>
-        <div style="display:flex;gap:12px;">
-          <div class="fmt-toggle">
-            <button class="fmt-btn" id="cal-view-list-btn" onclick="switchCalendarView('list')">Sima lista</button>
-            <button class="fmt-btn active" id="cal-view-grid-btn" onclick="switchCalendarView('grid')">Naptár Nézet</button>
-          </div>
-          <button onclick="loadCalendar()" class="cal-refresh-btn">↻ Frissítés</button>
-        </div>
-      </div>
-
-      <!-- List View -->
-      <div class="table-card" id="calendar-list-view" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Dátum / Idő</th>
-              <th>Esemény</th>
-              <th>Résztvevő</th>
-              <th>Időtartam</th>
-              <th>Email</th>
-            </tr>
-          </thead>
-          <tbody id="calendar-body">
-            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Grid View (FullCalendar) -->
-      <div id="calendar-grid-view" class="calendar-grid-wrapper">
-         <div id="fullcalendar-el"></div>
-      </div>
-    </div>
-
-    <!-- EMAILS PAGE -->
-    <div class="page" id="page-emails">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Emailek</div>
-          <div class="page-subtitle">Az agent által küldött follow-up emailek</div>
-        </div>
-        <button onclick="loadEmails()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family: 'Inter', Arial, sans-serif;">↻ Frissítés</button>
-      </div>
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Küldve</th>
-              <th>Címzett</th>
-              <th>Tárgy</th>
-              <th>Állapot</th>
-            </tr>
-          </thead>
-          <tbody id="emails-body">
-            <tr class="loading-row"><td colspan="4"><div class="spinner"></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- SESSIONS PAGE -->
-    <div class="page" id="page-sessions">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Sessionök</div>
-          <div class="page-subtitle">Minden hangügynök kapcsolat</div>
-        </div>
-        <button onclick="loadSessions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family: 'Inter', Arial, sans-serif;">↻ Frissítés</button>
-      </div>
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Időpont</th>
-              <th>Session ID</th>
-              <th>Szoba</th>
-              <th>Időtartam</th>
-              <th>Állapot</th>
-            </tr>
-          </thead>
-          <tbody id="sessions-body">
-            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </main>
+<div id="cd-last-visit" style="font-size:18px; font-weight:bold; color:#082432; margin-top:4px;">N/A</div>
+<div id="cd-total-interactions" style="font-size:12px; font-weight:600; color:inherit; opacity:0.8; margin-top:12px;">0 összesen interakció</div>
+</div>
+</div>
+<!-- History Table -->
+<div style="margin-top: 32px;">
+<h3 style="font-size:18px; font-weight:bold; margin-bottom:16px;">Interakciók története</h3>
+<div class="int-table-wrapper" style="border-radius:12px; border:1px solid var(--border);">
+<table style="width:100%; border-collapse:collapse; text-align:left;">
+<thead class="int-thead">
+<tr>
+<th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">DÁTUM / IDŐ</th>
+<th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">CSATORNA</th>
+<th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">INTERAKCIÓ TÍPUSA</th>
+<th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">TÉMA</th>
+<th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">ÖSSZEFOGLALÓ</th>
+<th style="padding:16px; font-size:11px; font-weight:600; color:#6b8b99; border-bottom:1px solid var(--border);">EREDMÉNY</th>
+</tr>
+</thead>
+<tbody id="cd-history-body">
+<tr>
+<td colspan="7" style="padding:32px; text-align:center; color:var(--text-muted); font-size:14px;">Még nincsenek adatok...</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="customer-view" id="view-emails" style="display:none;">
+<div class="page-header">
+<div>
+<div class="page-title">Emailek</div>
+<div class="page-subtitle">Az agent által küldött follow-up emailek</div>
+</div>
+<button onclick="loadEmails()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family: 'Inter', Arial, sans-serif;">↻ Frissítés</button>
+</div>
+<div class="table-card">
+<table class="data-table">
+<thead>
+<tr>
+<th>Küldve</th>
+<th>Címzett</th>
+<th>Tárgy</th>
+<th>Állapot</th>
+</tr>
+</thead>
+<tbody id="emails-body">
+<tr class="loading-row"><td colspan="4"><div class="spinner"></div></td></tr>
+</tbody>
+</table>
+</div>
+</div><div class="customer-view" id="view-sessions" style="display:none;">
+<div class="page-header">
+<div>
+<div class="page-title">Sessionök</div>
+<div class="page-subtitle">Minden hangügynök kapcsolat</div>
+</div>
+<button onclick="loadSessions()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);padding:8px 14px;font-size:13px;cursor:pointer;font-family: 'Inter', Arial, sans-serif;">↻ Frissítés</button>
+</div>
+<div class="table-card">
+<table class="data-table">
+<thead>
+<tr>
+<th>Időpont</th>
+<th>Session ID</th>
+<th>Szoba</th>
+<th>Időtartam</th>
+<th>Állapot</th>
+</tr>
+</thead>
+<tbody id="sessions-body">
+<tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+</tbody>
+</table>
+</div>
+</div></div><!-- end analytics-shell -->
+</div>
+<!-- CALENDAR PAGE -->
+<div class="page" id="page-calendar">
+<div class="page-header">
+<div>
+<div class="page-title">Naptár</div>
+<div class="page-subtitle">Foglalt időpontok és megbeszélések</div>
+</div>
+<div style="display:flex;gap:12px;">
+<div class="fmt-toggle">
+<button class="fmt-btn" id="cal-view-list-btn" onclick="switchCalendarView('list')">Sima lista</button>
+<button class="fmt-btn active" id="cal-view-grid-btn" onclick="switchCalendarView('grid')">Naptár Nézet</button>
+</div>
+<button class="cal-refresh-btn" onclick="loadCalendar()">↻ Frissítés</button>
+</div>
+</div>
+<!-- List View -->
+<div class="table-card" id="calendar-list-view" style="display:none;">
+<table class="data-table">
+<thead>
+<tr>
+<th>Dátum / Idő</th>
+<th>Esemény</th>
+<th>Résztvevő</th>
+<th>Időtartam</th>
+<th>Email</th>
+</tr>
+</thead>
+<tbody id="calendar-body">
+<tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+</tbody>
+</table>
+</div>
+<!-- Grid View (FullCalendar) -->
+<div class="calendar-grid-wrapper" id="calendar-grid-view">
+<div id="fullcalendar-el"></div>
+</div>
 </div>
 
+
+
+
+</main>
+</div>
 <script>
 const API = '';  // same origin
 let authToken = localStorage.getItem('thinkai_admin_token') || '';
@@ -2979,7 +2885,7 @@ function enterApp() {
   document.getElementById('sidebar-username').textContent = currentUser;
   document.getElementById('user-avatar-char').textContent = currentUser[0].toUpperCase();
   loadStats();
-  loadInteractions();
+  loadClientsTable();
 }
 
 // ── Page navigation ───────────────────────────────────────────────────────────
@@ -2990,8 +2896,6 @@ function showPage(page) {
   document.getElementById(`nav-${page}`).classList.add('active');
 
   if (page === 'calendar')     loadCalendar();
-  if (page === 'emails')       loadEmails();
-  if (page === 'sessions')     loadSessions();
   if (page === 'settings')     loadSettings();
   if (page === 'kanban')       loadKanban();
   if (page === 'clients')      loadClientsTable();
@@ -3229,14 +3133,18 @@ function buildFlatInteractionRows(sessions) {
   _allInteractionRows = [];
   sessions.forEach(s => {
     const sessionDate = s.started_at || '';
-    const channel = s.channel || 'Telefon';
+    const isEmail = s.room_name && s.room_name.toLowerCase().includes('email');
+    const channel = isEmail ? 'Email' : (s.channel || 'Telefon');
+    const clientName = s.participant || s.client_name || 'Ismeretlen';
+    
     (s.interactions || []).forEach(r => {
       _allInteractionRows.push({
         date: r.created_at || sessionDate,
         channel: channel,
-        type: r.type || '—',
-        topic: r.topic || '—',
-        summary: r.summary || '—',
+        client: clientName,
+        type: r.type || '-',
+        topic: r.topic || '-',
+        summary: r.summary || '-',
         result: r.result || '',
       });
     });
@@ -3245,9 +3153,10 @@ function buildFlatInteractionRows(sessions) {
       _allInteractionRows.push({
         date: sessionDate,
         channel: channel,
+        client: clientName,
         type: 'session',
-        topic: '—',
-        summary: s.summary || '—',
+        topic: '-',
+        summary: s.summary || '-',
         result: '',
       });
     }
@@ -4265,9 +4174,6 @@ function saveSzabalyok() {
 }
 
 </script>
-
-    
-
 <script>
 
 // Customer Center JS
@@ -4287,9 +4193,11 @@ function switchCustomerView(viewId, btn) {
     if(viewId === 'kanban') loadKanban();
     if(viewId === 'clients') loadClientsTable();
     if(viewId === 'interactions') loadInteractions();
+    if(viewId === 'emails') loadEmails();
+    if(viewId === 'sessions') loadSessions();
 }
 
-let lastActiveCustomerView = 'interactions';
+let lastActiveCustomerView = 'clients';
 
 function openClientDetails(clientData) {
     // Save current active view
