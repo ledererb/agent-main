@@ -785,6 +785,66 @@ async def save_workflow(payload: TextFileRequest, username: str = Depends(verify
     return {"ok": True, "message": "Workflow elmentve."}
 
 
+
+# ── Praxisinfó ────────────────────────────────────────────────────────────────
+PRAXISINFO_FILE = THIS_DIR / "praxisinfo.json"
+
+_HU_TO_EN = {
+    "hetfo": "monday", "kedd": "tuesday", "szerda": "wednesday",
+    "csutortok": "thursday", "pentek": "friday",
+    "szombat": "saturday", "vasarnap": "sunday",
+}
+
+class PraxisinfoSaveRequest(BaseModel):
+    practice_name: str = ""
+    description: str = ""
+    address: str = ""
+    business_hours: dict = {}
+    doctors: list = []
+    campaigns: list = []
+    faq: list = []
+
+@app.get("/admin/api/praxisinfo")
+async def get_praxisinfo(username: str = Depends(verify_jwt)):
+    """Return saved practice info."""
+    if PRAXISINFO_FILE.exists():
+        try:
+            return json.loads(PRAXISINFO_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+@app.post("/admin/api/praxisinfo")
+async def save_praxisinfo(payload: PraxisinfoSaveRequest, username: str = Depends(verify_jwt)):
+    """Save practice info and sync business_hours → agent_settings."""
+    data = {
+        "practice_name":  payload.practice_name,
+        "description":    payload.description,
+        "address":        payload.address,
+        "business_hours": payload.business_hours,
+        "doctors":        payload.doctors,
+        "campaigns":      payload.campaigns,
+        "faq":            payload.faq,
+        "last_updated":   datetime.utcnow().isoformat(),
+    }
+    PRAXISINFO_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Sync business_hours → agent_settings (English keys, open/close/enabled)
+    en_bh = {}
+    for hu_key, en_key in _HU_TO_EN.items():
+        day = payload.business_hours.get(hu_key, {})
+        en_bh[en_key] = {
+            "open":    day.get("from") or None,
+            "close":   day.get("to")   or None,
+            "enabled": bool(day.get("enabled", False)),
+        }
+    s = _read_settings()
+    s["business_hours"] = en_bh
+    SETTINGS_FILE.write_text(json.dumps(s, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {"ok": True, "message": "Praxisinformáció elmentve."}
+
+
 @app.get("/admin/api/cartesia/voices")
 async def cartesia_voices(username: str = Depends(verify_jwt)):
     """Proxy: list available Cartesia voices."""

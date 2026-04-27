@@ -2215,10 +2215,7 @@
 <label class="tt-label">Márkanév <span class="wip-badge">🚧</span></label>
 <input class="tt-input" disabled="" id="tt-markanev" placeholder="pl. Dental Clinic" style="opacity:.5;" type="text"/>
 </div>
-<div style="grid-column:1/-1;">
-<label class="tt-label">Rövid bemutatkozás</label>
-<textarea class="tt-textarea" id="tt-bemutatkozas">Modern fogászati rendelő a belvárosban, barátságos környezettel és tapasztalt szakemberekkel.</textarea>
-</div>
+
 <div>
 <label class="tt-label">Szakterület <span class="wip-badge">🚧</span></label>
 <input class="tt-input" disabled="" placeholder="pl. Fogászat, szájsebészet" style="opacity:.5;" type="text"/>
@@ -2265,26 +2262,7 @@
 </div>
 <button class="tt-add-btn" onclick="addDoctorRow()">+ Orvos hozzáadása</button>
 </div>
-<!-- 4. Nyitvatartás -->
-<div class="tt-section">
-<div class="tt-section-title"> Nyitvatartás</div>
-<table class="tt-bh-table">
-<thead><tr><th>Nap</th><th>Nyitva</th><th>Nyit</th><th>Zár</th></tr></thead>
-<tbody>
-<tr><td class="tt-bh-day">Hétfő</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'hetfo')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-hetfo-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-hetfo-to" type="time" value="18:00"/></td></tr>
-<tr><td class="tt-bh-day">Kedd</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'kedd')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-kedd-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-kedd-to" type="time" value="18:00"/></td></tr>
-<tr><td class="tt-bh-day">Szerda</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'szerda')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-szerda-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-szerda-to" type="time" value="20:00"/></td></tr>
-<tr><td class="tt-bh-day">Csütörtök</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'csutortok')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-csutortok-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-csutortok-to" type="time" value="18:00"/></td></tr>
-<tr><td class="tt-bh-day">Péntek</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'pentek')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-pentek-from" type="time" value="08:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-pentek-to" type="time" value="16:00"/></td></tr>
-<tr><td class="tt-bh-day">Szombat</td><td><label class="tt-toggle"><input checked="" onchange="ttToggleBh(this,'szombat')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" id="tt-bh-szombat-from" type="time" value="09:00"/></td><td><input class="tt-time-input tt-bh-to" id="tt-bh-szombat-to" type="time" value="13:00"/></td></tr>
-<tr><td class="tt-bh-day">Vasárnap</td><td><label class="tt-toggle"><input onchange="ttToggleBh(this,'vasarnap')" type="checkbox"/><span class="tt-toggle-slider"></span></label></td><td><input class="tt-time-input tt-bh-from" disabled="" id="tt-bh-vasarnap-from" type="time" value="00:00"/></td><td><input class="tt-time-input tt-bh-to" disabled="" id="tt-bh-vasarnap-to" type="time" value="00:00"/></td></tr>
-</tbody>
-</table>
-<div style="margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;">
-<div style="font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;">Speciális nyitvatartás <span class="wip-badge">🚧</span></div>
-<div style="font-size:12px;color:#9ca3af;">Ünnepnapok, szünetek egyedi beállítása – hamarosan elérhető.</div>
-</div>
-</div>
+
 <!-- 5. Árlista -->
 <div class="tt-section">
 <div class="tt-section-title"> Árlista <span class="wip-badge">🚧</span></div>
@@ -4297,13 +4275,171 @@ function addGyik() {
   list.appendChild(card);
 }
 
-// Save functions
-function savePraxisinfo() {
-  showToast('success', ' Praxisinformáció elmentve!');
+// ── PRAXISINFÓ LOAD & SAVE ───────────────────────────────────────────────────
+const _PI_DAYS = ['hetfo','kedd','szerda','csutortok','pentek','szombat','vasarnap'];
+
+async function loadPraxisinfo() {
+  try {
+    const res = await authFetch('/admin/api/praxisinfo');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !Object.keys(data).length) return; // no saved data yet
+
+    const v = (id) => document.getElementById(id);
+    if (data.practice_name !== undefined && v('tt-nev'))         v('tt-nev').value         = data.practice_name;
+    if (data.description   !== undefined && v('tt-bemutatkozas')) v('tt-bemutatkozas').value = data.description;
+    if (data.address       !== undefined && v('tt-cim'))          v('tt-cim').value          = data.address;
+
+    // Business hours
+    const bh = data.business_hours || {};
+    _PI_DAYS.forEach(day => {
+      const d     = bh[day] || {};
+      const fromEl = v(`tt-bh-${day}-from`);
+      const toEl   = v(`tt-bh-${day}-to`);
+      const cbEl   = document.querySelector(`input[onchange="ttToggleBh(this,'${day}')"]`);
+      if (fromEl) fromEl.value   = d.from || fromEl.value;
+      if (toEl)   toEl.value     = d.to   || toEl.value;
+      if (cbEl) {
+        cbEl.checked = d.enabled !== false;
+        ttToggleBh(cbEl, day);
+      }
+    });
+
+    // Doctors
+    const docList = document.getElementById('tt-orvosok-list');
+    if (docList && data.doctors && data.doctors.length) {
+      const header = docList.querySelector('.tt-doctor-row:not([data-id])');
+      docList.innerHTML = '';
+      if (header) docList.appendChild(header);
+      data.doctors.forEach((doc, i) => {
+        const row = document.createElement('div');
+        row.className = 'tt-dynamic-row tt-doctor-row';
+        row.dataset.id = Date.now() + i;
+        row.innerHTML = `
+          <input class="tt-input" type="text" placeholder="Név" value="${esc(doc.nev||'')}">
+          <input class="tt-input" type="text" placeholder="Szakterület" value="${esc(doc.szak||'')}">
+          <input class="tt-input" type="text" placeholder="Szolgáltatás" value="${esc(doc.svc||'')}">
+          <button class="tt-remove-btn" onclick="this.closest('[data-id]').remove()"></button>`;
+        docList.appendChild(row);
+      });
+    }
+
+    // Campaigns
+    const campList = document.getElementById('tt-kampanyok-list');
+    if (campList && data.campaigns && data.campaigns.length) {
+      campList.innerHTML = '';
+      data.campaigns.forEach(camp => {
+        const card = document.createElement('div');
+        card.className = 'tt-campaign-card';
+        card.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <label class="tt-toggle"><input type="checkbox" ${camp.active ? 'checked' : ''}><span class="tt-toggle-slider"></span></label>
+            <span style="font-size:12px;font-weight:600;color:#374151;">Kampány aktív</span>
+            <button class="tt-remove-btn" style="margin-left:auto;" onclick="this.closest('.tt-campaign-card').remove()"></button>
+          </div>
+          <textarea class="tt-textarea" style="min-height:60px;">${esc(camp.text||'')}</textarea>`;
+        campList.appendChild(card);
+      });
+    }
+
+    // FAQ
+    const faqList = document.getElementById('tt-gyik-list');
+    if (faqList && data.faq && data.faq.length) {
+      faqList.innerHTML = '';
+      data.faq.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'tt-campaign-card';
+        card.dataset.gyik = '';
+        card.innerHTML = `
+          <button class="tt-remove-btn" style="position:absolute;top:14px;right:14px;" onclick="this.closest('[data-gyik]').remove()"></button>
+          <label class="tt-label">Kérdés</label>
+          <input class="tt-input" type="text" value="${esc(item.question||'')}" style="margin-bottom:10px;">
+          <label class="tt-label">Válasz</label>
+          <textarea class="tt-textarea" style="min-height:60px;">${esc(item.answer||'')}</textarea>`;
+        faqList.appendChild(card);
+      });
+    }
+
+    // Last updated timestamp
+    if (data.last_updated) {
+      const metaEl = document.querySelector('#settings-view-praxis .tt-action-meta');
+      if (metaEl) {
+        const d = new Date(data.last_updated + 'Z');
+        const fmt = d.toLocaleString('hu-HU', {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        metaEl.innerHTML = `<strong>Utolsó frissítés:</strong> ${fmt} &nbsp; <strong>Állapot:</strong> <span class="tt-status-badge">Aktív</span>`;
+      }
+    }
+  } catch(e) { console.error('Praxisinfo betöltési hiba:', e); }
+}
+
+async function savePraxisinfo() {
+  const btn = document.querySelector('#settings-view-praxis .tt-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Mentés...'; }
+  try {
+    const v = (id) => document.getElementById(id);
+    const practice_name = (v('tt-nev')         && v('tt-nev').value.trim())         || '';
+    const description   = (v('tt-bemutatkozas') && v('tt-bemutatkozas').value.trim()) || '';
+    const address       = (v('tt-cim')          && v('tt-cim').value.trim())          || '';
+
+    // Business hours
+    const business_hours = {};
+    _PI_DAYS.forEach(day => {
+      const fromEl = v(`tt-bh-${day}-from`);
+      const toEl   = v(`tt-bh-${day}-to`);
+      const cbEl   = document.querySelector(`input[onchange="ttToggleBh(this,'${day}')"]`);
+      business_hours[day] = {
+        from:    fromEl ? fromEl.value : '',
+        to:      toEl   ? toEl.value   : '',
+        enabled: cbEl   ? cbEl.checked : false,
+      };
+    });
+
+    // Doctors
+    const doctors = [];
+    document.querySelectorAll('#tt-orvosok-list .tt-doctor-row[data-id]').forEach(row => {
+      const inputs = row.querySelectorAll('input.tt-input');
+      if (inputs.length >= 3) doctors.push({ nev: inputs[0].value.trim(), szak: inputs[1].value.trim(), svc: inputs[2].value.trim() });
+    });
+
+    // Campaigns
+    const campaigns = [];
+    document.querySelectorAll('#tt-kampanyok-list .tt-campaign-card').forEach(card => {
+      const cb = card.querySelector('input[type="checkbox"]');
+      const ta = card.querySelector('textarea');
+      campaigns.push({ active: cb ? cb.checked : true, text: ta ? ta.value.trim() : '' });
+    });
+
+    // FAQ
+    const faq = [];
+    document.querySelectorAll('#tt-gyik-list [data-gyik]').forEach(card => {
+      const q = card.querySelector('input.tt-input');
+      const a = card.querySelector('textarea');
+      faq.push({ question: q ? q.value.trim() : '', answer: a ? a.value.trim() : '' });
+    });
+
+    const res = await authFetch('/admin/api/praxisinfo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practice_name, description, address, business_hours, doctors, campaigns, faq })
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Mentési hiba'); }
+
+    showToast('success', '✅ Praxisinformáció elmentve!');
+    const metaEl = document.querySelector('#settings-view-praxis .tt-action-meta');
+    if (metaEl) {
+      const now = new Date();
+      const fmt = now.toLocaleString('hu-HU', {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      metaEl.innerHTML = `<strong>Utolsó frissítés:</strong> ${fmt} &nbsp; <strong>Állapot:</strong> <span class="tt-status-badge">Aktív</span>`;
+    }
+  } catch(e) {
+    showToast('error', '❌ Hiba: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#128190; Változtatások mentése'; }
+  }
 }
 
 function saveSzabalyok() {
-  showToast('info', ' Módosítási kérés rögzítve – hamarosan feldolgozzuk 🚧');
+  showToast('info', '🚧 Módosítási kérés rögzítve – hamarosan feldolgozzuk');
 }
 
 </script>
@@ -4316,6 +4452,7 @@ function switchSettingsView(viewId, btn) {
     document.querySelectorAll('#page-settings .view-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('settings-view-' + viewId).style.display = 'block';
     if(btn) btn.classList.add('active');
+    if(viewId === 'praxis') loadPraxisinfo();
 }
 
 function switchCustomerView(viewId, btn) {

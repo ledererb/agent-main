@@ -1,0 +1,71 @@
+{
+  "practice_name": "Dental Clinic Budapest",
+  "description": "",
+  "address": "1052 Budapest, Petőfi Sándor utca 12.",
+  "business_hours": {
+    "hetfo": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    },
+    "kedd": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    },
+    "szerda": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    },
+    "csutortok": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    },
+    "pentek": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    },
+    "szombat": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    },
+    "vasarnap": {
+      "from": "",
+      "to": "",
+      "enabled": false
+    }
+  },
+  "doctors": [
+    {
+      "nev": "Dr. Szabó Júlia",
+      "szak": "Általános fogászat",
+      "svc": "Vizsgálat, tömés"
+    },
+    {
+      "nev": "Dr. Kiss Péter",
+      "szak": "Implantológia",
+      "svc": "Implantátum beültetés"
+    }
+  ],
+  "campaigns": [
+    {
+      "active": true,
+      "text": "Tavaszi fogfehérítési akció: 20% kedvezmény minden fogfehérítési kezelésre április 30-ig. Az akció kódja: TAVASZ2026"
+    }
+  ],
+  "faq": [
+    {
+      "question": "Mennyi idővel előre kell foglalni időpontot?",
+      "answer": "Általában 1-2 héttel előre javasoljuk az időpontfoglalást, de sürgős esetekben akár azonnali ellátást is tudunk biztosítani."
+    },
+    {
+      "question": "Fogadnak-e TB-s betegeket?",
+      "answer": "Igen, TB-s ellátást is biztosítunk. Kérjük, hozza magával a TAJ-kártyáját."
+    }
+  ],
+  "last_updated": "2026-04-27T19:06:12.692370"
+}
