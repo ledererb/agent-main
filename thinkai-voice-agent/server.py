@@ -66,7 +66,9 @@ _setup_google_credentials()
 # SYSTEM PROMPT — loaded from system_prompt.md for easy editing
 # ═══════════════════════════════════════════════════════════════════════════════
 
-PRAXISINFO_FILE = THIS_DIR / "praxisinfo.json"
+PROMPT_FILE      = THIS_DIR / "system_prompt.md"
+PRAXISINFO_FILE  = THIS_DIR / "praxisinfo.json"
+
 
 def _load_praxisinfo() -> dict:
     """Load praxisinfo.json — practice metadata managed from admin UI."""

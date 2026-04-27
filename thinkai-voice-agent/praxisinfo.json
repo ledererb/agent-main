@@ -2,7 +2,11 @@
   "practice_name": "Kiütöm a fogadat Budapest",
   "description": "",
   "address": "1052 Budapest, Petőfi Sándor utca 12.",
-  "business_hours": {},
+  "markanev": "FogBox",
+  "szakterulet": "box, szájbaverés",
+  "kulcsszavak": "box, szájbaverés",
+  "megkozelites": "a nyócker legsötétt sikátora, ahova a nap soha nem sütött be.",
+  "price_list": "fog kiverés: 5000 Ft\nCsapágy csere: 12000 Ft",
   "doctors": [
     {
       "nev": "Dr. Szabó Júlia",
@@ -21,6 +25,5 @@
       "text": "Tavaszi fogfehérítési akció: 20% kedvezmény minden fogfehérítési kezelésre április 30-ig. Az akció kódja: TAVASZ2026"
     }
   ],
-  "faq": [],
-  "last_updated": "2026-04-27T20:17:37.153861"
+  "last_updated": "2026-04-27T20:32:16.061719"
 }
