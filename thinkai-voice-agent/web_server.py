@@ -269,6 +269,7 @@ async def process_meta_message(sender_id: str, message_text: str, source_channel
             
         final_text = ""
         current_response = response
+        booked_meeting = False
 
         while current_response.function_calls:
             # Hozzáadjuk a Gemini által generált function callokat a kontextushoz
@@ -296,6 +297,7 @@ async def process_meta_message(sender_id: str, message_text: str, source_channel
                         tool_result = f"Sikeres mentés. ID: {client_id}"
 
                     elif tool_name == "book_appointment":
+                        booked_meeting = True
                         start_dt_val = tool_args.get("start_dt", "")
                         existing = db.get_calendar_events()
                         # Duplikáció elkerülése, ha ugyanerre a percre már van foglalva valami
@@ -351,6 +353,19 @@ async def process_meta_message(sender_id: str, message_text: str, source_channel
         if final_text:
             # Válasz rögzítése a Kanbanba
             db.upsert_client({"messenger_id": sender_id, "forras_csatorna": source_channel}, additional_log=f"AI Válasz: {final_text}")
+            
+            f_stage = "foglalt" if booked_meeting else "valaszolt"
+            session_id = f"{source_channel.lower()}_{sender_id}"
+            db.create_session(session_id=session_id, room_name=f"{source_channel} Chat", participant=sender_id)
+            db.log_interaction(
+                type=source_channel.lower(),
+                topic=f"{source_channel} AI válasz",
+                summary=final_text[:100],
+                result="Üzenet generálva",
+                tool_name="process_meta_message",
+                session_id=session_id,
+                funnel_stage=f_stage
+            )
 
             async with httpx.AsyncClient() as http_client:
                 if source_channel == "WhatsApp":
@@ -481,6 +496,11 @@ async def admin_login(req: LoginRequest):
 async def admin_stats(period: str = "month", username: str = Depends(verify_jwt)):
     """Analytics summary stats."""
     return db.get_stats(period=period)
+
+@app.get("/admin/api/analytics/funnel")
+async def admin_funnel(username: str = Depends(verify_jwt)):
+    """Funnel stats based on interaction stages."""
+    return db.get_funnel_stats()
 
 
 @app.get("/admin/api/interactions")

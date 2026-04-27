@@ -127,7 +127,7 @@ def get_sessions(limit: int = 50) -> list[dict]:
 # INTERACTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def log_interaction(type: str, topic: str = "", summary: str = "", result: str = "", tool_name: str = "", session_id: str = "") -> None:
+def log_interaction(type: str, topic: str = "", summary: str = "", result: str = "", tool_name: str = "", session_id: str = "", funnel_stage: str = "relevant") -> None:
     if not supabase: return
     try:
         supabase.table("interactions").insert({
@@ -136,7 +136,8 @@ def log_interaction(type: str, topic: str = "", summary: str = "", result: str =
             "topic": topic,
             "summary": summary,
             "result": result,
-            "tool_name": tool_name or None
+            "tool_name": tool_name or None,
+            "funnel_stage": funnel_stage
         }).execute()
     except Exception as e:
         logger.error(f"Error logging interaction: {e}")
@@ -305,11 +306,45 @@ def get_stats(period: str = "month") -> dict:
 
         tasks_res = supabase.table("tasks").select("id", count="exact", head=True).eq("completed", 0).execute()
 
-        all_inters = supabase.table("interactions").select("type").gte("created_at", start_dt.isoformat()).execute()
+        all_inters = supabase.table("interactions").select("type, created_at").gte("created_at", start_dt.isoformat()).execute()
         type_counts = {}
+        
+        interactions_by_dow = {"total": [0]*7, "channels": {}}
+        interactions_by_hour = {"total": [0]*24, "channels": {}}
+        
         for i in all_inters.data:
-            t = i["type"]
+            t_raw = (i.get("type") or "Telefon").lower()
+            if "email" in t_raw:
+                t = "E-Mail"
+            elif "whatsapp" in t_raw:
+                t = "Whatsapp"
+            elif "messenger" in t_raw or "meta" in t_raw or "instagram" in t_raw:
+                t = "Messenger"
+            else:
+                t = "Telefon"
             type_counts[t] = type_counts.get(t, 0) + 1
+            
+            created_at = i.get("created_at")
+            if created_at:
+                try:
+                    dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                    dt_local = dt + timedelta(hours=2) # CET/CEST aprox
+                    
+                    wd = dt_local.weekday()
+                    hr = dt_local.hour
+                    
+                    interactions_by_dow["total"][wd] += 1
+                    if t not in interactions_by_dow["channels"]:
+                        interactions_by_dow["channels"][t] = [0]*7
+                    interactions_by_dow["channels"][t][wd] += 1
+                    
+                    interactions_by_hour["total"][hr] += 1
+                    if t not in interactions_by_hour["channels"]:
+                        interactions_by_hour["channels"][t] = [0]*24
+                    interactions_by_hour["channels"][t][hr] += 1
+                except Exception:
+                    pass
+
         interactions_by_type = [{"type": k, "count": v} for k, v in sorted(type_counts.items(), key=lambda x: x[1], reverse=True)]
 
         all_sess = supabase.table("sessions").select("started_at, duration_seconds").gte("started_at", start_dt.isoformat()).execute()
@@ -355,6 +390,8 @@ def get_stats(period: str = "month") -> dict:
             "open_tasks": tasks_res.count or 0,
             "avg_session_duration": round(avg_dur),
             "interactions_by_type": interactions_by_type,
+            "interactions_by_dow": interactions_by_dow,
+            "interactions_by_hour": interactions_by_hour,
             "sessions_per_day": filled_days,
             "previous_period": {
                 "total_sessions": prev_sess.count or 0,
@@ -367,6 +404,32 @@ def get_stats(period: str = "month") -> dict:
     except Exception as e:
         logger.error(f"Stats error: {e}")
         return {}
+
+def get_funnel_stats() -> dict:
+    if not supabase: return {}
+    try:
+        res = supabase.table("interactions").select("funnel_stage").execute()
+        stages = [r.get("funnel_stage") or "relevant" for r in res.data]
+        
+        relevant_count = len([s for s in stages if s not in ("irrelevant", "spam")])
+        valaszolt_count = len([s for s in stages if s in ("valaszolt", "ajanlat", "foglalt")])
+        ajanlat_count = len([s for s in stages if s in ("ajanlat", "foglalt")])
+        foglalt_count = len([s for s in stages if s == "foglalt"])
+        
+        return {
+            "osszes_relevans": relevant_count,
+            "valaszolt_ugyek": valaszolt_count,
+            "ajanlatig_jutott": ajanlat_count,
+            "idopont_lett": foglalt_count
+        }
+    except Exception as e:
+        logger.error(f"Funnel stats error: {e}")
+        return {
+            "osszes_relevans": 0,
+            "valaszolt_ugyek": 0,
+            "ajanlatig_jutott": 0,
+            "idopont_lett": 0
+        }
 
 def get_interactions(limit: int = 100, type_filter: str = "") -> list[dict]:
     if not supabase: return []

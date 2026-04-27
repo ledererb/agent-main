@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS interactions (
     summary TEXT,
     result TEXT,
     tool_name TEXT,
+    funnel_stage TEXT DEFAULT 'relevant',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

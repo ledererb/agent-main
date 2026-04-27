@@ -2720,6 +2720,12 @@
       transition: background 0.15s;
     }
 
+    .tt-remove-btn::before {
+      content: '✕';
+      font-size: 14px;
+      font-weight: bold;
+    }
+
     .tt-remove-btn:hover {
       background: #fef2f2;
     }
@@ -3429,17 +3435,29 @@
           <div class="section-divider"></div>
           <h2 class="section-header-figma">Működési áttekintés</h2>
           <div class="charts-row" style="margin-bottom:36px;">
-            <div class="chart-card" style="height:300px;">
-              <div class="chart-title">Sessionök időbeli alakulása</div>
-              <div style="position:relative;height:calc(100% - 30px);">
+            <div class="chart-card" style="height:350px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="chart-title" style="margin-bottom:0; color:var(--text); font-weight:700;">Megkeresések időbeli alakulása <i class="fa-regular fa-circle-question" style="color:#6b8b99; margin-left:6px; cursor:help;"></i></div>
+                <div style="display:flex; gap:4px; background:var(--bg3); padding:4px; border-radius:8px;">
+                  <button id="btn-chart-napi" class="toggle-btn active" style="background:var(--primary); color:#0a192f; border:none; border-radius:6px; font-size:12px; font-weight:600; padding:4px 12px; cursor:pointer; transition:0.2s;">Napi</button>
+                  <button id="btn-chart-oras" class="toggle-btn" style="background:transparent; color:#6b8b99; border:none; border-radius:6px; font-size:12px; padding:4px 12px; cursor:pointer; transition:0.2s;">Órás</button>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <label style="display:flex; align-items:center; font-size:12px; color:#6b8b99; cursor:pointer; width:fit-content;">
+                  <input type="checkbox" id="chk-channel-breakdown" style="margin-right:8px; accent-color:#1ceee0;"> Csatorna szerinti bontás
+                </label>
+              </div>
+              <div style="position:relative;height:calc(100% - 70px); margin-top:10px;">
                 <canvas class="chart-canvas" id="sessions-chart"></canvas>
               </div>
             </div>
-            <div class="chart-card" style="height:300px;">
-              <div class="chart-title">Interakció típusonként</div>
-              <div style="position:relative;height:calc(100% - 30px);">
+            <div class="chart-card" style="height:350px;">
+              <div class="chart-title" style="color:var(--text); font-weight:700;">Csatornamegoszlás <i class="fa-regular fa-circle-question" style="color:#6b8b99; margin-left:6px; cursor:help;" title="Melyik platformról érkezett a legtöbb megkeresés"></i></div>
+              <div style="position:relative;height:160px; display:flex; justify-content:center; align-items:center; margin-top:10px;">
                 <canvas class="chart-canvas" id="types-chart"></canvas>
               </div>
+              <div id="types-chart-legend" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:30px; padding:0 10px;"></div>
             </div>
           </div>
           <!-- 2. Blokk: Minőség és teljesítmény -->
@@ -3463,29 +3481,11 @@
                 <canvas id="handoff-chart"></canvas>
               </div>
             </div>
-            <!-- Foglalási tölcsér 🚧 -->
+            <!-- Foglalási tölcsér -->
             <div class="panel-white">
-              <div class="panel-title">Foglalási tölcsér <span class="wip-badge">🚧</span></div>
-              <div>
-                <div class="funnel-step" style="width:100%;">
-                  <div class="funnel-step-label">Összes releváns megkeresés</div>
-                  <div><span class="funnel-step-val">1,284</span><span class="funnel-step-pct">(100%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 90% konverzió</div>
-                <div class="funnel-step" style="width:90%;">
-                  <div class="funnel-step-label">Válaszolt ügyek</div>
-                  <div><span class="funnel-step-val">1,156</span><span class="funnel-step-pct">(90%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 60% konverzió</div>
-                <div class="funnel-step" style="width:70%;">
-                  <div class="funnel-step-label">Foglalási ajánlatig jutott</div>
-                  <div><span class="funnel-step-val">694</span><span class="funnel-step-pct">(60%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 63% konverzió</div>
-                <div class="funnel-step" style="width:50%;">
-                  <div class="funnel-step-label">Időpont lett belőle</div>
-                  <div><span class="funnel-step-val">437</span><span class="funnel-step-pct">(63%)</span></div>
-                </div>
+              <div class="panel-title">Foglalási tölcsér</div>
+              <div id="funnel-container">
+                <div style="text-align:center;padding:20px;color:#6b7280;"><div class="spinner"></div>Betöltés...</div>
               </div>
             </div>
           </div>
@@ -4522,6 +4522,10 @@
       if (typeof filterInteractionsTable === 'function') {
         filterInteractionsTable();
       }
+      // Re-render chart grids
+      if (typeof window._updateChartThemes === 'function') {
+        window._updateChartThemes();
+      }
     }
 
     function _updateThemeBtn(isDark) {
@@ -4634,8 +4638,58 @@
         const data = await res.json();
         _analyticsData = data;
         renderStats(data);
+        loadFunnelStats();
       } catch (e) {
         kpiGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ef4444;padding:30px;">Hiba az adatok betöltésekor.</div>';
+      }
+    }
+
+    async function loadFunnelStats() {
+      const container = document.getElementById('funnel-container');
+      if (!container) return;
+      
+      try {
+        const res = await authFetch('/admin/api/analytics/funnel');
+        const data = await res.json();
+        
+        const total = data.osszes_relevans || 0;
+        const valaszolt = data.valaszolt_ugyek || 0;
+        const ajanlat = data.ajanlatig_jutott || 0;
+        const foglalt = data.idopont_lett || 0;
+
+        const p1 = total > 0 ? 100 : 0;
+        const p2 = total > 0 ? Math.round((valaszolt / total) * 100) : 0;
+        const p3 = valaszolt > 0 ? Math.round((ajanlat / valaszolt) * 100) : 0;
+        const p4 = ajanlat > 0 ? Math.round((foglalt / ajanlat) * 100) : 0;
+        
+        const w1 = 100;
+        const w2 = total > 0 ? Math.round((valaszolt / total) * 100) : 10;
+        const w3 = total > 0 ? Math.round((ajanlat / total) * 100) : 10;
+        const w4 = total > 0 ? Math.round((foglalt / total) * 100) : 10;
+
+        container.innerHTML = `
+          <div class="funnel-step" style="width:${Math.max(w1, 10)}%;">
+            <div class="funnel-step-label">Összes releváns megkeresés</div>
+            <div><span class="funnel-step-val">${total}</span><span class="funnel-step-pct">(${p1}%)</span></div>
+          </div>
+          <div class="funnel-conv">▼ ${p2}% konverzió</div>
+          <div class="funnel-step" style="width:${Math.max(w2, 10)}%;">
+            <div class="funnel-step-label">Válaszolt ügyek</div>
+            <div><span class="funnel-step-val">${valaszolt}</span><span class="funnel-step-pct">(${p2}%)</span></div>
+          </div>
+          <div class="funnel-conv">▼ ${p3}% konverzió</div>
+          <div class="funnel-step" style="width:${Math.max(w3, 10)}%;">
+            <div class="funnel-step-label">Foglalási ajánlatig jutott</div>
+            <div><span class="funnel-step-val">${ajanlat}</span><span class="funnel-step-pct">(${p3}%)</span></div>
+          </div>
+          <div class="funnel-conv">▼ ${p4}% konverzió</div>
+          <div class="funnel-step" style="width:${Math.max(w4, 10)}%;">
+            <div class="funnel-step-label">Időpont lett belőle</div>
+            <div><span class="funnel-step-val">${foglalt}</span><span class="funnel-step-pct">(${p4}%)</span></div>
+          </div>
+        `;
+      } catch (e) {
+        container.innerHTML = '<div style="color:red;padding:20px;text-align:center;">Hiba a tölcsér betöltésekor</div>';
       }
     }
 
@@ -4706,62 +4760,187 @@
         }
       }
 
-      // Sessions per day chart
-      const daily = data.sessions_per_day || [];
+      // Interactions over time chart
+      const dowData = data.interactions_by_dow || {total: [0,0,0,0,0,0,0], channels: {}};
+      const hourData = data.interactions_by_hour || {total: Array(24).fill(0), channels: {}};
+      
       const ctx1 = document.getElementById('sessions-chart');
       if (!ctx1) return;
       if (sessionsChart) { sessionsChart.destroy(); sessionsChart = null; }
 
-      const counts = daily.map(d => d.count).filter(v => v > 0);
-      const avg = counts.length ? counts.reduce((a, b) => a + b, 0) / counts.length : 5;
-      const maxVal = counts.length ? Math.max(...counts) : 10;
-      const yMax = Math.ceil(Math.max(avg * 2.2, maxVal * 1.25));
-      const yStep = Math.max(1, Math.ceil(yMax / 8));
+      const typeColorMap = {
+        'E-Mail': '#1ceee0',
+        'Telefon': '#3b82f6',
+        'Whatsapp': '#22c55e',
+        'Messenger': '#8b5cf6'
+      };
 
-      sessionsChart = new Chart(ctx1, {
-        type: 'line',
-        data: {
-          labels: daily.map(d => d.day),
-          datasets: [{
-            label: 'Sessionök',
-            data: daily.map(d => d.count),
+      let currentView = window._chartCurrentView || 'napi';
+      const breakdownCheckbox = document.getElementById('chk-channel-breakdown');
+      const btnNapi = document.getElementById('btn-chart-napi');
+      const btnOras = document.getElementById('btn-chart-oras');
+      
+      if (window._chartIsBreakdown && breakdownCheckbox) {
+          breakdownCheckbox.checked = true;
+      }
+
+      window._updateChartThemes = function() {
+        if (!sessionsChart) return;
+        const isDark = document.body.classList.contains('dark');
+        const gridColor = isDark ? '#1a3548' : '#f1f5f9';
+        const gridDash = isDark ? [] : [5, 5];
+        sessionsChart.options.scales.x.grid.color = gridColor;
+        sessionsChart.options.scales.y.grid.color = gridColor;
+        sessionsChart.options.scales.x.grid.borderDash = gridDash;
+        sessionsChart.options.scales.y.grid.borderDash = gridDash;
+        sessionsChart.update();
+      };
+
+      function updateInteractionsChart() {
+        const isDark = document.body.classList.contains('dark');
+        const gridColor = isDark ? '#1a3548' : '#f1f5f9';
+        const gridDash = isDark ? [] : [5, 5];
+        
+        const isBreakdown = breakdownCheckbox ? breakdownCheckbox.checked : false;
+        if (breakdownCheckbox) window._chartIsBreakdown = isBreakdown;
+        
+        const targetData = currentView === 'napi' ? dowData : hourData;
+        const labels = currentView === 'napi' 
+            ? ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap']
+            : Array.from({length: 24}, (_, i) => `${i}:00`);
+
+        let datasets = [];
+
+        if (isBreakdown) {
+          for (const [channel, counts] of Object.entries(targetData.channels)) {
+             datasets.push({
+               label: channel,
+               data: counts,
+               borderColor: typeColorMap[channel] || '#f59e0b',
+               backgroundColor: 'transparent',
+               borderWidth: 2,
+               tension: 0.4,
+               pointRadius: 3,
+               pointBackgroundColor: typeColorMap[channel] || '#f59e0b'
+             });
+          }
+        } else {
+          datasets.push({
+            label: 'Összes megkeresés',
+            data: targetData.total,
             borderColor: '#1ceee0',
             backgroundColor: 'rgba(28,238,224,0.08)',
             borderWidth: 2,
             fill: true,
             tension: 0.4,
-            pointRadius: 3,
+            pointRadius: 4,
             pointBackgroundColor: '#1ceee0',
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: '#6b8b99', font: { size: 11 } }, grid: { color: '#1a3548' } },
-            y: {
-              min: 0,
-              max: yMax,
-              ticks: { color: '#6b8b99', font: { size: 11 }, stepSize: yStep },
-              grid: { color: '#1a3548' }
-            }
-          }
+          });
         }
-      });
+
+        let maxVal = 5;
+        datasets.forEach(ds => {
+            const maxData = Math.max(...ds.data);
+            if (maxData > maxVal) maxVal = maxData;
+        });
+        const yMax = Math.ceil(maxVal * 1.25);
+        const yStep = Math.max(1, Math.ceil(yMax / 6));
+
+        if (sessionsChart) {
+           sessionsChart.data.labels = labels;
+           sessionsChart.data.datasets = datasets;
+           sessionsChart.options.scales.y.max = yMax;
+           sessionsChart.options.scales.y.ticks.stepSize = yStep;
+           sessionsChart.options.scales.x.grid.color = gridColor;
+           sessionsChart.options.scales.y.grid.color = gridColor;
+           sessionsChart.options.scales.x.grid.borderDash = gridDash;
+           sessionsChart.options.scales.y.grid.borderDash = gridDash;
+           sessionsChart.update();
+        } else {
+           sessionsChart = new Chart(ctx1, {
+             type: 'line',
+             data: { labels, datasets },
+             options: {
+               responsive: true,
+               maintainAspectRatio: false,
+               plugins: {
+                 legend: { 
+                   display: true, 
+                   position: 'bottom',
+                   labels: { color: '#6b8b99', usePointStyle: true, boxWidth: 8, font: { size: 11 } }
+                 }
+               },
+               scales: {
+                 x: { 
+                   ticks: { color: '#6b8b99', font: { size: 11 } }, 
+                   grid: { color: gridColor, borderDash: gridDash },
+                   border: { display: false }
+                 },
+                 y: {
+                   min: 0,
+                   max: yMax,
+                   ticks: { color: '#6b8b99', font: { size: 11 }, stepSize: yStep },
+                   grid: { color: gridColor, borderDash: gridDash },
+                   border: { display: false }
+                 }
+               }
+             }
+           });
+        }
+      }
+
+      updateInteractionsChart();
+
+      if (btnNapi && btnOras) {
+          const newBtnNapi = btnNapi.cloneNode(true);
+          const newBtnOras = btnOras.cloneNode(true);
+          btnNapi.parentNode.replaceChild(newBtnNapi, btnNapi);
+          btnOras.parentNode.replaceChild(newBtnOras, btnOras);
+          
+          if (currentView === 'napi') {
+             newBtnNapi.style.background = 'var(--primary)'; newBtnNapi.style.color = '#0a192f'; newBtnNapi.style.fontWeight = '600';
+             newBtnOras.style.background = 'transparent'; newBtnOras.style.color = '#6b8b99'; newBtnOras.style.fontWeight = 'normal';
+          } else {
+             newBtnOras.style.background = 'var(--primary)'; newBtnOras.style.color = '#0a192f'; newBtnOras.style.fontWeight = '600';
+             newBtnNapi.style.background = 'transparent'; newBtnNapi.style.color = '#6b8b99'; newBtnNapi.style.fontWeight = 'normal';
+          }
+
+          newBtnNapi.addEventListener('click', () => {
+             window._chartCurrentView = 'napi'; currentView = 'napi';
+             newBtnNapi.style.background = 'var(--primary)'; newBtnNapi.style.color = '#0a192f'; newBtnNapi.style.fontWeight = '600';
+             newBtnOras.style.background = 'transparent'; newBtnOras.style.color = '#6b8b99'; newBtnOras.style.fontWeight = 'normal';
+             updateInteractionsChart();
+          });
+          newBtnOras.addEventListener('click', () => {
+             window._chartCurrentView = 'oras'; currentView = 'oras';
+             newBtnOras.style.background = 'var(--primary)'; newBtnOras.style.color = '#0a192f'; newBtnOras.style.fontWeight = '600';
+             newBtnNapi.style.background = 'transparent'; newBtnNapi.style.color = '#6b8b99'; newBtnNapi.style.fontWeight = 'normal';
+             updateInteractionsChart();
+          });
+      }
+
+      if (breakdownCheckbox) {
+          const newCb = breakdownCheckbox.cloneNode(true);
+          breakdownCheckbox.parentNode.replaceChild(newCb, breakdownCheckbox);
+          newCb.addEventListener('change', () => updateInteractionsChart());
+      }
 
       // Types donut chart
       const chartTypes = data.interactions_by_type || [];
       const ctx2 = document.getElementById('types-chart');
+      const legendContainer = document.getElementById('types-chart-legend');
       if (!ctx2) return;
       if (typesChart) { typesChart.destroy(); typesChart = null; }
+      
+      const typeColors = ['#3b82f6', '#1ceee0', '#22c55e', '#8b5cf6', '#f59e0b', '#f97316'];
+      
       typesChart = new Chart(ctx2, {
         type: 'doughnut',
         data: {
           labels: chartTypes.map(t => t.type),
           datasets: [{
             data: chartTypes.map(t => t.count),
-            backgroundColor: ['#1ceee0', '#3b82f6', '#22c55e', '#8b5cf6', '#f59e0b', '#f97316'],
+            backgroundColor: typeColors.slice(0, chartTypes.length),
             borderWidth: 0,
           }]
         },
@@ -4770,10 +4949,22 @@
           maintainAspectRatio: false,
           cutout: '65%',
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#6b8b99', font: { size: 11 }, padding: 10 } }
+            legend: { display: false }
           }
         }
       });
+
+      if (legendContainer) {
+        legendContainer.innerHTML = chartTypes.map((t, i) => `
+          <div style="display:flex; flex-direction:column; align-items:flex-start;">
+            <div style="display:flex; align-items:center; margin-bottom:4px;">
+              <div style="width:8px;height:8px;border-radius:50%;background-color:${typeColors[i % typeColors.length]};margin-right:8px;"></div>
+              <span style="font-size:12px;color:#6b8b99;">${t.type === 'Whatsapp' ? 'WhatsApp' : t.type}</span>
+            </div>
+            <div style="font-size:16px;font-weight:600;color:var(--text);padding-left:16px;">${t.count}</div>
+          </div>
+        `).join('');
+      }
 
       // Handoff placeholder chart
       renderHandoffChart();

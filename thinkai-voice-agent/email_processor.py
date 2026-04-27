@@ -221,13 +221,18 @@ Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
             status="sent" if sent_ok else f"failed ({error_msg})",
             session_id=session_id
         )
+        f_stage = "valaszolt"
+        if meeting:
+            f_stage = "foglalt"
+            
         db.log_interaction(
             type="email",
             topic="Email AI válasz",
             summary=f"Bejövő e-mail {from_email} címről",
             result="Sikeres válasz" if sent_ok else "Hibás küldés",
             tool_name="imap_worker_ai",
-            session_id=session_id
+            session_id=session_id,
+            funnel_stage=f_stage
         )
 
 

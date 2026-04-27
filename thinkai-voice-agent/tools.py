@@ -123,6 +123,7 @@ async def send_followup_email(
     recipient_email: Annotated[str, "A címzett email címe"],
     message: Annotated[str, "Az email szövegtörzse (rövid, barátságos, szakmai)"],
     subject: Annotated[str, "Az email tárgya"] = "ThinkAI — Köszönjük érdeklődését!",
+    funnel_stage: Annotated[str, "A beszélgetés állapota: 'irrelevant', 'relevant', 'valaszolt', 'ajanlat', 'foglalt'"] = "valaszolt",
 ) -> str:
     """Follow-up email küldése egy érdeklődőnek."""
     raw_key = os.getenv("BREVO_API_KEY", "")
@@ -186,6 +187,7 @@ async def send_followup_email(
         result=f"Küldés {'sikeres' if sent_ok else 'sikertelen'}",
         tool_name="send_followup_email",
         session_id=_current_session_id,
+        funnel_stage=funnel_stage,
     )
 
     if sent_ok:
@@ -202,6 +204,7 @@ async def send_followup_email(
 async def check_calendar(
     ctx: RunContext,
     days_ahead: Annotated[int, "Hány napra előre nézze a naptárat (alapértelmezett: 7)"] = 7,
+    funnel_stage: Annotated[str, "A beszélgetés állapota: 'irrelevant', 'relevant', 'valaszolt', 'ajanlat', 'foglalt'"] = "valaszolt",
 ) -> str:
     """Naptár ellenőrzése a következő napokra."""
     logger.info(f"Checking calendar for next {days_ahead} days")
@@ -246,6 +249,7 @@ async def check_calendar(
         result=f"{len(upcoming)} esemény",
         tool_name="check_calendar",
         session_id=_current_session_id,
+        funnel_stage=funnel_stage,
     )
     return result_text
 
@@ -265,6 +269,7 @@ async def book_meeting(
     attendee_email: Annotated[str, "A meghívott ügyfél email címe (kötelező bekérni)"],
     duration_minutes: Annotated[int, "A meeting hossza percben"] = 30,
     additional_info: Annotated[str, "Bármely egyéb kiegészítő adat JSON szövegként (pl. cégnév, lakcím). Hagyd üresen '{}' ha nincsen egyéb."] = "{}",
+    funnel_stage: Annotated[str, "A beszélgetés állapota: 'irrelevant', 'relevant', 'valaszolt', 'ajanlat', 'foglalt'"] = "foglalt",
 ) -> str:
     """Találkozó foglalása a naptárba."""
     logger.info(f"Booking meeting: {title} on {date} at {time}, attendee={attendee}, email={attendee_email}")
@@ -336,6 +341,7 @@ async def book_meeting(
             result="Lefoglalva + Kanban kártya létrehozva",
             tool_name="book_meeting",
             session_id=_current_session_id,
+            funnel_stage=funnel_stage,
         )
 
         result = f"Találkozó sikeresen lefoglalva: {title}, {date} {time}-kor, {duration_minutes} perces."
@@ -405,6 +411,7 @@ CITY_COORDS = {
 async def get_weather(
     ctx: RunContext,
     city: Annotated[str, "A város neve (pl. Budapest, Debrecen, Bécs)"],
+    funnel_stage: Annotated[str, "A beszélgetés állapota: 'irrelevant', 'relevant', 'valaszolt', 'ajanlat', 'foglalt'"] = "irrelevant",
 ) -> str:
     """Időjárás lekérdezése."""
     city_lower = city.lower().strip()
@@ -446,6 +453,7 @@ async def get_weather(
             result=f"{temp}°C, {weather_desc}",
             tool_name="get_weather",
             session_id=_current_session_id,
+            funnel_stage=funnel_stage,
         )
         return result_str
     except Exception as e:
@@ -463,6 +471,7 @@ async def create_task(
     task: Annotated[str, "A feladat szövege"],
     priority: Annotated[str, "Prioritás: low/normal/high"] = "normal",
     due_date: Annotated[str, "Határidő YYYY-MM-DD formátumban (opcionális)"] = "",
+    funnel_stage: Annotated[str, "A beszélgetés állapota: 'irrelevant', 'relevant', 'valaszolt', 'ajanlat', 'foglalt'"] = "valaszolt",
 ) -> str:
     """Feladat rögzítése."""
     logger.info(f"Creating task: {task}")
@@ -476,6 +485,7 @@ async def create_task(
             result="Rögzítve",
             tool_name="create_task",
             session_id=_current_session_id,
+            funnel_stage=funnel_stage,
         )
 
         result = f'Feladat rögzítve: "{task}"'
@@ -535,6 +545,7 @@ _TOPIC_ALIASES = {
 async def lookup_info(
     ctx: RunContext,
     topic: Annotated[str, "A keresett téma szabadon megadva, pl: 'csapat', 'árazás', 'pályázat', 'garancia', 'ügyfélszolgálat', 'sikertörténetek'"],
+    funnel_stage: Annotated[str, "A beszélgetés állapota: 'irrelevant', 'relevant', 'valaszolt', 'ajanlat', 'foglalt'"] = "valaszolt",
 ) -> str:
     """ThinkAI tudásbázis lekérdezése."""
     kb = _load_knowledge()
@@ -602,6 +613,7 @@ async def lookup_info(
         result=result[:100] + "..." if len(result) > 100 else result,
         tool_name="lookup_info",
         session_id=_current_session_id,
+        funnel_stage=funnel_stage,
     )
     return result
 
