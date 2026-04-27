@@ -140,7 +140,9 @@ def _get_system_prompt() -> str:
         "doctors":        _format_doctors(pi.get("doctors", [])),
         "campaigns":      _format_campaigns(pi.get("campaigns", [])),
         "knowledge":      _format_knowledge(settings.get("knowledge_content", "")),
+        "tone":           settings.get("tone", ""),
     }
+
 
 
     try:
