@@ -1,5 +1,5 @@
 """
-ThinkAI Voice Agent — LiveKit Agents Server
+ThinkAI Voice Agent - LiveKit Agents Server
 Real-time voice assistant powered by LiveKit + ElevenLabs Scribe v2 STT + Gemini 2.5 Flash + Cartesia TTS
 Hungarian-only with ThinkAI brand pronunciation handling
 """
@@ -66,13 +66,91 @@ _setup_google_credentials()
 # SYSTEM PROMPT — loaded from system_prompt.md for easy editing
 # ═══════════════════════════════════════════════════════════════════════════════
 
-PROMPT_FILE = THIS_DIR / "system_prompt.md"
+PRAXISINFO_FILE = THIS_DIR / "praxisinfo.json"
+
+def _load_praxisinfo() -> dict:
+    """Load praxisinfo.json — practice metadata managed from admin UI."""
+    if PRAXISINFO_FILE.exists():
+        try:
+            return json.loads(PRAXISINFO_FILE.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning(f"Could not read praxisinfo.json: {e}")
+    return {}
+
+def _format_doctors(doctors: list) -> str:
+    if not doctors:
+        return "Nincs megadva"
+    lines = []
+    for d in doctors:
+        name = d.get("nev", "")
+        spec = d.get("szak", "")
+        svc  = d.get("svc", "")
+        line = name
+        if spec: line += f" ({spec})"
+        if svc:  line += f" – {svc}"
+        if line: lines.append(line)
+    return "\n".join(f"- {l}" for l in lines) if lines else "Nincs megadva"
+
+def _format_campaigns(campaigns: list) -> str:
+    active = [c.get("text", "").strip() for c in campaigns if c.get("active") and c.get("text")]
+    return "\n".join(f"- {t}" for t in active) if active else "Nincs aktív kampány"
+
+def _format_knowledge(raw: str) -> str:
+    """Convert knowledge JSON (Q&A dict) to readable K:/V: pairs for the prompt."""
+    try:
+        pairs = json.loads(raw) if isinstance(raw, str) else raw
+        if isinstance(pairs, dict) and pairs:
+            return "\n\n".join(f"K: {q}\nV: {a}" for q, a in pairs.items())
+    except Exception:
+        pass
+    return raw or ""
 
 def _get_system_prompt() -> str:
-    """Load system prompt from system_prompt.md and inject current date."""
-    today = datetime.now().strftime("%Y-%m-%d (%A)")
+    """Load system prompt from system_prompt.md and inject runtime variables.
+
+    Available template variables:
+      {today}          – current date
+      {practice_name}  – intézmény neve (praxisinfo.json)
+      {address}        – cím (praxisinfo.json)
+      {markanev}       – márkanév (praxisinfo.json)
+      {szakterulet}    – szakterület (praxisinfo.json)
+      {kulcsszavak}    – kulcsszavak (praxisinfo.json)
+      {megkozelites}   – megközelítési infók (praxisinfo.json)
+      {price_list}     – árlista szöveg (praxisinfo.json)
+      {doctors}        – orvosok listája (praxisinfo.json)
+      {campaigns}      – aktív kampányok (praxisinfo.json)
+      {knowledge}      – tudásbázis Q&A párok (agent_settings.json)
+    """
     template = PROMPT_FILE.read_text(encoding="utf-8")
-    return template.format(today=today)
+
+    pi       = _load_praxisinfo()
+    settings = _load_agent_settings()
+
+    variables = {
+        "today":          datetime.now().strftime("%Y-%m-%d (%A)"),
+        "practice_name":  pi.get("practice_name", ""),
+        "address":        pi.get("address", ""),
+        "markanev":       pi.get("markanev", ""),
+        "szakterulet":    pi.get("szakterulet", ""),
+        "kulcsszavak":    pi.get("kulcsszavak", ""),
+        "megkozelites":   pi.get("megkozelites", ""),
+        "price_list":     pi.get("price_list", ""),
+        "doctors":        _format_doctors(pi.get("doctors", [])),
+        "campaigns":      _format_campaigns(pi.get("campaigns", [])),
+        "knowledge":      _format_knowledge(settings.get("knowledge_content", "")),
+    }
+
+
+    try:
+        return template.format(**variables)
+    except KeyError as e:
+        # Unknown variable in template — replace only the known ones to avoid crash
+        logger.warning(f"Unknown variable in system prompt template: {e}")
+        result = template
+        for key, val in variables.items():
+            result = result.replace("{" + key + "}", str(val))
+        return result
+
 
 
 # ── TTS pronunciation replacements (applied before Cartesia gets the text) ────

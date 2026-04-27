@@ -795,12 +795,15 @@ _HU_TO_EN = {
 
 class PraxisinfoSaveRequest(BaseModel):
     practice_name: str = ""
-    description: str = ""
-    address: str = ""
-    business_hours: dict = {}
-    doctors: list = []
+    description:   str = ""
+    address:       str = ""
+    markanev:      str = ""
+    szakterulet:   str = ""
+    kulcsszavak:   str = ""
+    megkozelites:  str = ""
+    price_list:    str = ""
+    doctors:  list = []
     campaigns: list = []
-    faq: list = []
 
 @app.get("/admin/api/praxisinfo")
 async def get_praxisinfo(username: str = Depends(verify_jwt)):
@@ -814,33 +817,23 @@ async def get_praxisinfo(username: str = Depends(verify_jwt)):
 
 @app.post("/admin/api/praxisinfo")
 async def save_praxisinfo(payload: PraxisinfoSaveRequest, username: str = Depends(verify_jwt)):
-    """Save practice info and sync business_hours → agent_settings."""
+    """Save practice info. Business hours are managed separately via /admin/api/settings."""
     data = {
-        "practice_name":  payload.practice_name,
-        "description":    payload.description,
-        "address":        payload.address,
-        "business_hours": payload.business_hours,
-        "doctors":        payload.doctors,
-        "campaigns":      payload.campaigns,
-        "faq":            payload.faq,
-        "last_updated":   datetime.utcnow().isoformat(),
+        "practice_name": payload.practice_name,
+        "description":   payload.description,
+        "address":       payload.address,
+        "markanev":      payload.markanev,
+        "szakterulet":   payload.szakterulet,
+        "kulcsszavak":   payload.kulcsszavak,
+        "megkozelites":  payload.megkozelites,
+        "price_list":    payload.price_list,
+        "doctors":       payload.doctors,
+        "campaigns":     payload.campaigns,
+        "last_updated":  datetime.utcnow().isoformat(),
     }
     PRAXISINFO_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    # Sync business_hours → agent_settings (English keys, open/close/enabled)
-    en_bh = {}
-    for hu_key, en_key in _HU_TO_EN.items():
-        day = payload.business_hours.get(hu_key, {})
-        en_bh[en_key] = {
-            "open":    day.get("from") or None,
-            "close":   day.get("to")   or None,
-            "enabled": bool(day.get("enabled", False)),
-        }
-    s = _read_settings()
-    s["business_hours"] = en_bh
-    SETTINGS_FILE.write_text(json.dumps(s, ensure_ascii=False, indent=2), encoding="utf-8")
-
     return {"ok": True, "message": "Praxisinformáció elmentve."}
+
 
 
 @app.get("/admin/api/cartesia/voices")
