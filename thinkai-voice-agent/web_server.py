@@ -515,31 +515,25 @@ async def admin_tasks(completed: str = "all", username: str = Depends(verify_jwt
 @app.patch("/admin/api/tasks/{task_id}/complete")
 async def admin_task_complete(task_id: int, username: str = Depends(verify_jwt)):
     """Toggle task completed status."""
-    with db.get_db() as conn:
-        row = conn.execute("SELECT completed FROM tasks WHERE id = ?", (task_id,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Task not found")
-        new_val = 0 if row["completed"] else 1
-        conn.execute("UPDATE tasks SET completed = ? WHERE id = ?", (new_val, task_id))
-    return {"ok": True, "completed": bool(new_val)}
+    res = db.update_task_complete(task_id)
+    if not res.get("ok"):
+        raise HTTPException(status_code=404, detail="Task not found or update failed")
+    return {"ok": True, "completed": res.get("completed", False)}
 
 
 @app.delete("/admin/api/tasks/{task_id}")
 async def admin_task_delete(task_id: int, username: str = Depends(verify_jwt)):
     """Delete a task."""
-    with db.get_db() as conn:
-        conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    res = db.delete_task(task_id)
+    if not res:
+        raise HTTPException(status_code=404, detail="Delete failed")
     return {"ok": True}
 
 
 @app.get("/admin/api/sessions")
 async def admin_sessions(limit: int = 50, username: str = Depends(verify_jwt)):
     """Recent sessions."""
-    with db.get_db() as conn:
-        rows = conn.execute(
-            "SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?", (limit,)
-        ).fetchall()
-    return {"sessions": [dict(r) for r in rows]}
+    return {"sessions": db.get_sessions(limit=limit)}
 
 
 @app.get("/admin/api/sessions/summary")
@@ -561,7 +555,11 @@ class ClientStatusUpdateRequest(BaseModel):
 @app.get("/admin/api/clients")
 async def admin_clients(username: str = Depends(verify_jwt)):
     """List all clients for Kanban."""
-    return {"clients": db.get_clients()}
+    clients = db.get_clients()
+    for c in clients:
+        if "custom_data" in c and isinstance(c["custom_data"], dict):
+            c["custom_data"] = json.dumps(c["custom_data"])
+    return {"clients": clients}
 
 @app.post("/admin/api/clients")
 async def admin_add_client(req: ClientCreateRequest, username: str = Depends(verify_jwt)):
