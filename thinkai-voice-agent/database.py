@@ -127,7 +127,7 @@ def get_sessions(limit: int = 50) -> list[dict]:
 # INTERACTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def log_interaction(type: str, topic: str = "", summary: str = "", result: str = "", tool_name: str = "", session_id: str = "", funnel_stage: str = "relevant") -> None:
+def log_interaction(type: str, topic: str = "", summary: str = "", result: str = "", tool_name: str = "", session_id: str = "", funnel_stage: str = "relevant", alert_tags: list = None, handover_reason: str = None, direction: str = "inbound") -> None:
     if not supabase: return
     try:
         supabase.table("interactions").insert({
@@ -137,7 +137,10 @@ def log_interaction(type: str, topic: str = "", summary: str = "", result: str =
             "summary": summary,
             "result": result,
             "tool_name": tool_name or None,
-            "funnel_stage": funnel_stage
+            "funnel_stage": funnel_stage,
+            "alert_tags": alert_tags or [],
+            "handover_reason": handover_reason,
+            "direction": direction
         }).execute()
     except Exception as e:
         logger.error(f"Error logging interaction: {e}")
@@ -276,6 +279,108 @@ def delete_task(task_id: int) -> bool:
 # ANALYTICS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def get_alerts_stats() -> dict:
+    if not supabase: 
+        return {"urgent_count": 0, "complaint_count": 0, "callback_count": 0, "recurring_count": 0, "stuck_count": 0}
+    try:
+        urgent_res = supabase.table("interactions").select("id", count="exact", head=True).contains("alert_tags", '["urgent"]').execute()
+        complaint_res = supabase.table("interactions").select("id", count="exact", head=True).contains("alert_tags", '["complaint"]').execute()
+        callback_res = supabase.table("interactions").select("id", count="exact", head=True).contains("alert_tags", '["callback"]').execute()
+        recurring_res = supabase.table("interactions").select("id", count="exact", head=True).contains("alert_tags", '["recurring"]').execute()
+        
+        # Stuck cases: older than 24 hours and not in a closed status
+        yesterday = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        clients_res = supabase.table("clients").select("id, status").lt("created_at", yesterday).execute()
+        
+        stuck_count = 0
+        closed_statuses = ["lezarva", "siker", "kuka", "befejezett", "lezart"]
+        for c in clients_res.data:
+            st_lower = str(c.get("status", "")).lower()
+            if not any(k in st_lower for k in closed_statuses):
+                stuck_count += 1
+                
+        return {
+            "urgent_count": urgent_res.count or 0,
+            "complaint_count": complaint_res.count or 0,
+            "callback_count": callback_res.count or 0,
+            "recurring_count": recurring_res.count or 0,
+            "stuck_count": stuck_count
+        }
+    except Exception as e:
+        logger.error(f"Alert stats error: {e}")
+        return {"urgent_count": 0, "complaint_count": 0, "callback_count": 0, "recurring_count": 0, "stuck_count": 0}
+
+def get_alert_details(alert_type: str) -> list[dict]:
+    if not supabase: return []
+    try:
+        if alert_type == "stuck":
+            yesterday = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+            clients_res = supabase.table("clients").select("*").lt("created_at", yesterday).order("created_at", desc=True).execute()
+            
+            stuck_cases = []
+            closed_statuses = ["lezarva", "siker", "kuka", "befejezett", "lezart"]
+            for c in clients_res.data:
+                st_lower = str(c.get("status", "")).lower()
+                if not any(k in st_lower for k in closed_statuses):
+                    import json
+                    try:
+                        custom = json.loads(c.get("custom_data") or "{}")
+                    except:
+                        custom = {}
+                    
+                    source = custom.get("forras_csatorna") or ("Messenger" if custom.get("messenger_id") else "Ismeretlen")
+                    name = custom.get("name", custom.get("név", "Névtelen"))
+                    
+                    stuck_cases.append({
+                        "id": c["id"],
+                        "created_at": c["created_at"],
+                        "name": name,
+                        "channel": source,
+                        "status": c["status"],
+                        "is_stuck": True
+                    })
+            return stuck_cases
+        elif alert_type in ["urgent", "complaint", "callback", "recurring"]:
+            # Standard interactions filter
+            res = supabase.table("interactions").select("*").contains("alert_tags", f'["{alert_type}"]').order("created_at", desc=True).limit(50).execute()
+            
+            alerts = []
+            for item in res.data:
+                alerts.append({
+                    "id": item["id"],
+                    "created_at": item["created_at"],
+                    "channel": item["type"],
+                    "topic": item["topic"],
+                    "summary": item["summary"],
+                    "is_stuck": False
+                })
+            return alerts
+            
+        return []
+    except Exception as e:
+        logger.error(f"Alert details error: {e}")
+        return []
+
+def get_latest_ai_insights() -> list[str]:
+    if not supabase: return []
+    try:
+        res = supabase.table("ai_insights").select("insights").order("created_at", desc=True).limit(1).execute()
+        if res.data and len(res.data) > 0:
+            return res.data[0].get("insights", [])
+        return []
+    except Exception as e:
+        logger.error(f"Get AI insights error: {e}")
+        return []
+
+def save_ai_insights(insights: list[str]) -> bool:
+    if not supabase: return False
+    try:
+        supabase.table("ai_insights").insert({"insights": insights}).execute()
+        return True
+    except Exception as e:
+        logger.error(f"Save AI insights error: {e}")
+        return False
+
 def get_stats(period: str = "month") -> dict:
     if not supabase: return {}
     today = datetime.now(timezone.utc)
@@ -306,8 +411,16 @@ def get_stats(period: str = "month") -> dict:
 
         tasks_res = supabase.table("tasks").select("id", count="exact", head=True).eq("completed", 0).execute()
 
-        all_inters = supabase.table("interactions").select("type, created_at").gte("created_at", start_dt.isoformat()).execute()
+        all_inters = supabase.table("interactions").select("type, topic, handover_reason, created_at").gte("created_at", start_dt.isoformat()).execute()
         type_counts = {}
+        topic_counts = {}
+        handover_counts = {
+            "Összetett kérdés": 0,
+            "Sürgős / triázs": 0,
+            "Hiányzó info": 0,
+            "Foglalási kivétel": 0,
+            "Emberi döntés": 0
+        }
         
         interactions_by_dow = {"total": [0]*7, "channels": {}}
         interactions_by_hour = {"total": [0]*24, "channels": {}}
@@ -343,9 +456,27 @@ def get_stats(period: str = "month") -> dict:
                         interactions_by_hour["channels"][t] = [0]*24
                     interactions_by_hour["channels"][t][hr] += 1
                 except Exception:
-                    pass
+                    pass            
+            topic_raw = i.get("topic")
+            if topic_raw:
+                t_topic = str(topic_raw).strip()
+                if t_topic.lower() not in ["", "none", "null", "ismeretlen"]:
+                    # Shorten very long topics for display
+                    if len(t_topic) > 35:
+                        t_topic = t_topic[:32] + "..."
+                    topic_counts[t_topic] = topic_counts.get(t_topic, 0) + 1
+
+            ho_reason = i.get("handover_reason")
+            if ho_reason:
+                ho_reason = str(ho_reason).strip()
+                if ho_reason:
+                    handover_counts[ho_reason] = handover_counts.get(ho_reason, 0) + 1
 
         interactions_by_type = [{"type": k, "count": v} for k, v in sorted(type_counts.items(), key=lambda x: x[1], reverse=True)]
+        interactions_by_topic = [{"topic": k, "count": v} for k, v in sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)]
+        
+        # Sort handovers primarily by predefined order or count, but dict items are fine as is, we'll format them to a list
+        handovers = [{"reason": k, "count": v} for k, v in handover_counts.items()]
 
         all_sess = supabase.table("sessions").select("started_at, duration_seconds").gte("started_at", start_dt.isoformat()).execute()
         day_counts = {}
@@ -389,7 +520,9 @@ def get_stats(period: str = "month") -> dict:
             "total_bookings": cal_res.count or 0,
             "open_tasks": tasks_res.count or 0,
             "avg_session_duration": round(avg_dur),
+            "handovers": handovers,
             "interactions_by_type": interactions_by_type,
+            "interactions_by_topic": interactions_by_topic,
             "interactions_by_dow": interactions_by_dow,
             "interactions_by_hour": interactions_by_hour,
             "sessions_per_day": filled_days,
@@ -404,6 +537,81 @@ def get_stats(period: str = "month") -> dict:
     except Exception as e:
         logger.error(f"Stats error: {e}")
         return {}
+
+def get_outbound_stats(period: str = "month") -> dict:
+    if not supabase: return {"total_outbound": 0, "reached_rate": 0, "booked_count": 0, "booked_rate": 0, "open_followup": 0}
+    today = datetime.now(timezone.utc)
+    
+    if period == "week":
+        start_dt = today - timedelta(days=today.weekday())
+    elif period == "month":
+        start_dt = today.replace(day=1)
+    else: # year
+        start_dt = today - timedelta(days=365)
+
+    try:
+        all_inters = supabase.table("interactions").select("session_id, direction, funnel_stage, handover_reason, created_at").gte("created_at", start_dt.isoformat()).execute()
+        
+        sessions = {}
+        # also count interactions without session_id that are outbound
+        total_outbound = 0
+        
+        for i in all_inters.data:
+            d = i.get("direction", "inbound") or "inbound"
+            if d == "outbound":
+                total_outbound += 1
+                
+            sid = i.get("session_id")
+            if not sid:
+                continue
+            if sid not in sessions:
+                sessions[sid] = {"outbound": [], "inbound": []}
+            sessions[sid][d].append(i)
+            
+        reached_count = 0
+        booked_count = 0
+        open_followup = 0
+        negotiating_count = 0
+        
+        for sid, data in sessions.items():
+            if not data["outbound"]:
+                continue
+            
+            # Reached: if there is any inbound in this session (meaning they replied)
+            if data["inbound"]:
+                reached_count += 1
+                
+                # Check for followup
+                has_handover = any(o.get("handover_reason") for o in data["outbound"] + data["inbound"])
+                # Ideally we check if it's open, but for now we check if there's a handover reason
+                if has_handover:
+                    open_followup += 1
+            
+            # Negotiating: if any interaction in this session has funnel_stage in ['ajanlat', 'foglalas_alatt', 'foglalt']
+            is_negotiating = any(o.get("funnel_stage") in ["ajanlat", "foglalas_alatt", "foglalt"] for o in data["outbound"] + data["inbound"])
+            if is_negotiating:
+                negotiating_count += 1
+                
+            # Booked: if any interaction in this session has funnel_stage == 'foglalt'
+            is_booked = any(o.get("funnel_stage") == "foglalt" for o in data["outbound"] + data["inbound"])
+            if is_booked:
+                booked_count += 1
+                
+        reached_rate = round((reached_count / total_outbound * 100)) if total_outbound > 0 else 0
+        booked_rate = round((booked_count / total_outbound * 100)) if total_outbound > 0 else 0
+        
+        return {
+            "total_outbound": total_outbound,
+            "reached_count": reached_count,
+            "reached_rate": reached_rate,
+            "negotiating_count": negotiating_count,
+            "booked_count": booked_count,
+            "booked_rate": booked_rate,
+            "open_followup": open_followup
+        }
+    except Exception as e:
+        logger.error(f"Outbound stats error: {e}")
+        return {"total_outbound": 0, "reached_rate": 0, "booked_count": 0, "booked_rate": 0, "open_followup": 0}
 
 def get_funnel_stats() -> dict:
     if not supabase: return {}

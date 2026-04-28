@@ -3476,7 +3476,7 @@
             </div>
             <!-- Átadási okok 🚧 -->
             <div class="panel-white">
-              <div class="panel-title">Átadási okok <span class="wip-badge">🚧</span></div>
+              <div class="panel-title">Átadási okok</div>
               <div style="position:relative;height:240px;">
                 <canvas id="handoff-chart"></canvas>
               </div>
@@ -3489,84 +3489,72 @@
               </div>
             </div>
           </div>
-          <!-- 3. Blokk: Operatív figyelmeztetések 🚧 -->
+          <!-- 3. Blokk: Operatív figyelmeztetések -->
           <div class="section-divider"></div>
-          <h2 class="section-header-figma">Operatív figyelmeztetések és teendők <span class="wip-badge">🚧</span></h2>
+          <h2 class="section-header-figma">Operatív figyelmeztetések és teendők</h2>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:36px;">
             <!-- Kritikus ügyek -->
             <div class="panel-white">
               <div class="panel-title"> Kritikus ügyek</div>
-              <div class="severity-card high">
+              <div class="severity-card high" onclick="openAlertDetails('urgent')">
                 <span class="severity-label">Sürgős megkeresés</span>
-                <span><span class="severity-count">3</span><span class="severity-unit">eset</span></span>
+                <span><span class="severity-count" id="alert-urgent">0</span><span class="severity-unit">eset</span></span>
               </div>
-              <div class="severity-card high">
+              <div class="severity-card high" onclick="openAlertDetails('complaint')">
                 <span class="severity-label">Panasz</span>
-                <span><span class="severity-count">7</span><span class="severity-unit">eset</span></span>
+                <span><span class="severity-count" id="alert-complaint">0</span><span class="severity-unit">eset</span></span>
               </div>
-              <div class="severity-card medium">
+              <div class="severity-card medium" onclick="openAlertDetails('stuck')">
                 <span class="severity-label">Nem kezelt / elakadt ügy</span>
-                <span><span class="severity-count">12</span><span class="severity-unit">eset</span></span>
+                <span><span class="severity-count" id="alert-stuck">0</span><span class="severity-unit">eset</span></span>
               </div>
-              <div class="severity-card medium">
+              <div class="severity-card medium" onclick="openAlertDetails('callback')">
                 <span class="severity-label">Visszahívást igénylő lead</span>
-                <span><span class="severity-count">18</span><span class="severity-unit">eset</span></span>
+                <span><span class="severity-count" id="alert-callback">0</span><span class="severity-unit">eset</span></span>
               </div>
-              <div class="severity-card low">
+              <div class="severity-card low" onclick="openAlertDetails('recurring')">
                 <span class="severity-label">Többször visszatérő kérdés</span>
-                <span><span class="severity-count">5</span><span class="severity-unit">eset</span></span>
+                <span><span class="severity-count" id="alert-recurring">0</span><span class="severity-unit">eset</span></span>
               </div>
             </div>
             <!-- AI javaslatok -->
             <div class="panel-white">
-              <div class="panel-title"> Finomhangolási javaslatok</div>
-              <div class="suggestion-card">
-                <span class="suggestion-icon"></span>
-                <span class="suggestion-text">Az árkérdések aránya 28%-kal nőtt – érdemes bővíteni az árakkal
-                  kapcsolatos tudásbázist.</span>
+              <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Finomhangolási javaslatok</span>
+                <button id="btn-refresh-insights" onclick="generateInsights()" style="background:transparent; border:none; cursor:pointer; color:var(--text-muted); font-size:14px; display:flex; align-items:center; gap:4px; padding:4px 8px; border-radius:4px; transition:all 0.2s;">
+                  <span id="insights-refresh-icon">🔄</span> Frissítés
+                </button>
               </div>
-              <div class="suggestion-card">
-                <span class="suggestion-icon"></span>
-                <span class="suggestion-text">Az angol nyelvű megkeresések aránya nő – megfontolható az angol nyelvű
-                  válaszok fejlesztése.</span>
-              </div>
-              <div class="suggestion-card">
-                <span class="suggestion-icon"></span>
-                <span class="suggestion-text">A 16:00–18:00 közti sávban emelkedett az átadási arány – érdemes vizsgálni
-                  az okot.</span>
-              </div>
-              <div class="suggestion-card">
-                <span class="suggestion-icon"></span>
-                <span class="suggestion-text">Az időpontmódosítási kérdésekre érdemes új szabályt rögzíteni a Szabályok
-                  menüben.</span>
+              <div id="insights-container">
+                <div style="text-align:center; padding:20px;"><div class="spinner"></div></div>
               </div>
             </div>
           </div>
-          <!-- 4. Blokk: Kimenő kommunikáció 🚧 -->
+          <!-- 4. Blokk: Kimenő kommunikáció -->
           <div class="section-divider"></div>
-          <h2 class="section-header-figma">Kimenő kommunikáció <span class="wip-badge">🚧</span></h2>
+          <h2 class="section-header-figma">Kimenő kommunikáció</h2>
           <div style="display:grid;grid-template-columns:220px 1fr 1fr;gap:18px;margin-bottom:20px;">
             <!-- Mini KPI-k -->
             <div>
               <div class="out-kpi-card">
                 <div class="out-kpi-label">Összes kimenő</div>
-                <div class="out-kpi-value">326</div>
-                <div class="out-kpi-trend kpi-trend-up">▲ +18% <span class="kpi-trend-desc">előző időszakhoz</span>
+                <div class="out-kpi-value" id="outbound-total">0</div>
+                <div class="out-kpi-trend">
                 </div>
               </div>
               <div class="out-kpi-card">
                 <div class="out-kpi-label">Elért páciensek</div>
-                <div class="out-kpi-value">72%</div>
+                <div class="out-kpi-value" id="outbound-reached">0%</div>
                 <div class="out-kpi-sub">az összes indított kapcsolatfelvételből</div>
               </div>
               <div class="out-kpi-card">
                 <div class="out-kpi-label">Foglalássá vált</div>
-                <div class="out-kpi-value">48</div>
-                <div class="out-kpi-trend kpi-trend-up">▲ 15% konverziós arány</div>
+                <div class="out-kpi-value" id="outbound-booked">0</div>
+                <div class="out-kpi-trend" id="outbound-booked-rate">0% konverziós arány</div>
               </div>
               <div class="out-kpi-card">
                 <div class="out-kpi-label">Nyitott utánkövetés</div>
-                <div class="out-kpi-value">19</div>
+                <div class="out-kpi-value" id="outbound-open">0</div>
                 <div class="out-kpi-sub">emberi lépést igényel</div>
               </div>
             </div>
@@ -3580,31 +3568,8 @@
             <!-- Konverziós funnel zöld -->
             <div class="panel-white">
               <div class="panel-title">Eredményesség és konverzió</div>
-              <div>
-                <div class="green-funnel-step" style="width:100%;">
-                  <div class="green-funnel-label">Kimenő kommunikáció indítva</div>
-                  <div><span class="green-funnel-val">326</span><span class="green-funnel-pct">(100%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 72% konverzió</div>
-                <div class="green-funnel-step" style="width:72%;">
-                  <div class="green-funnel-label">Páciens elérve</div>
-                  <div><span class="green-funnel-val">235</span><span class="green-funnel-pct">(72%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 60% konverzió</div>
-                <div class="green-funnel-step" style="width:55%;">
-                  <div class="green-funnel-label">Reagált / kapcsolat létrejött</div>
-                  <div><span class="green-funnel-val">141</span><span class="green-funnel-pct">(60%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 52% konverzió</div>
-                <div class="green-funnel-step" style="width:40%;">
-                  <div class="green-funnel-label">Időpont egyeztetve</div>
-                  <div><span class="green-funnel-val">73</span><span class="green-funnel-pct">(52%)</span></div>
-                </div>
-                <div class="funnel-conv">▼ 66% konverzió</div>
-                <div class="green-funnel-step" style="width:28%;">
-                  <div class="green-funnel-label">Foglalás létrejött</div>
-                  <div><span class="green-funnel-val">48</span><span class="green-funnel-pct">(66%)</span></div>
-                </div>
+              <div id="outbound-funnel-container">
+                <div style="text-align:center;padding:20px;color:#6b7280;"><div class="spinner"></div>Betöltés...</div>
               </div>
             </div>
           </div>
@@ -4144,6 +4109,7 @@
                 <div class="page-subtitle">Ügyfelek listázása és alapadatok módosítása</div>
               </div>
               <div style="display:flex;gap:12px;">
+                <button id="bulk-delete-btn" class="int-toolbar-btn" style="display:none; color: #ef4444; border-color: #ef4444;" onclick="bulkDeleteClients()">🗑 Kijelöltek törlése (<span id="bulk-delete-count">0</span>)</button>
                 <button class="int-toolbar-btn" onclick="openClientFieldsModal()">Ügyfél mezők beállítása</button>
                 <button class="int-toolbar-btn" onclick="loadClientsTable()">↻ Frissítés</button>
                 <button class="int-toolbar-btn" onclick="openClientModal()" style="width:auto; margin:0;">+ Új
@@ -4225,6 +4191,7 @@
               </div>
             </div>
           </div>
+
 
           <!-- Log Modal HTML -->
           <div id="log-modal"
@@ -4627,11 +4594,58 @@
       if (page === 'tudastar') initTudastar();
     }
 
+    async function openAlertDetails(type) {
+      const typeNames = {
+        urgent: "Sürgős megkeresések",
+        complaint: "Panaszok",
+        stuck: "Nem kezelt / elakadt ügyek",
+        callback: "Visszahívást igénylők",
+        recurring: "Többször visszatérő kérdések"
+      };
+      
+      document.getElementById('alert-modal-title').textContent = `Részletek: ${typeNames[type] || type}`;
+      document.getElementById('alert-modal-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;"><div class="spinner"></div></td></tr>';
+      document.getElementById('alert-details-modal').style.display = 'flex';
+      
+      try {
+        const res = await authFetch(`/admin/api/analytics/alerts/details?type=${type}`);
+        const data = await res.json();
+        
+        if (data.status === 'success' && data.data && data.data.length > 0) {
+          const rows = data.data.map(item => {
+            if (item.is_stuck) {
+              return `<tr>
+                <td class="td-time">${fmtDt(item.created_at)}</td>
+                <td style="font-weight:600; color:var(--text);">${esc(item.channel)}</td>
+                <td><strong style="color:var(--text);">${esc(item.name)}</strong></td>
+                <td><span class="status-badge" style="background:var(--bg3); color:var(--text); padding:4px 8px; border-radius:4px; font-size:12px;">${esc(item.status)}</span></td>
+              </tr>`;
+            } else {
+              return `<tr>
+                <td class="td-time">${fmtDt(item.created_at)}</td>
+                <td style="font-weight:600; color:var(--text);">${esc(item.channel)}</td>
+                <td><strong style="color:var(--text);">${esc(item.topic)}</strong></td>
+                <td style="color:rgba(8,36,50,0.8);">${esc(item.summary)}</td>
+              </tr>`;
+            }
+          }).join('');
+          document.getElementById('alert-modal-tbody').innerHTML = rows;
+        } else {
+          document.getElementById('alert-modal-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">Nincs megjeleníthető adat.</td></tr>';
+        }
+      } catch (err) {
+        document.getElementById('alert-modal-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Hiba történt az adatok betöltésekor.</td></tr>';
+      }
+    }
+
     // ── ANALYTICS ─────────────────────────────────────────────────────────────────
     async function loadStats() {
       const period = document.getElementById('stats-days').value;
       const kpiGrid = document.getElementById('kpi-grid-figma');
       kpiGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#6b7280;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;"></div></div>`;
+
+      // Betöltjük az AI insightokat is párhuzamosan
+      loadInsights();
 
       try {
         const res = await authFetch(`/admin/api/stats?period=${period}`);
@@ -4639,8 +4653,24 @@
         _analyticsData = data;
         renderStats(data);
         loadFunnelStats();
+        loadAlerts();
+        loadOutboundStats();
       } catch (e) {
         kpiGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ef4444;padding:30px;">Hiba az adatok betöltésekor.</div>';
+      }
+    }
+
+    async function loadAlerts() {
+      try {
+        const res = await authFetch('/admin/api/analytics/alerts');
+        const data = await res.json();
+        document.getElementById('alert-urgent').textContent = data.urgent_count || 0;
+        document.getElementById('alert-complaint').textContent = data.complaint_count || 0;
+        document.getElementById('alert-callback').textContent = data.callback_count || 0;
+        document.getElementById('alert-recurring').textContent = data.recurring_count || 0;
+        document.getElementById('alert-stuck').textContent = data.stuck_count || 0;
+      } catch (e) {
+        console.error("Alerts fetch error", e);
       }
     }
 
@@ -4693,6 +4723,147 @@
       }
     }
 
+    async function loadOutboundStats() {
+      const period = document.getElementById('stats-days').value;
+      try {
+        const res = await authFetch(`/admin/api/analytics/outbound/summary?period=${period}`);
+        const data = await res.json();
+        
+        const total = data.total_outbound || 0;
+        const reached = data.reached_count || 0;
+        const negotiating = data.negotiating_count || 0;
+        const booked = data.booked_count || 0;
+        
+        document.getElementById('outbound-total').textContent = total;
+        document.getElementById('outbound-reached').textContent = (data.reached_rate || 0) + '%';
+        document.getElementById('outbound-booked').textContent = booked;
+        
+        const rateEl = document.getElementById('outbound-booked-rate');
+        rateEl.innerHTML = `<span>${data.booked_rate || 0}% konverziós arány</span>`;
+        if (data.booked_rate > 0) {
+            rateEl.classList.add('kpi-trend-up');
+        } else {
+            rateEl.classList.remove('kpi-trend-up');
+        }
+        
+        document.getElementById('outbound-open').textContent = data.open_followup || 0;
+        
+        // Render Green Funnel
+        const funnelContainer = document.getElementById('outbound-funnel-container');
+        
+        const p1 = total > 0 ? Math.round((reached / total) * 100) : 0;
+        const p2 = reached > 0 ? Math.round((negotiating / reached) * 100) : 0;
+        const p3 = negotiating > 0 ? Math.round((booked / negotiating) * 100) : 0;
+        
+        const w1 = total > 0 ? Math.round((reached / total) * 100) : 10;
+        const w2 = total > 0 ? Math.round((negotiating / total) * 100) : 10;
+        const w3 = total > 0 ? Math.round((booked / total) * 100) : 10;
+        
+        if (funnelContainer) {
+            if (total === 0) {
+              funnelContainer.innerHTML = `
+                <div class="green-funnel-step" style="width:100%;">
+                  <div class="green-funnel-label">Kimenő kommunikáció indítva</div>
+                  <div><span class="green-funnel-val">0</span><span class="green-funnel-pct">(100%)</span></div>
+                </div>
+                <div class="funnel-conv">▼ 72% konverzió</div>
+                <div class="green-funnel-step" style="width:72%;">
+                  <div class="green-funnel-label">Páciens elérve / Reagált</div>
+                  <div><span class="green-funnel-val">0</span><span class="green-funnel-pct">(0%)</span></div>
+                </div>
+                <div class="funnel-conv">▼ 60% konverzió</div>
+                <div class="green-funnel-step" style="width:55%;">
+                  <div class="green-funnel-label">Időpont egyeztetve</div>
+                  <div><span class="green-funnel-val">0</span><span class="green-funnel-pct">(0%)</span></div>
+                </div>
+                <div class="funnel-conv">▼ 52% konverzió</div>
+                <div class="green-funnel-step" style="width:40%;">
+                  <div class="green-funnel-label">Foglalás létrejött</div>
+                  <div><span class="green-funnel-val">0</span><span class="green-funnel-pct">(0%)</span></div>
+                </div>
+              `;
+            } else {
+              funnelContainer.innerHTML = `
+                <div class="green-funnel-step" style="width:100%;">
+                  <div class="green-funnel-label">Kimenő kommunikáció indítva</div>
+                  <div><span class="green-funnel-val">${total}</span><span class="green-funnel-pct">(100%)</span></div>
+                </div>
+                <div class="funnel-conv">▼ ${p1}% konverzió</div>
+                <div class="green-funnel-step" style="width:${Math.max(w1, 10)}%;">
+                  <div class="green-funnel-label">Páciens elérve / Reagált</div>
+                  <div><span class="green-funnel-val">${reached}</span><span class="green-funnel-pct">(${total > 0 ? Math.round((reached/total)*100) : 0}%)</span></div>
+                </div>
+                <div class="funnel-conv">▼ ${p2}% konverzió</div>
+                <div class="green-funnel-step" style="width:${Math.max(w2, 10)}%;">
+                  <div class="green-funnel-label">Időpont egyeztetve</div>
+                  <div><span class="green-funnel-val">${negotiating}</span><span class="green-funnel-pct">(${total > 0 ? Math.round((negotiating/total)*100) : 0}%)</span></div>
+                </div>
+                <div class="funnel-conv">▼ ${p3}% konverzió</div>
+                <div class="green-funnel-step" style="width:${Math.max(w3, 10)}%;">
+                  <div class="green-funnel-label">Foglalás létrejött</div>
+                  <div><span class="green-funnel-val">${booked}</span><span class="green-funnel-pct">(${total > 0 ? Math.round((booked/total)*100) : 0}%)</span></div>
+                </div>
+              `;
+            }
+        }
+        
+      } catch (e) {
+        console.error("Outbound stats fetch error", e);
+        const funnelContainer = document.getElementById('outbound-funnel-container');
+        if (funnelContainer) funnelContainer.innerHTML = '<div style="color:red;padding:20px;text-align:center;">Hiba a tölcsér betöltésekor</div>';
+      }
+    }
+
+    async function loadInsights() {
+      const container = document.getElementById('insights-container');
+      try {
+        const res = await authFetch('/admin/api/analytics/insights');
+        const data = await res.json();
+        if (data.status === 'success' && data.insights && data.insights.length > 0) {
+          renderInsights(data.insights);
+        } else {
+          container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Nincs elérhető javaslat.</div>';
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px;">Hiba a betöltéskor.</div>';
+      }
+    }
+
+    async function generateInsights() {
+      const btn = document.getElementById('btn-refresh-insights');
+      const icon = document.getElementById('insights-refresh-icon');
+      const container = document.getElementById('insights-container');
+      
+      btn.disabled = true;
+      icon.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:2px;border-color:#e5e7eb;border-top-color:currentColor;display:inline-block;"></div>';
+      container.innerHTML = '<div style="text-align:center; padding:20px;"><div class="spinner" style="border-color:#e5e7eb;border-top-color:#1ceee0;"></div><div style="margin-top:10px; color:var(--text-muted); font-size:13px;">AI analízis folyamatban...</div></div>';
+      
+      try {
+        const res = await authFetch('/admin/api/analytics/insights/generate', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'success' && data.insights) {
+          renderInsights(data.insights);
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px;">Hiba a generáláskor.</div>';
+      } finally {
+        btn.disabled = false;
+        icon.innerHTML = '🔄';
+      }
+    }
+
+    function renderInsights(insights) {
+      const container = document.getElementById('insights-container');
+      container.innerHTML = insights.map(text => `
+        <div class="suggestion-card">
+          <span class="suggestion-icon">💡</span>
+          <span class="suggestion-text">${esc(text)}</span>
+        </div>
+      `).join('');
+    }
+
     function renderStats(data) {
       const kpiGrid = document.getElementById('kpi-grid-figma');
       const period = document.getElementById('stats-days').value;
@@ -4736,7 +4907,7 @@
   `).join('');
 
       // Fill top topics from interaction types
-      const types = data.interactions_by_type || [];
+      const types = data.interactions_by_topic || [];
       const typesTotal = types.reduce((a, t) => a + (t.count || 0), 0);
       const topicsEl = document.getElementById('top-topics-list');
       if (topicsEl) {
@@ -4750,7 +4921,7 @@
             <div class="topic-row-header">
               <div style="display:flex;align-items:center;">
                 <div class="topic-rank-badge">${i + 1}</div>
-                <span class="topic-name">${t.type || 'Ismeretlen'}</span>
+                <span class="topic-name">${t.topic || 'Ismeretlen'}</span>
               </div>
               <span class="topic-value">${t.count}<span class="topic-pct">(${pct}%)</span></span>
             </div>
@@ -4967,7 +5138,12 @@
       }
 
       // Handoff placeholder chart
-      renderHandoffChart();
+      // Handoff chart is now dynamic, called inside loadStats
+      if (data && data.handovers) {
+          renderHandoffChart(data.handovers);
+      } else {
+          renderHandoffChart([]);
+      }
 
       // Outgoing activity placeholder chart
       renderOutgoingChart();
@@ -4978,12 +5154,22 @@
       }, 50);
     }
 
-    function renderHandoffChart() {
+    function renderHandoffChart(handovers = []) {
       const ctx = document.getElementById('handoff-chart');
       if (!ctx) return;
       if (handoffChart) { handoffChart.destroy(); handoffChart = null; }
-      const labels = ['Összetett kérdés', 'Sürgős / triázs', 'Hiányzó info', 'Foglalási kivétel', 'Emberi döntés'];
-      const values = [95, 78, 62, 48, 38];
+      
+      let labels = [];
+      let values = [];
+      
+      if (handovers.length > 0) {
+          labels = handovers.map(h => h.reason);
+          values = handovers.map(h => h.count);
+      } else {
+          labels = ['Összetett kérdés', 'Sürgős / triázs', 'Hiányzó info', 'Foglalási kivétel', 'Emberi döntés'];
+          values = [0, 0, 0, 0, 0];
+      }
+      
       handoffChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -5598,6 +5784,7 @@
       const displayFields = currentClientFields.slice(0, 4);
       thead.innerHTML = `
     <tr>
+      <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllClients" onchange="toggleAllClients(this)"></th>
       <th>Regisztrálva</th>
       <th>Csatorna</th>
       ${displayFields.map(f => `<th>${esc(f.name)}</th>`).join('')}
@@ -5606,13 +5793,17 @@
     </tr>
   `;
 
-      tbody.innerHTML = `<tr class="loading-row"><td colspan="${4 + displayFields.length}"><div class="spinner"></div></td></tr>`;
+      tbody.innerHTML = `<tr class="loading-row"><td colspan="${5 + displayFields.length}"><div class="spinner"></div></td></tr>`;
+      
+      // Hide bulk delete button on reload
+      document.getElementById('bulk-delete-btn').style.display = 'none';
+      document.getElementById('bulk-delete-count').textContent = '0';
       try {
         const res = await authFetch('/admin/api/clients');
         const data = await res.json();
         const clients = data.clients || [];
         if (!clients.length) {
-          tbody.innerHTML = `<tr><td colspan="${4 + displayFields.length}"><div class="empty-state"><div class="empty-state-text">Nincs rögzített ügyfél</div></div></td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="${5 + displayFields.length}"><div class="empty-state"><div class="empty-state-text">Nincs rögzített ügyfél</div></div></td></tr>`;
           return;
         }
 
@@ -5634,6 +5825,7 @@
           }
           return `
       <tr>
+        <td style="text-align: center;"><input type="checkbox" class="client-checkbox" value="${c.id}" onchange="updateBulkDeleteBtn()"></td>
         <td class="td-time">${fmtDt(c.created_at)}</td>
         <td style="font-weight:600; font-size:12px; color:var(--text);">${esc(csatorna)}</td>
         ${displayFields.map((f, i) => {
@@ -5670,6 +5862,56 @@
       if (date) document.getElementById('log-modal-date').textContent = date;
       document.getElementById('log-modal-topic').textContent = 'Beszélgetés napló';
       document.getElementById('log-modal').style.display = 'flex';
+    }
+
+    function toggleAllClients(selectAllCheckbox) {
+      const checkboxes = document.querySelectorAll('.client-checkbox');
+      checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+      updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+      const checkedCount = document.querySelectorAll('.client-checkbox:checked').length;
+      const btn = document.getElementById('bulk-delete-btn');
+      const countSpan = document.getElementById('bulk-delete-count');
+      const selectAll = document.getElementById('selectAllClients');
+      
+      const totalCheckboxes = document.querySelectorAll('.client-checkbox').length;
+      if (selectAll && totalCheckboxes > 0) {
+          selectAll.checked = (checkedCount === totalCheckboxes);
+      }
+
+      if (checkedCount > 0) {
+        btn.style.display = 'inline-flex';
+        countSpan.textContent = checkedCount;
+      } else {
+        btn.style.display = 'none';
+        countSpan.textContent = '0';
+      }
+    }
+
+    async function bulkDeleteClients() {
+      const checkedBoxes = document.querySelectorAll('.client-checkbox:checked');
+      if (checkedBoxes.length === 0) return;
+      
+      if (!confirm(`Biztosan törölni szeretnél ${checkedBoxes.length} db ügyfelet? Ez a művelet nem vonható vissza!`)) return;
+      
+      const clientIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+      
+      try {
+        const res = await authFetch('/admin/api/clients/bulk_delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ client_ids: clientIds })
+        });
+        if (!res.ok) throw new Error();
+        loadClientsTable();
+        loadKanban();
+      } catch (err) {
+        alert('Hiba történt a törlés során!');
+      }
     }
 
     async function openClientModal(id = null, encodedCustomData = 'e30=') {
@@ -6517,6 +6759,45 @@
     });
 
   </script>
+
+  <!-- Alert Details Modal HTML -->
+  <div id="alert-details-modal"
+    style="display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div class="login-card"
+      style="width:800px; max-width:95vw; max-height:85vh; padding:0; overflow:hidden; border-radius:16px; border:none; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display:flex; flex-direction:column;">
+      <!-- Header -->
+      <div
+        style="background: linear-gradient(to right, #fef2f2, #fee2e2); padding: 20px 24px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 id="alert-modal-title"
+              style="margin:0; color:#b91c1c; font-size:18px; font-weight:700;">Részletek: ...</h3>
+          </div>
+          <button onclick="document.getElementById('alert-details-modal').style.display='none'"
+            style="background:transparent; border:none; color:rgba(0,0,0,0.4); font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+        </div>
+      </div>
+      <!-- Content -->
+      <div style="padding: 24px; overflow-y:auto; flex:1; background:var(--bg2);">
+        <div class="table-card" style="margin:0; box-shadow:none; border:1px solid rgba(0,0,0,0.05);">
+          <table class="data-table" style="margin:0;">
+            <thead id="alert-modal-thead">
+              <tr>
+                <th>Dátum</th>
+                <th>Csatorna</th>
+                <th>Név / Téma</th>
+                <th>Részlet / Státusz</th>
+              </tr>
+            </thead>
+            <tbody id="alert-modal-tbody">
+              <tr><td colspan="4" style="text-align:center;">Betöltés...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>

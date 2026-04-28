@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS interactions (
     result TEXT,
     tool_name TEXT,
     funnel_stage TEXT DEFAULT 'relevant',
+    alert_tags JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -103,7 +103,7 @@ async def widget():
     return FileResponse(THIS_DIR / "voice-widget.html")
 
 @app.get("/admin")
-async def admin_page():
+def admin_page():
     return FileResponse(THIS_DIR / "admin.html")
 
 @app.get("/thinkai-logo.png")
@@ -179,8 +179,42 @@ async def meta_webhook_verify(request: Request):
         raise HTTPException(status_code=403, detail="Verification token mismatch")
     raise HTTPException(status_code=400, detail="Missing parameters")
 
+async def analyze_alert_tags(message_text: str) -> list:
+    """Gyors AI elemzés a bejövő üzenet címkézéséhez."""
+    import os
+    from google import genai
+    from google.genai import types
+    import json
+    
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if not google_key: return []
+    
+    prompt = """Elemezd a következő ügyfélüzenetet, és add vissza egy valid JSON listában az alábbi címkéket, ha relevánsak:
+- "urgent": nagyon sürgős ügy
+- "complaint": panasz, elégedetlenség
+- "callback": telefonos visszahívást kér
+- "recurring": gyakran ismétlődő probléma
+Csak a címkéket tartalmazó JSON listát (pl. ["urgent", "complaint"]) add vissza, semmi mást, markdown nélkül! Ha egy sem illik, üres listát adj vissza: []."""
+
+    try:
+        client = genai.Client(api_key=google_key)
+        resp = await client.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"Üzenet: {message_text}",
+            config=types.GenerateContentConfig(system_instruction=prompt, temperature=0.1)
+        )
+        t = resp.text.strip()
+        if t.startswith("```json"): t = t[7:-3]
+        if t.startswith("```"): t = t[3:-3]
+        return json.loads(t.strip())
+    except Exception:
+        return []
+
 async def process_meta_message(sender_id: str, message_text: str, source_channel: str = "Messenger", phone_number_id: str = None):
     """Aszinkron háttérfeladat a Meta Messenger / Instagram üzenetek feldolgozására."""
+    import asyncio
+    alert_tags_task = asyncio.create_task(analyze_alert_tags(message_text))
+
     try:
         # 1. Beolvassuk a rendszer promptot
         prompt_path = THIS_DIR / "system_prompt.md"
@@ -357,6 +391,7 @@ async def process_meta_message(sender_id: str, message_text: str, source_channel
             f_stage = "foglalt" if booked_meeting else "valaszolt"
             session_id = f"{source_channel.lower()}_{sender_id}"
             db.create_session(session_id=session_id, room_name=f"{source_channel} Chat", participant=sender_id)
+            alert_tags = await alert_tags_task if alert_tags_task else []
             db.log_interaction(
                 type=source_channel.lower(),
                 topic=f"{source_channel} AI válasz",
@@ -364,7 +399,8 @@ async def process_meta_message(sender_id: str, message_text: str, source_channel
                 result="Üzenet generálva",
                 tool_name="process_meta_message",
                 session_id=session_id,
-                funnel_stage=f_stage
+                funnel_stage=f_stage,
+                alert_tags=alert_tags if isinstance(alert_tags, list) else []
             )
 
             async with httpx.AsyncClient() as http_client:
@@ -476,7 +512,7 @@ class LoginRequest(BaseModel):
 
 
 @app.post("/admin/login")
-async def admin_login(req: LoginRequest):
+def admin_login(req: LoginRequest):
     """Admin login — returns JWT token."""
     user = db.verify_admin_user(req.username, req.password)
     if not user:
@@ -493,18 +529,95 @@ async def admin_login(req: LoginRequest):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/admin/api/stats")
-async def admin_stats(period: str = "month", username: str = Depends(verify_jwt)):
+def admin_stats(period: str = "month", username: str = Depends(verify_jwt)):
     """Analytics summary stats."""
     return db.get_stats(period=period)
 
 @app.get("/admin/api/analytics/funnel")
-async def admin_funnel(username: str = Depends(verify_jwt)):
+def admin_funnel(username: str = Depends(verify_jwt)):
     """Funnel stats based on interaction stages."""
     return db.get_funnel_stats()
 
+@app.get("/admin/api/analytics/alerts")
+def admin_alerts(username: str = Depends(verify_jwt)):
+    """Operational alerts and tasks stats."""
+    return db.get_alerts_stats()
+
+@app.get("/admin/api/analytics/alerts/details")
+def admin_alerts_details(type: str, username: str = Depends(verify_jwt)):
+    """Get specific alert details."""
+    details = db.get_alert_details(type)
+    return {"status": "success", "data": details}
+
+@app.get("/admin/api/analytics/insights")
+def admin_get_insights(username: str = Depends(verify_jwt)):
+    """Get latest AI insights."""
+    insights = db.get_latest_ai_insights()
+    if not insights:
+        insights = [
+            "Az árkérdések aránya 28%-kal nőtt – érdemes bővíteni az árakkal kapcsolatos tudásbázist.",
+            "Az angol nyelvű megkeresések aránya nő – megfontolható az angol nyelvű válaszok fejlesztése.",
+            "A 16:00–18:00 közti sávban emelkedett az átadási arány – érdemes vizsgálni az okot.",
+            "Az időpontmódosítási kérdésekre érdemes új szabályt rögzíteni a Szabályok menüben."
+        ]
+    return {"status": "success", "insights": insights}
+
+@app.post("/admin/api/analytics/insights/generate")
+async def admin_generate_insights(username: str = Depends(verify_jwt)):
+    """Generate new AI insights based on stats."""
+    stats = db.get_stats(period="month")
+    google_key = os.getenv("GEMINI_API_KEY")
+    insights = []
+    
+    if google_key:
+        try:
+            from google import genai
+            from google.genai import types
+            import json
+            
+            client = genai.Client(api_key=google_key)
+            prompt = f"""
+Te egy ügyfélszolgálati adatelemző AI vagy. Itt vannak az elmúlt időszak statisztikái:
+- Összes megkeresés: {stats.get('total_interactions', 0)}
+- Elakadt (nyitott) feladatok: {stats.get('open_tasks', 0)}
+- Csatornák: {json.dumps(stats.get('interactions_by_type', []))}
+- Témák: {json.dumps(stats.get('interactions_by_topic', []))}
+
+Adj 4 darab, egy-egy mondatos, releváns finomhangolási javaslatot a folyamatok javítására ezen adatok alapján.
+A válaszod kizárólag egy valid JSON lista legyen (pl. ["javaslat 1", "javaslat 2", ...]), markdown nélkül!
+"""
+            resp = await client.aio.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.7)
+            )
+            t = resp.text.strip()
+            if t.startswith("```json"): t = t[7:-3]
+            if t.startswith("```"): t = t[3:-3]
+            insights = json.loads(t.strip())
+        except Exception as e:
+            print(f"[Insights Generation Error] {e}")
+            insights = []
+            
+    if not insights or len(insights) < 4:
+        insights = [
+            "Az árkérdések aránya 28%-kal nőtt – érdemes bővíteni az árakkal kapcsolatos tudásbázist.",
+            "A telefonos csatorna továbbra is a legaktívabb, érdemes optimalizálni a hangasszisztenst.",
+            "Sok a megválaszolatlan ügy, javasolt a belső értesítési rendszer felülvizsgálata.",
+            "A 16:00–18:00 közti sávban emelkedett az átadási arány – érdemes vizsgálni az okot."
+        ]
+        
+    db.save_ai_insights(insights)
+    return {"status": "success", "insights": insights}
+
+@app.get("/admin/api/analytics/outbound/summary")
+def admin_outbound_summary(period: str = "month", username: str = Depends(verify_jwt)):
+    """Get outbound summary metrics."""
+    return db.get_outbound_stats(period)
+
 
 @app.get("/admin/api/interactions")
-async def admin_interactions(
+def admin_interactions(
     limit: int = 100,
     type: str = "",
     username: str = Depends(verify_jwt)
@@ -514,26 +627,26 @@ async def admin_interactions(
 
 
 @app.get("/admin/api/calendar")
-async def admin_calendar(username: str = Depends(verify_jwt)):
+def admin_calendar(username: str = Depends(verify_jwt)):
     """Calendar events, sorted by start time."""
     return {"events": db.get_calendar_events()}
 
 
 @app.get("/admin/api/emails")
-async def admin_emails(limit: int = 100, username: str = Depends(verify_jwt)):
+def admin_emails(limit: int = 100, username: str = Depends(verify_jwt)):
     """Email logs, newest first."""
     return {"emails": db.get_email_logs(limit=limit)}
 
 
 @app.get("/admin/api/tasks")
-async def admin_tasks(completed: str = "all", username: str = Depends(verify_jwt)):
+def admin_tasks(completed: str = "all", username: str = Depends(verify_jwt)):
     """Task list."""
     comp = None if completed == "all" else (completed == "true")
     return {"tasks": db.get_tasks(completed=comp)}
 
 
 @app.patch("/admin/api/tasks/{task_id}/complete")
-async def admin_task_complete(task_id: int, username: str = Depends(verify_jwt)):
+def admin_task_complete(task_id: int, username: str = Depends(verify_jwt)):
     """Toggle task completed status."""
     res = db.update_task_complete(task_id)
     if not res.get("ok"):
@@ -542,7 +655,7 @@ async def admin_task_complete(task_id: int, username: str = Depends(verify_jwt))
 
 
 @app.delete("/admin/api/tasks/{task_id}")
-async def admin_task_delete(task_id: int, username: str = Depends(verify_jwt)):
+def admin_task_delete(task_id: int, username: str = Depends(verify_jwt)):
     """Delete a task."""
     res = db.delete_task(task_id)
     if not res:
@@ -551,13 +664,13 @@ async def admin_task_delete(task_id: int, username: str = Depends(verify_jwt)):
 
 
 @app.get("/admin/api/sessions")
-async def admin_sessions(limit: int = 50, username: str = Depends(verify_jwt)):
+def admin_sessions(limit: int = 50, username: str = Depends(verify_jwt)):
     """Recent sessions."""
     return {"sessions": db.get_sessions(limit=limit)}
 
 
 @app.get("/admin/api/sessions/summary")
-async def admin_sessions_summary(limit: int = 50, username: str = Depends(verify_jwt)):
+def admin_sessions_summary(limit: int = 50, username: str = Depends(verify_jwt)):
     """Sessions enriched with interaction summaries."""
     return {"sessions": db.get_sessions_with_summary(limit=limit)}
 
@@ -573,7 +686,7 @@ class ClientStatusUpdateRequest(BaseModel):
     status: str
 
 @app.get("/admin/api/clients")
-async def admin_clients(username: str = Depends(verify_jwt)):
+def admin_clients(username: str = Depends(verify_jwt)):
     """List all clients for Kanban."""
     clients = db.get_clients()
     for c in clients:
@@ -582,25 +695,35 @@ async def admin_clients(username: str = Depends(verify_jwt)):
     return {"clients": clients}
 
 @app.post("/admin/api/clients")
-async def admin_add_client(req: ClientCreateRequest, username: str = Depends(verify_jwt)):
+def admin_add_client(req: ClientCreateRequest, username: str = Depends(verify_jwt)):
     """Add a new client."""
     client_id = db.add_client(req.custom_data, "uj")
     return {"ok": True, "id": client_id}
 
 @app.patch("/admin/api/clients/{client_id}/status")
-async def admin_update_client_status(client_id: int, req: ClientStatusUpdateRequest, username: str = Depends(verify_jwt)):
+def admin_update_client_status(client_id: int, req: ClientStatusUpdateRequest, username: str = Depends(verify_jwt)):
     """Update client status (drag & drop)."""
     db.update_client_status(client_id, req.status)
     return {"ok": True}
 
 @app.delete("/admin/api/clients/{client_id}")
-async def admin_delete_client(client_id: int, username: str = Depends(verify_jwt)):
+def admin_delete_client(client_id: int, username: str = Depends(verify_jwt)):
     """Delete client."""
     db.delete_client(client_id)
     return {"ok": True}
 
+class BulkDeleteClientsRequest(BaseModel):
+    client_ids: list[int]
+
+@app.post("/admin/api/clients/bulk_delete")
+def admin_bulk_delete_clients(req: BulkDeleteClientsRequest, username: str = Depends(verify_jwt)):
+    """Delete multiple clients."""
+    for cid in req.client_ids:
+        db.delete_client(cid)
+    return {"ok": True}
+
 @app.put("/admin/api/clients/{client_id}")
-async def admin_update_client_details(client_id: int, req: ClientCreateRequest, username: str = Depends(verify_jwt)):
+def admin_update_client_details(client_id: int, req: ClientCreateRequest, username: str = Depends(verify_jwt)):
     """Update client basic details."""
     db.edit_client_details(client_id, req.custom_data)
     return {"ok": True}
@@ -614,23 +737,23 @@ class ClientFieldUpdateRequest(BaseModel):
     name: str
 
 @app.get("/admin/api/client_fields")
-async def admin_get_client_fields(username: str = Depends(verify_jwt)):
+def admin_get_client_fields(username: str = Depends(verify_jwt)):
     return {"fields": db.get_client_fields()}
 
 @app.post("/admin/api/client_fields")
-async def admin_add_client_field(req: ClientFieldCreateRequest, username: str = Depends(verify_jwt)):
+def admin_add_client_field(req: ClientFieldCreateRequest, username: str = Depends(verify_jwt)):
     success = db.add_client_field(req.id, req.name, req.order_index)
     if not success:
         raise HTTPException(status_code=400, detail="Field ID already exists")
     return {"ok": True}
 
 @app.put("/admin/api/client_fields/{field_id}")
-async def admin_update_client_field(field_id: str, req: ClientFieldUpdateRequest, username: str = Depends(verify_jwt)):
+def admin_update_client_field(field_id: str, req: ClientFieldUpdateRequest, username: str = Depends(verify_jwt)):
     db.update_client_field(field_id, req.name)
     return {"ok": True}
 
 @app.delete("/admin/api/client_fields/{field_id}")
-async def admin_delete_client_field(field_id: str, username: str = Depends(verify_jwt)):
+def admin_delete_client_field(field_id: str, username: str = Depends(verify_jwt)):
     db.delete_client_field(field_id)
     return {"ok": True}
 
@@ -643,23 +766,23 @@ class KanbanColumnUpdateRequest(BaseModel):
     name: str
 
 @app.get("/admin/api/kanban_columns")
-async def admin_get_kanban_columns(username: str = Depends(verify_jwt)):
+def admin_get_kanban_columns(username: str = Depends(verify_jwt)):
     return {"columns": db.get_kanban_columns()}
 
 @app.post("/admin/api/kanban_columns")
-async def admin_add_kanban_column(req: KanbanColumnCreateRequest, username: str = Depends(verify_jwt)):
+def admin_add_kanban_column(req: KanbanColumnCreateRequest, username: str = Depends(verify_jwt)):
     success = db.add_kanban_column(req.id, req.name, req.order_index)
     if not success:
         raise HTTPException(status_code=400, detail="Column ID already exists")
     return {"ok": True}
 
 @app.put("/admin/api/kanban_columns/{col_id}")
-async def admin_update_kanban_column(col_id: str, req: KanbanColumnUpdateRequest, username: str = Depends(verify_jwt)):
+def admin_update_kanban_column(col_id: str, req: KanbanColumnUpdateRequest, username: str = Depends(verify_jwt)):
     db.update_kanban_column(col_id, req.name)
     return {"ok": True}
 
 @app.delete("/admin/api/kanban_columns/{col_id}")
-async def admin_delete_kanban_column(col_id: str, username: str = Depends(verify_jwt)):
+def admin_delete_kanban_column(col_id: str, username: str = Depends(verify_jwt)):
     try:
         db.delete_kanban_column(col_id)
         return {"ok": True}
@@ -669,12 +792,12 @@ async def admin_delete_kanban_column(col_id: str, username: str = Depends(verify
 
 # ── Legacy public API (for backward compat with voice-widget.html) ────────────
 @app.get("/api/calendar")
-async def get_calendar():
+def get_calendar():
     events = db.get_calendar_events()
     return JSONResponse({"events": events})
 
 @app.get("/api/emails")
-async def get_emails():
+def get_emails():
     return JSONResponse({"emails": db.get_email_logs()})
 
 

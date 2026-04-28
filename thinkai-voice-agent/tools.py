@@ -697,6 +697,34 @@ async def delete_meeting(
     return f"Esemény törölve: {event_title}."
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# 9. REPORT ALERT (voice command / background)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@function_tool(description="Operatív riasztás rögzítése. Használd AZONNAL a háttérben, ha az ügyfél panaszkodik (complaint), nagyon sürgős esetet jelez (urgent), visszahívást kér (callback), vagy egy gyakran ismétlődő hibát/kérdést vet fel (recurring).")
+async def report_alert(
+    ctx: RunContext,
+    tags: Annotated[list[str], "A releváns címkék listája. Lehetséges értékek: 'urgent', 'complaint', 'callback', 'recurring'"],
+    reason: Annotated[str, "Rövid indoklás, hogy miért kapta ezt a címkét a beszélgetés"] = "",
+) -> str:
+    """Riasztási címke rögzítése az adatbázisba."""
+    logger.info(f"Reporting alert tags: {tags} - Reason: {reason}")
+    valid_tags = [t for t in tags if t in ("urgent", "complaint", "callback", "recurring")]
+    
+    if valid_tags:
+        db.log_interaction(
+            type="voice_alert",
+            topic="Riasztás (AI Automata)",
+            summary=reason or "Automatikus címkézés a beszélgetés alapján",
+            result=", ".join(valid_tags),
+            tool_name="report_alert",
+            session_id=_current_session_id,
+            funnel_stage="relevant",
+            alert_tags=valid_tags
+        )
+        return "Riasztás sikeresen rögzítve az adminisztrátorok felé a háttérben."
+    return "Nem megfelelő címkék."
+
 # All tools for easy import
 ALL_TOOLS = [
     send_followup_email,
@@ -707,4 +735,5 @@ ALL_TOOLS = [
     create_task,
     get_weather,
     lookup_info,
+    report_alert,
 ]

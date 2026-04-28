@@ -79,9 +79,16 @@ JSON STRUKTÚRA:
         "date": "YYYY-MM-DD",
         "time": "HH:MM",
         "duration_minutes": 30
-    }
+    },
+    "alert_tags": ["urgent", "complaint", "callback", "recurring"], // Válaszd ki, ha releváns, különben üres lista []
+    "handover_reason": "Az átadás oka, ha emberi beavatkozás szükséges. Válaszd ezek közül: 'Összetett kérdés', 'Sürgős / triázs', 'Hiányzó info', 'Foglalási kivétel', 'Emberi döntés'. Ha az AI mindent meg tudott oldani, ez legyen null."
 }
 Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
+A lehetséges alert_tags értékek:
+- "urgent": ha nagyon sürgős az ügy
+- "complaint": ha a levél panaszt, elégedetlenséget tartalmaz
+- "callback": ha telefonos visszahívást kérnek
+- "recurring": ha egy gyakori ismétlődő hibát/kérdést vetnek fel.
 """
     client = genai.Client(api_key=google_key)
     
@@ -129,6 +136,13 @@ Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
     kanban = data.get("kanban_data", {})
     beszelgetes = data.get("beszelgetes_naplobejegyzes", "")
     meeting = data.get("meeting")
+    alert_tags = data.get("alert_tags", [])
+    handover_reason = data.get("handover_reason")
+    
+    # Fallback emberi döntés
+    if not handover_reason and email_reply and ("hív" in email_reply.lower() or "ember" in email_reply.lower() or "kollég" in email_reply.lower()):
+        if "callback" in alert_tags or "urgent" in alert_tags:
+            handover_reason = "Emberi döntés"
     
     log_szoveg = f"{beszelgetes}\n- Bejövő e-mail (Tárgy: {subject}): {text_content}"
 
@@ -232,7 +246,9 @@ Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
             result="Sikeres válasz" if sent_ok else "Hibás küldés",
             tool_name="imap_worker_ai",
             session_id=session_id,
-            funnel_stage=f_stage
+            funnel_stage=f_stage,
+            alert_tags=alert_tags if isinstance(alert_tags, list) else [],
+            handover_reason=handover_reason
         )
 
 
