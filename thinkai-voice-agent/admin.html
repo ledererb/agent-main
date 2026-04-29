@@ -3859,137 +3859,73 @@
             </div>
             <button class="tt-add-btn" onclick="addSzolgaltatas()">+ Szolgáltatás hozzáadása</button>
           </div>
-          <!-- 3. Kivételek -->
-          <div class="tt-section">
-            <div class="tt-section-title"> Kivételek kezelése <span class="wip-badge">🚧</span></div>
-            <p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Add meg azokat a helyzeteket, amikor a DigiDesk
-              nem foglalhat automatikusan.</p>
-            <div id="tt-kivetelek-list">
-              <div class="tt-dynamic-row tt-exception-row" data-exc="">
-                <input class="tt-input" type="text" value="Altatásos szájsebészet" />
-                <button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()"></button>
+          <!-- 3. Kivételek és Lemondás (Egymás mellett) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; margin-bottom: 24px;">
+            <!-- Kivételek -->
+            <div class="tt-section" style="margin-bottom: 0;">
+              <div class="tt-section-title"> Kivételek kezelése </div>
+              <p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Add meg azokat a helyzeteket, amikor a DigiDesk
+                nem foglalhat automatikusan.</p>
+              <div id="tt-kivetelek-list">
+                <!-- Dinamikusan töltődik -->
               </div>
-              <div class="tt-dynamic-row tt-exception-row" data-exc="">
-                <input class="tt-input" type="text" value="Komplex implantáció" />
-                <button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()"></button>
-              </div>
-            </div>
-            <button class="tt-add-btn" onclick="addKivetel()">+ Kivétel hozzáadása</button>
-          </div>
-          <!-- 4. Lemondás és módosítás -->
-          <div class="tt-section">
-            <div class="tt-section-title"> Lemondás és módosítás <span class="wip-badge">🚧</span></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-              <div>
-                <label class="tt-label">Időpont módosításának engedélyezése</label>
-                <select class="tt-select" id="tt-modositas-eng">
-                  <option value="igen">Igen</option>
-                  <option value="nem">Nem</option>
-                </select>
-              </div>
-              <div>
-                <label class="tt-label">24 órán belüli lemondás kezelése</label>
-                <select class="tt-select" id="tt-lemondas-24h" onchange="toggleFigyelmeztetoSzoveg()">
-                  <option value="elfogadhato">Elfogadható</option>
-                  <option selected="" value="figyelmeztetoSzoveggel">Elfogadható figyelmeztető szöveggel</option>
-                  <option value="eloAtadas">Élő átadás szükséges</option>
-                </select>
-              </div>
-              <div id="tt-figyelmezteto-wrap" style="grid-column:1/-1;">
-                <label class="tt-label">Figyelmeztető szöveg</label>
-                <textarea
-                  class="tt-textarea">Tájékoztatjuk, hogy 24 órán belüli lemondás esetén rendelőnk külön szabályzata lehet érvényben.</textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+                <button class="tt-add-btn" onclick="addKivetel()" style="background: transparent; border: none; color: #10b981; font-weight: 600; cursor: pointer; padding: 0;">+ Kivétel hozzáadása</button>
+                <button class="tt-save-btn" onclick="savePraxisinfo(this, 'Kivételek sikeresen elmentve')" style="margin: 0; padding: 8px 16px; font-size: 13px;">&#128190; Mentés</button>
               </div>
             </div>
+
+            <!-- Lemondás és módosítás -->
+            <div class="tt-section" style="margin-bottom: 0;">
+              <div class="tt-section-title"> Lemondás és módosítás </div>
+              <div style="display:flex; flex-direction: column; gap:14px;">
+                <div>
+                  <label class="tt-label">Időpont módosításának engedélyezése</label>
+                  <select class="tt-select" id="tt-modositas-eng">
+                    <option value="igen">Igen</option>
+                    <option value="nem">Nem</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="tt-label">24 órán belüli lemondás kezelése</label>
+                  <select class="tt-select" id="tt-lemondas-24h" onchange="toggleFigyelmeztetoSzoveg()">
+                    <option value="elfogadhato">Elfogadható</option>
+                    <option selected="" value="figyelmeztetoSzoveggel">Elfogadható figyelmeztető szöveggel</option>
+                    <option value="eloAtadas">Élő átadás szükséges</option>
+                  </select>
+                </div>
+                <div id="tt-figyelmezteto-wrap">
+                  <textarea id="tt-figyelmezteto-szoveg"
+                    class="tt-textarea">Tájékoztatjuk, hogy 24 órán belüli lemondás esetén rendelőnk külön szabályzata lehet érvényben.</textarea>
+                </div>
+              </div>
+            </div>
           </div>
-          <!-- 5. Triázs szabályok -->
+
+          <!-- 4. Triázs szabályok -->
           <div class="tt-section">
-            <div class="tt-section-title"> Triázs szabályok <span class="wip-badge">🚧</span></div>
-            <table class="triage-table">
+            <div class="tt-section-title" style="margin-bottom: 20px;">Triázs szabályok</div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
               <thead>
-                <tr>
-                  <th>Helyzet</th>
-                  <th>Prioritás</th>
-                  <th>Eszkalációs e-mail (sürgős esetén)</th>
+                <tr style="background: #f9fafb; color: #4b5563; text-align: left; border-bottom: 1px solid #e5e7eb;">
+                  <th style="padding: 16px; font-weight: 600; width: 30%;">Helyzet</th>
+                  <th style="padding: 16px; font-weight: 600; width: 35%;">Prioritás</th>
+                  <th style="padding: 16px; font-weight: 600; width: 30%;">Eszkalációs e-mail</th>
+                  <th style="padding: 16px; width: 5%;"></th>
                 </tr>
               </thead>
-              <tbody id="triage-tbody">
-                <tr>
-                  <td>Általános kérdés</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option>Fontos</option>
-                      <option>Sürgős</option>
-                      <option>Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Időpontkérés</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option>Fontos</option>
-                      <option>Sürgős</option>
-                      <option>Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Árkérdés</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option>Fontos</option>
-                      <option>Sürgős</option>
-                      <option>Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Panasz</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option selected="">Fontos</option>
-                      <option>Sürgős</option>
-                      <option>Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"></td>
-                </tr>
-                <tr>
-                  <td>Fájdalom / sürgős eset</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option>Fontos</option>
-                      <option selected="">Sürgős</option>
-                      <option>Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"><input class="escalation-input" placeholder="eszkalációs e-mail"
-                      type="email" /></td>
-                </tr>
-                <tr>
-                  <td>Szövődmény / komplikáció</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option>Fontos</option>
-                      <option selected="">Sürgős</option>
-                      <option>Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"><input class="escalation-input" placeholder="eszkalációs e-mail"
-                      type="email" /></td>
-                </tr>
-                <tr>
-                  <td>Konfliktus / indulatosság</td>
-                  <td><select class="priority-select" onchange="triazsChange(this)">
-                      <option>Normál</option>
-                      <option>Fontos</option>
-                      <option>Sürgős</option>
-                      <option selected="">Kiemelt</option>
-                    </select></td>
-                  <td class="triage-email-cell"><input class="escalation-input" type="email"
-                      value="vezeto@mintaklinika.hu" /></td>
-                </tr>
+              <tbody id="triage-rules-list">
+                <!-- JS fogja feltölteni -->
               </tbody>
             </table>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <button class="tt-add-btn" onclick="addTriageRule()" style="background: transparent; border: none; color: #10b981; font-weight: 600; cursor: pointer; padding: 0;">+ Új szabály hozzáadása</button>
+              <button class="tt-save-btn" onclick="saveAllTriageRules()" style="margin: 0; padding: 8px 16px; font-size: 13px;">&#128190; Triázs szabályok mentése</button>
+            </div>
           </div>
+
           <!-- Action bar -->
           <div class="tt-action-bar">
             <div class="tt-action-meta">
@@ -6513,6 +6449,40 @@
           });
         }
 
+        // Exceptions
+        const excList = document.getElementById('tt-kivetelek-list');
+        if (excList) {
+          excList.innerHTML = '';
+          if (data.exceptions && data.exceptions.length) {
+            data.exceptions.forEach(exc => {
+              const row = document.createElement('div');
+              row.className = 'tt-dynamic-row tt-exception-row';
+              row.dataset.exc = '';
+              row.innerHTML = `
+                <input class="tt-input" type="text" value="${esc(exc)}">
+                <button class="tt-remove-btn" onclick="this.closest('[data-exc]').remove()"></button>`;
+              excList.appendChild(row);
+            });
+          }
+        }
+
+        // Lemondás és módosítás
+        if (data.modositas_eng) {
+          const modEng = document.getElementById('tt-modositas-eng');
+          if (modEng) modEng.value = data.modositas_eng;
+        }
+        if (data.lemondas_24h) {
+          const lem24 = document.getElementById('tt-lemondas-24h');
+          if (lem24) lem24.value = data.lemondas_24h;
+        }
+        if (data.figyelmezteto_szoveg !== undefined) {
+          const figyTxt = document.getElementById('tt-figyelmezteto-szoveg');
+          if (figyTxt) figyTxt.value = data.figyelmezteto_szoveg;
+        }
+        if (typeof toggleFigyelmeztetoSzoveg === 'function') {
+          toggleFigyelmeztetoSzoveg();
+        }
+
         // Last updated timestamp
         if (data.last_updated) {
           const metaEl = document.querySelector('#settings-view-praxis .tt-action-meta');
@@ -6525,8 +6495,9 @@
       } catch (e) { console.error('Praxisinfo betöltési hiba:', e); }
     }
 
-    async function savePraxisinfo() {
-      const btn = document.querySelector('#settings-view-praxis .tt-save-btn');
+    async function savePraxisinfo(sourceBtn = null, successMsg = null) {
+      const btn = sourceBtn || document.querySelector('#settings-view-praxis .tt-save-btn');
+      const originalText = btn ? btn.innerHTML : '';
       if (btn) { btn.disabled = true; btn.textContent = 'Mentés...'; }
       try {
         const v = (id) => document.getElementById(id);
@@ -6538,6 +6509,9 @@
         const kulcsszavak    = (v('tt-kulcsszavak')  && v('tt-kulcsszavak').value.trim())  || '';
         const megkozelites   = (v('tt-megkozelites') && v('tt-megkozelites').value.trim()) || '';
         const price_list     = (v('tt-arlista')      && v('tt-arlista').value.trim())      || '';
+        const modositas_eng  = (v('tt-modositas-eng') && v('tt-modositas-eng').value)      || 'igen';
+        const lemondas_24h   = (v('tt-lemondas-24h') && v('tt-lemondas-24h').value)        || 'figyelmeztetoSzoveggel';
+        const figyelmezteto_szoveg = (v('tt-figyelmezteto-szoveg') && v('tt-figyelmezteto-szoveg').value.trim()) || '';
 
         // Doctors
         const doctors = [];
@@ -6554,14 +6528,25 @@
           campaigns.push({ active: cb ? cb.checked : true, text: ta ? ta.value.trim() : '' });
         });
 
+        // Exceptions
+        const exceptions = [];
+        document.querySelectorAll('#tt-kivetelek-list .tt-exception-row').forEach(row => {
+          const inp = row.querySelector('input');
+          if (inp && inp.value.trim()) exceptions.push(inp.value.trim());
+        });
+
         const res = await authFetch('/admin/api/praxisinfo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ practice_name, description, address, markanev, szakterulet, kulcsszavak, megkozelites, price_list, doctors, campaigns })
+          body: JSON.stringify({ practice_name, description, address, markanev, szakterulet, kulcsszavak, megkozelites, price_list, doctors, campaigns, exceptions, modositas_eng, lemondas_24h, figyelmezteto_szoveg })
         });
         if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Mentési hiba'); }
 
-        showToast('success', '✅ Praxisinformáció elmentve!');
+        if (successMsg) {
+          showFancySuccess(successMsg);
+        } else {
+          showToast('success', '✅ Praxisinformáció elmentve!');
+        }
         const metaEl = document.querySelector('#settings-view-praxis .tt-action-meta');
         if (metaEl) {
           const now = new Date();
@@ -6571,7 +6556,7 @@
       } catch (e) {
         showToast('error', '❌ Hiba: ' + e.message);
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '&#128190; Változtatások mentése'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText || '&#128190; Változtatások mentése'; }
       }
     }
 
@@ -6758,6 +6743,186 @@
       }
     });
 
+    // --- Triázs Szabályok Logika ---
+    function fetchTriageRules() {
+      authFetch('/admin/api/triage_rules')
+        .then(res => res.json())
+        .then(rules => {
+          const list = document.getElementById('triage-rules-list');
+          if (!list) return;
+          list.innerHTML = '';
+          if (rules && rules.length > 0) {
+            rules.forEach(rule => {
+              list.appendChild(createTriageRuleRow(rule));
+            });
+          } else {
+            list.innerHTML = '<tr><td colspan="4" style="font-size:13px; color:#9ca3af; padding:20px; text-align:center;">Nincsenek még triázs szabályok.</td></tr>';
+          }
+        })
+        .catch(err => console.error("Hiba a triázs szabályok betöltésekor:", err));
+    }
+
+    function createTriageRuleRow(rule = { id: '', situation: '', priority: 'Normál', escalation_email: '' }) {
+      const tr = document.createElement('tr');
+      tr.className = 'triage-row';
+      tr.style.borderBottom = '1px solid #f3f4f6';
+      tr.dataset.id = rule.id || '';
+
+      const isSurgosOrKiemelt = rule.priority === 'Sürgős' || rule.priority === 'Kiemelt';
+
+      tr.innerHTML = `
+        <td style="padding: 16px;">
+          <input class="tt-input triage-situation" type="text" placeholder="Helyzet (pl. Erős fájdalom)" value="${rule.situation || ''}" 
+                 style="margin:0; border:none; background:transparent; width:100%; box-shadow:none; padding:0; color: #4b5563; font-size: 13px; outline: none;" />
+        </td>
+        <td style="padding: 16px;">
+          <select class="tt-select triage-priority" onchange="toggleTriageEmail(this);" 
+                  style="margin:0; border:none; background:#f3f4f6; padding:10px 14px; border-radius:6px; color: #4b5563; font-size: 13px; width:100%; cursor:pointer; outline:none;">
+            <option value="Normál" ${rule.priority === 'Normál' ? 'selected' : ''}>Normál – önálló válasz engedélyezett</option>
+            <option value="Fontos" ${rule.priority === 'Fontos' ? 'selected' : ''}>Fontos – visszahívás szükséges</option>
+            <option value="Sürgős" ${rule.priority === 'Sürgős' ? 'selected' : ''}>Sürgős – azonnali átadás szükséges</option>
+            <option value="Kiemelt" ${rule.priority === 'Kiemelt' ? 'selected' : ''}>Kiemelt – vezető értesítése szükséges</option>
+          </select>
+        </td>
+        <td style="padding: 16px;">
+          <div class="triage-email-container" style="visibility: ${isSurgosOrKiemelt ? 'visible' : 'hidden'};">
+            <input class="tt-input triage-email" type="email" placeholder="Eszkalációs e-mail" value="${rule.escalation_email || ''}" 
+                   style="margin:0; border:none; background:#f3f4f6; padding:10px 14px; border-radius:6px; color: #4b5563; font-size: 13px; width:100%; outline:none;" />
+          </div>
+        </td>
+        <td style="padding: 16px; text-align:right;">
+          <button class="tt-remove-btn" onclick="deleteTriageRule(this)" style="margin: 0; display:inline-block; vertical-align:middle; opacity:0.5; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5"></button>
+        </td>
+      `;
+      return tr;
+    }
+
+    function toggleTriageEmail(selectElem) {
+      const row = selectElem.closest('tr');
+      const emailContainer = row.querySelector('.triage-email-container');
+      const emailInput = row.querySelector('.triage-email');
+      
+      if (selectElem.value === 'Sürgős' || selectElem.value === 'Kiemelt') {
+        emailContainer.style.visibility = 'visible';
+      } else {
+        emailContainer.style.visibility = 'hidden';
+        emailInput.value = '';
+      }
+    }
+
+    function addTriageRule() {
+      const list = document.getElementById('triage-rules-list');
+      if (list.innerHTML.includes('Nincsenek')) list.innerHTML = '';
+      list.appendChild(createTriageRuleRow());
+    }
+
+    async function saveAllTriageRules() {
+      const rows = document.querySelectorAll('.triage-row');
+      const promises = [];
+      let hasError = false;
+
+      for (const row of rows) {
+        const ruleId = row.dataset.id;
+        const data = {
+          situation: row.querySelector('.triage-situation').value.trim(),
+          priority: row.querySelector('.triage-priority').value,
+          escalation_email: row.querySelector('.triage-email').value.trim()
+        };
+
+        if (!data.situation) continue; // Skip empty
+        if ((data.priority === 'Sürgős' || data.priority === 'Kiemelt') && !data.escalation_email) {
+          showToast('error', 'Kérlek add meg az eszkalációs e-mailt a sürgős/kiemelt szabályokhoz!');
+          return;
+        }
+
+        const method = ruleId ? 'PUT' : 'POST';
+        const url = ruleId ? '/admin/api/triage_rules/' + ruleId : '/admin/api/triage_rules';
+
+        promises.push(
+          authFetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          }).then(res => res.json()).then(resData => {
+            if (resData.ok && !ruleId && resData.id) {
+              row.dataset.id = resData.id;
+            }
+          }).catch(err => {
+            hasError = true;
+            console.error(err);
+          })
+        );
+      }
+
+      const btn = document.querySelector('button[onclick="saveAllTriageRules()"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Mentés...';
+      btn.disabled = true;
+
+      await Promise.all(promises);
+      
+      btn.disabled = false;
+      if (hasError) {
+        showToast('error', 'Hiba történt néhány szabály mentésekor!');
+        btn.innerHTML = originalText;
+      } else {
+        showFancySuccess('Szabályok sikeresen elmentve');
+        btn.innerHTML = '&#128190; Mentve';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+      }
+    }
+
+    function showFancySuccess(msg) {
+      const el = document.createElement('div');
+      el.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; background: rgba(16, 185, 129, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.2); padding: 14px 24px; border-radius: 50px; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15);">
+          <div style="display:flex; align-items:center; justify-content:center; width:24px; height:24px; background:#10b981; color:#fff; border-radius:50%; font-size:12px;">✓</div>
+          <span style="color:#065f46; font-weight:600; font-size:15px;">${msg}</span>
+        </div>
+      `;
+      el.style.position = 'fixed';
+      el.style.top = '-100px';
+      el.style.left = '50%';
+      el.style.transform = 'translateX(-50%)';
+      el.style.zIndex = '10000';
+      el.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      document.body.appendChild(el);
+      
+      requestAnimationFrame(() => {
+        el.style.top = '40px';
+      });
+      
+      setTimeout(() => {
+        el.style.top = '-100px';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 400);
+      }, 3000);
+    }
+
+    function deleteTriageRule(btn) {
+      if (!confirm("Biztosan törlöd ezt a triázs szabályt?")) return;
+      const row = btn.closest('tr');
+      const ruleId = row.dataset.id;
+      
+      if (!ruleId) {
+        row.remove();
+        return;
+      }
+
+      authFetch('/admin/api/triage_rules/' + ruleId, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(resData => {
+          if (resData.ok) row.remove();
+          else alert("Hiba a törlés során.");
+        })
+        .catch(err => alert("Hiba a hálózatban."));
+    }
+
+    // Call fetchTriageRules when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchTriageRules();
+    });
+
   </script>
 
   <!-- Alert Details Modal HTML -->
@@ -6795,9 +6960,6 @@
           </table>
         </div>
       </div>
-    </div>
-  </div>
-
 </body>
 
 </html>

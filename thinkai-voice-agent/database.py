@@ -866,3 +866,48 @@ def delete_kanban_column(col_id: str) -> bool:
         raise e
     except Exception:
         return False
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRIAGE RULES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def get_triage_rules() -> list[dict]:
+    if not supabase: return []
+    try:
+        res = supabase.table("triage_rules").select("*").order("id", desc=False).execute()
+        return res.data
+    except Exception:
+        return []
+
+def add_triage_rule(situation: str, priority: str, escalation_email: str) -> int:
+    if not supabase: return 0
+    try:
+        res = supabase.table("triage_rules").insert({
+            "situation": situation,
+            "priority": priority,
+            "escalation_email": escalation_email or None
+        }).execute()
+        return res.data[0]["id"] if res.data else 0
+    except Exception as e:
+        logger.error(f"Add triage rule error: {e}")
+        return 0
+
+def update_triage_rule(rule_id: int, situation: str, priority: str, escalation_email: str) -> bool:
+    if not supabase: return False
+    try:
+        supabase.table("triage_rules").update({
+            "situation": situation,
+            "priority": priority,
+            "escalation_email": escalation_email or None
+        }).eq("id", rule_id).execute()
+        return True
+    except Exception:
+        return False
+
+def delete_triage_rule(rule_id: int) -> bool:
+    if not supabase: return False
+    try:
+        supabase.table("triage_rules").delete().eq("id", rule_id).execute()
+        return True
+    except Exception:
+        return False

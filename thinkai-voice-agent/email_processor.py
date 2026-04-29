@@ -17,27 +17,7 @@ import database as db
 
 THIS_DIR = Path(__file__).resolve().parent
 load_dotenv(THIS_DIR / ".env")
-
-SYSTEM_PROMPT_FILE = THIS_DIR / "system_prompt.md"
-KNOWLEDGE_JSON = THIS_DIR / "knowledge.json"
-KNOWLEDGE_MD = THIS_DIR / "knowledge.md"
-SETTINGS_FILE = THIS_DIR / "agent_settings.json"
-
-def _read_knowledge() -> str:
-    # Try reading settings to see if it's md or json formatted knowledge
-    fmt = "json"
-    if SETTINGS_FILE.exists():
-        try:
-            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
-            fmt = settings.get("knowledge_format", "json")
-        except Exception:
-            pass
-    if fmt == "md" and KNOWLEDGE_MD.exists():
-        return KNOWLEDGE_MD.read_text(encoding="utf-8")
-    elif KNOWLEDGE_JSON.exists():
-        return KNOWLEDGE_JSON.read_text(encoding="utf-8")
-    return ""
-
+from prompt_utils import get_system_prompt
 def decode_mime_words(s):
     if not s:
         return ""
@@ -52,8 +32,7 @@ async def process_single_email(from_email: str, from_name: str, subject: str, te
         logger.error("Nincs GOOGLE_API_KEY beállítva. E-mail feldolgozás megszakítva.")
         return
 
-    sys_prompt = SYSTEM_PROMPT_FILE.read_text(encoding="utf-8") if SYSTEM_PROMPT_FILE.exists() else "Te egy ügyfélszolgálati asszisztens vagy."
-    knowledge = _read_knowledge()
+    sys_prompt = get_system_prompt()
 
     # Utasítás a strukturált JSON outputra
     json_instruction = """
@@ -80,12 +59,26 @@ JSON STRUKTÚRA:
         "time": "HH:MM",
         "duration_minutes": 30
     },
+    "action_modify_meeting": {
+        "event_title_to_modify": "A módosítandó esemény címe vagy része",
+        "new_date": "YYYY-MM-DD",
+        "new_time": "HH:MM"
+    },
+    "action_delete_meeting": {
+        "event_title_to_delete": "A törlendő esemény címe vagy része"
+    },
     "alert_tags": ["urgent", "complaint", "callback", "recurring"], // Válaszd ki, ha releváns, különben üres lista []
     "handover_reason": "Az átadás oka, ha emberi beavatkozás szükséges. Válaszd ezek közül: 'Összetett kérdés', 'Sürgős / triázs', 'Hiányzó info', 'Foglalási kivétel', 'Emberi döntés'. Ha az AI mindent meg tudott oldani, ez legyen null."
 }
-Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null.
+Ha nem kérnek egyértelműen időpontot, a "meeting" értéke legyen null. 
+FIGYELEM: Ha az eset Sürgős vagy Kiemelt prioritású, VAGY a kérés szerepel a Kivételek (Exceptions) listájában, a "meeting" értéke KÖTELEZŐEN null kell legyen (SZIGORÚAN TILOS időpontot foglalni!), és a "handover_reason" legyen 'Sürgős / triázs' vagy 'Foglalási kivétel'.
+Ebben az esetben a válaszlevélben se ígérj egyeztetést konkrét időpontokról, kizárólag azt jelezd, hogy az ügyét azonnal továbbítottad egy élő kollégának/munkatársnak!
+
+KIVÉTEL A TILTÁS ALÓL (FONTOS!):
+Ha a felhasználó egyértelműen időpontot kér, de NEM adja meg, hogy milyen panasza/kezelése van, AKKOR IS FOGLALD LE az időpontot (a "meeting" objektum kitöltésével, pl. "Konzultáció" vagy "Általános vizsgálat" címmel)! Ne tagadd meg a foglalást és ne kérj vissza pontosítást csak azért, mert nem tudod a kezelés típusát. Csak akkor tilos a foglalás, ha a megadott panasz egyértelműen Sürgős/Kiemelt, vagy egyértelműen szerepel a Kivételek között. Ha nincs panasz megadva, feltételezd, hogy Normál eset!
 A lehetséges alert_tags értékek:
 - "urgent": ha nagyon sürgős az ügy
+- "exception": ha a kérés szerepel a Kivételek listájában
 - "complaint": ha a levél panaszt, elégedetlenséget tartalmaz
 - "callback": ha telefonos visszahívást kérnek
 - "recurring": ha egy gyakori ismétlődő hibát/kérdést vetnek fel.
@@ -93,9 +86,12 @@ A lehetséges alert_tags értékek:
     client = genai.Client(api_key=google_key)
     
     user_content = f"--- BEJÖVŐ E-MAIL ---\nFeladó: {from_name} <{from_email}>\nTárgy: {subject}\nÜzenet:\n{text_content}\n"
-    
-    if knowledge:
-        sys_prompt += f"\n\n--- TUDÁSBÁZIS ---\n{knowledge}"
+        
+    triage_rules = db.get_triage_rules()
+    if triage_rules:
+        rules_text = "\n".join([f"- Szabály ID: {r['id']}, Helyzet: {r['situation']}, Prioritás: {r['priority']}" for r in triage_rules])
+        sys_prompt += f"\n\n--- TRIÁZS SZABÁLYOK ---\nKérlek értékeld az e-mail tartalmát az alábbi szabályok alapján is. Ha egyezik egy 'Sürgős' szabállyal, KÖTELEZŐ felvenned az 'urgent' tag-et az alert_tags listába!\n{rules_text}\n"
+
     sys_prompt += f"\n\n--- JSON UTASÍTÁS ---\n{json_instruction}"
 
     logger.info(f"Gemini 2.5 Flash elemzi az e-mailt: {from_email} - {subject}")
@@ -188,6 +184,38 @@ A lehetséges alert_tags értékek:
         except Exception as e:
             logger.error(f"Hiba a naptáresemény hozzáadásakor: {e}")
 
+    modify_action = data.get("action_modify_meeting")
+    if modify_action and modify_action.get("event_title_to_modify"):
+        try:
+            ev_title = modify_action["event_title_to_modify"]
+            found = db.find_calendar_event_by_title(ev_title)
+            if found:
+                updates = {}
+                if modify_action.get("new_date") or modify_action.get("new_time"):
+                    old_dt = datetime.fromisoformat(found["start_dt"])
+                    d = modify_action.get("new_date") or old_dt.strftime("%Y-%m-%d")
+                    t = modify_action.get("new_time") or old_dt.strftime("%H:%M")
+                    new_start = datetime.fromisoformat(f"{d}T{t}:00")
+                    dur = found.get("duration_minutes", 30)
+                    updates["start_dt"] = new_start.isoformat()
+                    updates["end_dt"] = (new_start + timedelta(minutes=dur)).isoformat()
+                if updates:
+                    db.update_calendar_event(found["id"], **updates)
+                    logger.info(f"Naptár esemény módosítva (e-mailből): {found['title']}")
+        except Exception as e:
+            logger.error(f"Hiba a naptáresemény módosításakor: {e}")
+
+    delete_action = data.get("action_delete_meeting")
+    if delete_action and delete_action.get("event_title_to_delete"):
+        try:
+            ev_title = delete_action["event_title_to_delete"]
+            found = db.find_calendar_event_by_title(ev_title)
+            if found:
+                db.delete_calendar_event(found["id"])
+                logger.info(f"Naptár esemény törölve (e-mailből): {found['title']}")
+        except Exception as e:
+            logger.error(f"Hiba a naptáresemény törlésekor: {e}")
+
     if email_reply:
         # Email küldés Brevo API-n
         brevo_key = os.getenv("BREVO_API_KEY", "")
@@ -250,6 +278,23 @@ A lehetséges alert_tags értékek:
             alert_tags=alert_tags if isinstance(alert_tags, list) else [],
             handover_reason=handover_reason
         )
+
+        if isinstance(alert_tags, list) and "urgent" in alert_tags:
+            email_to_send = None
+            t_rules = db.get_triage_rules()
+            for r in t_rules:
+                if r.get("priority") == "Sürgős" and r.get("escalation_email"):
+                    email_to_send = r["escalation_email"]
+                    break
+            
+            if email_to_send:
+                asyncio.create_task(send_escalation_email_to_staff(
+                    to_email=email_to_send,
+                    patient_name=from_name,
+                    patient_contact=from_email,
+                    problem_description=f"E-mail tárgy: {subject}\n{text_content[:200]}...",
+                    priority="Sürgős"
+                ))
 
 
 def check_imap_sync():
@@ -343,3 +388,62 @@ async def email_worker_loop():
             
         # Várakozás a következő lekérdezésig (pl. 60 másodperc)
         await asyncio.sleep(60)
+
+async def send_escalation_email_to_staff(to_email: str, patient_name: str, patient_contact: str, problem_description: str, priority: str = "Sürgős") -> bool:
+    """Eszkalációs e-mail küldése az orvosnak/személyzetnek sürgős eseteknél."""
+    brevo_key = os.getenv("BREVO_API_KEY", "")
+    api_key = brevo_key
+    if brevo_key and not brevo_key.startswith("xkeysib-"):
+        try:
+            import base64 as b64module
+            decoded = b64module.b64decode(brevo_key).decode()
+            parsed = json.loads(decoded)
+            api_key = parsed.get("api_key", brevo_key)
+        except Exception:
+            pass
+
+    if not api_key:
+        logger.error("Nincs beállítva BREVO_API_KEY az eszkalációs e-mailhez.")
+        return False
+
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ef4444; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #ef4444; margin-top: 0;">Rendszer Riasztás: {priority} eset</h2>
+        <p>Egy új {priority.lower()} prioritású eset érkezett az AI rendszerbe.</p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">Páciens neve:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{patient_name}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Elérhetőség:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{patient_contact}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee; font-weight: bold;">Probléma leírása:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">{problem_description}</td>
+            </tr>
+        </table>
+        <p style="color: #666; font-size: 12px; margin-top: 20px;">Ez egy automatikusan generált üzenet a ThinkAI Voice Agent rendszerből.</p>
+    </div>
+    """
+
+    try:
+        async with httpx.AsyncClient() as http_client:
+            resp = await http_client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": api_key, "Content-Type": "application/json"},
+                json={
+                    "sender": {"name": "ThinkAI Riasztás", "email": "bege@thinkai.hu"},
+                    "to": [{"email": to_email}],
+                    "subject": f"[{priority}] Riasztás: {patient_name}",
+                    "htmlContent": html_content,
+                },
+                timeout=20,
+            )
+            resp.raise_for_status()
+            logger.info(f"Eszkalációs e-mail elküldve a következő címre: {to_email}")
+            return True
+    except Exception as e:
+        logger.error(f"Hiba az eszkalációs e-mail küldésekor: {e}")
+        return False

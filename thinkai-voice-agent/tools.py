@@ -13,8 +13,10 @@ import re
 import httpx
 from livekit.agents import function_tool, RunContext
 from loguru import logger
+import asyncio
 
 import database as db
+import email_processor
 
 
 # ── Paths ────────────────────────────────────────────────────────────────────
@@ -722,6 +724,24 @@ async def report_alert(
             funnel_stage="relevant",
             alert_tags=valid_tags
         )
+        
+        if "urgent" in valid_tags:
+            triage_rules = db.get_triage_rules()
+            email_to_send = None
+            for r in triage_rules:
+                if r.get("priority") == "Sürgős" and r.get("escalation_email"):
+                    email_to_send = r["escalation_email"]
+                    break
+            
+            if email_to_send:
+                asyncio.create_task(email_processor.send_escalation_email_to_staff(
+                    to_email=email_to_send,
+                    patient_name="Ismeretlen (Hangasszisztens)",
+                    patient_contact="Lásd a rendszerben",
+                    problem_description=reason or "Sürgős eset bejelentése telefonon.",
+                    priority="Sürgős"
+                ))
+
         return "Riasztás sikeresen rögzítve az adminisztrátorok felé a háttérben."
     return "Nem megfelelő címkék."
 
